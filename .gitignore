@@ -3,6 +3,7 @@
 */logs/!index.html
 */cache/*
 */cache/!index.html
+readme.md
 .settings
 .buildpath
 .project
