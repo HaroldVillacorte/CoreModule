@@ -30,16 +30,16 @@ class User extends MX_Controller {
     self::$data['view_file'] = 'user_profile';
     echo Modules::run($this->template, self::$data);
   }
-  
+
   public function permission($role)
   {
-  	if ($this->session->userdata('role')) {
-  	  $user_role = $this->session->userdata('role');
-  	}
-  	else {
-  	  $user_role = '';
-  	}
-  	if ($role != $user_role) {  		
+    if ($this->session->userdata('role')) {
+      $user_role = $this->session->userdata('role');
+    }
+    else {
+      $user_role = '';
+    }
+    if ($role != $user_role) {
       if ($this->session->userdata('user_id')) {
         $message = 'That page requires ' . $role . ' permission. Please login as admin.';
         $this->session->set_flashdata('message_error', $message);
