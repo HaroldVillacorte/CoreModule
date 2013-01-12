@@ -1,10 +1,8 @@
 <!-- Call to Action Panel -->
 <div class="row">
   <div class="twelve columns">
-
     <div class="panel">
       <h4>Get in touch!</h4>
-
       <div class="row">
         <div class="nine columns">
           <p>We'd love to hear from you, you attractive person you.</p>
@@ -14,6 +12,5 @@
         </div>
       </div>
     </div>
-
   </div>
 </div>

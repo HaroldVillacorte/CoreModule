@@ -1,4 +1,4 @@
-<!-- Footer -->  
+<!-- Footer -->
 <footer class="row">
   <div class="twelve columns">
     <hr />
@@ -11,9 +11,9 @@
           <li><a href="#">Link 1</a></li>
           <li><a href="#">Link 2</a></li>
           <li><a href="#">Link 3</a></li>
-          <li><a href="<?php echo base_url(). 'user_guide/index.html'?>" target="_blank">CI User guide</a></li>
+          <li><a href="<?php echo base_url () . 'user_guide/index.html' ?>" target="_blank">CI User guide</a></li>
         </ul>
       </div>
     </div>
-  </div> 
+  </div>
 </footer>
