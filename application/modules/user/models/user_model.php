@@ -26,8 +26,7 @@ class User_Model extends CI_Model {
       unset ($post['submit']);
       unset ($post['passconf']);
       if ($this->db->insert ('user', $post)) {
-        $result_set = $this->db
-            ->get_where ('user', array('username' => $post['username']), 1);
+        $result_set = $this->db->get_where ('user', array('username' => $post['username']), 1);
         $result = $result_set->row ();
         $id = $result->id;
         return 'inserted';

@@ -13,6 +13,9 @@ class Default_Controller extends MX_Controller {
   }
 
   public function index() {
+  	// Add filenames to the $scripts array.
+    array_unshift(self::$data['scripts'], 'jquery.foundation.orbit.js');
+    //array_unshift(self::$data['stylesheets'], 'CSS file GOES HERE');
     self::$data['view_file'] = 'one_column';
     echo Modules::run ($this->default_template, self::$data);
   }
