@@ -43,7 +43,7 @@ class User extends MX_Controller {
       if ($this->session->userdata('user_id')) {
         $message = 'That page requires ' . $role . ' permission. Please login as admin.';
         $this->session->set_flashdata('message_error', $message);
-  		  redirect(base_url() . 'user/profile/' . $this->session->userdata('user_id'));
+        redirect(base_url() . 'user/profile/' . $this->session->userdata('user_id'));
       }
       else {
         $message = 'That page requires ' . $role . ' permission. Please login.';
@@ -56,7 +56,7 @@ class User extends MX_Controller {
   public function login()
   {
     if (isset($_POST['submit'])) {
-  	  $rules = array(
+        $rules = array(
         array(
           'field' => 'username',
           'label' => 'Username',
@@ -68,21 +68,21 @@ class User extends MX_Controller {
           'rules' => 'required',
         ),
       );
-  	  $this->form_validation->set_rules($rules);
-  	  if ($this->form_validation->run() == FALSE) {
+      $this->form_validation->set_rules($rules);
+      if ($this->form_validation->run() == FALSE) {
         // Form does not validate.
         self::$data['view_file'] = 'user_login';
         echo Modules::run('template/default_template', self::$data);
       }
       else {
-  	    // Encrypt password and send to database.
+        // Encrypt password and send to database.
         $_POST['password'] = sha1($_POST['password']);
         if ($this->user_model->login($_POST)) {
           // Login success.
           $this->session->set_flashdata('message_success', 'You are now logged in as ' . $_POST['username'] . '.');
           redirect(base_url());
         }
-  	    else {
+          else {
           // Unseccessful login.
           $this->session->set_flashdata('message_error', 'Username and password combination not found.');
           redirect(current_url());
