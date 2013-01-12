@@ -57,8 +57,8 @@ class User extends MX_Controller {
   {
     if (isset($_POST['submit'])) {
   	  $rules = array(
-  	    array(
-  	      'field' => 'username',
+        array(
+          'field' => 'username',
           'label' => 'Username',
           'rules' => 'required',
         ),
@@ -74,7 +74,7 @@ class User extends MX_Controller {
         self::$data['view_file'] = 'user_login';
         echo Modules::run('template/default_template', self::$data);
       }
-  	  else {
+      else {
   	    // Encrypt password and send to database.
         $_POST['password'] = sha1($_POST['password']);
         if ($this->user_model->login($_POST)) {
@@ -201,7 +201,7 @@ class User extends MX_Controller {
           }
           elseif ($result_id = $this->user_model->save_user($_POST) == 'protected') {
             $this->session->set_flashdata('message_error', 'Unable to save.  Account is protected.');
-        	  redirect(current_url());
+            redirect(current_url());
           }
           else {
             $this->session->set_flashdata('message_error', 'Unable to save user. Please contact administrator.');
