@@ -1,4 +1,4 @@
-CI_Starter
+CI Starter
 ==========
 
-Full featured Codeigniter starter application.
+A full featured Codeigniter starter application.
