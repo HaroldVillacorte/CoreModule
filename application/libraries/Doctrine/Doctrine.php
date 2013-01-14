@@ -12,7 +12,7 @@ class Doctrine {
   public function __construct()
   {
     // load database configuration from CodeIgniter
-    include APPPATH.'config/database.php';
+    require APPPATH.'config/database.php';
 
     // Set up class loading. You could use different autoloaders, provided by your favorite framework,
     // if you want to.
