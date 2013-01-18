@@ -9,21 +9,23 @@ class User extends MX_Controller {
     parent::__construct ();
     $this->load->library ('encrypt');
     $this->load->library ('form_validation');
-    $this->load->model ('user_model');
+    //$this->load->model ('user_model');
     self::$data = $this->default_model->site_info ();
     self::$data['module'] = 'user';
+    $this->load->library('doctrine');
   }
 
-  public function index($id) {
+  public function index() {
     redirect (base_url () . 'user/profile');
   }
 
-  public function profile($id) {
-    if (!isset ($id)) {
+  public function profile() {
+    $id = $this->session->userdata('user_id');
+    if (!$id) {
       redirect (base_url ());
     }
-    $user = $this->user_model->get_user_by_id ($id);
-    self::$data['user'] = $user->row ();
+    $user = $this->doctrine->em->find('Entities\User', $id);
+    self::$data['user'] = $user;
     self::$data['view_file'] = 'user_profile';
     echo Modules::run ($this->template, self::$data);
   }
@@ -50,7 +52,7 @@ class User extends MX_Controller {
   }
 
   public function login() {
-    if (isset ($_POST['submit'])) {
+    if ($this->input->post('submit')) {
       $rules = array(
           array(
             'field' => 'username',
@@ -71,11 +73,25 @@ class User extends MX_Controller {
       }
       else {
         // Encrypt password and send to database.
-        $_POST['password'] = sha1 ($_POST['password']);
-        if ($this->user_model->login ($_POST)) {
+        $password = sha1 ($this->input->post('password'));
+        $username = $this->input->post('username');
+        $user = $this->doctrine->em->getRepository('Entities\User')->findOneBy(array(
+            'username' => $username,
+            'password' => $password,)
+                );
+        if ($user) {
           // Login success.
-          $this->session->set_flashdata ('message_success', 'You are now logged in as ' . $_POST['username'] . '.');
-          redirect (base_url ());
+          $this->session->set_flashdata ('message_success', 'You are now logged in as ' . $username . '.');
+          $userarray = array(
+              'user_id' => $user->getId(),
+              'username' => $user->getUsername(),
+              'email' => $user->getEmail(),
+              'first_name' => $user->getFirstName(),
+              'last_name' => $user->getLastName(),
+              'role' => $user->getRole(),
+              );
+          $this->session->set_userdata ($userarray);
+          redirect (base_url () . 'user/profile/');
         }
         else {
           // Unseccessful login.
@@ -83,6 +99,10 @@ class User extends MX_Controller {
           redirect (current_url ());
         }
       }
+    }
+    if ($this->session->userdata('user_id')) {
+      $this->session->keep_flashdata('message_success');
+      redirect(base_url() . 'user/profile/');
     }
     self::$data['view_file'] = 'user_login';
     echo Modules::run ('template/default_template', self::$data);
@@ -96,17 +116,22 @@ class User extends MX_Controller {
   }
 
   public function crud() {
-    if (isset ($_POST['delete'])) {
-      if (isset ($_POST['id'])) {
-        redirect (base_url () . 'user/delete/' . $_POST['id']);
+    if ($id = $this->session->userdata ('user_id')) {
+      $user = $this->doctrine->em->find('Entities\User', $id);
+      self::$data['user'] = $user;
+    }
+    if ($this->input->post('delete')) {
+      if ($this->input->post('id')) {
+        redirect (base_url () . 'user/delete/');
       }
     }
-    if (isset ($_POST['submit'])) {
+
+    if ($this->input->post('save')) {
       $rules_insert = array(
           array(
             'field' => 'username',
             'label' => 'Username',
-            'rules' => 'required',
+            'rules' => 'required|is_unique[users.username]',
           ),
           array(
             'field' => 'password',
@@ -121,7 +146,7 @@ class User extends MX_Controller {
           array(
             'field' => 'email',
             'label' => 'Email',
-            'rules' => 'required|valid_email|is_unique[user.email]'
+            'rules' => 'required|valid_email|is_unique[users.email]'
           ),
           array(
             'field' => 'first_name',
@@ -166,7 +191,7 @@ class User extends MX_Controller {
             'rules' => 'required',
           ),
       );
-      if (isset ($_POST['id'])) {
+      if ($this->input->post('id')) {
         $this->form_validation->set_rules ($rules_update);
       }
       else {
@@ -180,64 +205,82 @@ class User extends MX_Controller {
         echo Modules::run ($this->template, self::$data);
       }
       elseif ($this->form_validation->run () != FALSE) {
+
         // Encrypt password and send to database.
-        $_POST['password'] = sha1 ($_POST['password']);
-        $_POST['role'] = 'authenticated';
-        // See user_model.php.  Save user method returns $id as opposed to boolean.
-        if ($result = $this->user_model->save_user ($_POST)) {
-          if ($result == 'updated') {
-            $this->session->set_flashdata ('message_success', $_POST['username'] . ' saved succesfully.');
-            redirect (current_url ());
-          }
-          elseif ($result == 'inserted') {
-            $this->session->set_flashdata ('message_success', $_POST['username'] . ' saved succesfully.');
-            redirect (base_url () . 'user/login');
-          }
-          elseif ($result_id = $this->user_model->save_user ($_POST) == 'protected') {
+        $password = sha1 ($this->input->post('password'));
+
+        if (!$this->input->post('id')) {
+          // Doctrine
+          $user = new Entities\User;
+          $user->setUsername($this->input->post('username'));
+          $user->setPassword($password);
+          $user->setEmail($this->input->post('email'));
+          $user->setFirstName($this->input->post('first_name'));
+          $user->setLastName($this->input->post('last_name'));
+          $user->setRole('authenticated');
+          $user->setCreated(new DateTime());
+          $user->setProtected(FALSE);
+          $this->doctrine->em->persist($user);
+        }
+        else {
+          $found_user = $this->doctrine->em->find('Entities\User', $this->input->post('id'));
+          if($found_user->getProtected() == TRUE) {
             $this->session->set_flashdata ('message_error', 'Unable to save.  Account is protected.');
             redirect (current_url ());
           }
           else {
-            $this->session->set_flashdata ('message_error', 'Unable to save user. Please contact administrator.');
-            redirect (current_url ());
+            $found_user->setUsername($this->input->post('username'));
+            $found_user->setPassword($password);
+            $found_user->setEmail($this->input->post('email'));
+            $found_user->setFirstName($this->input->post('first_name'));
+            $found_user->setLastName($this->input->post('last_name'));
+            $found_user->setRole('authenticated');
           }
+        }
+        try {
+          $this->doctrine->em->flush();
+          $this->session->set_flashdata ('message_success', $this->input->post('username') . ' saved succesfully.');
+          redirect (base_url () . 'user/login/');
+        }
+        catch (Exception $e) {
+          $this->session->set_flashdata ('message_error', 'Unable to save user. Please contact administrator.');
+          redirect (current_url ());
         }
       }
     }
     else {
       // Load page without $_POST['submit'].
-      if ($id = $this->session->userdata ('user_id')) {
-        if ($result = $this->user_model->get_user_by_id ($id)) {
-          self::$data['user'] = $result->row ();
-        }
-      }
       self::$data['view_file'] = 'user_crud';
       echo Modules::run ($this->template, self::$data);
     }
   }
 
-  public function delete($id = NULL) {
-    if (isset ($_POST['delete'])) {
-      if ($this->user_model->delete_user ($_POST['id']) == 'success') {
-        $this->session->set_flashdata ('message_success', 'Your account has been deleted.');
-        redirect (base_url () . 'user/logout');
-      }
-      elseif ($this->user_model->delete_user ($_POST['id']) == 'protected') {
+  public function delete() {
+    if ($id = $this->session->userdata('user_id')) {
+      $user = $this->doctrine->em->find('Entities\User', $id);
+    }
+    if ($this->input->post('delete')) {
+      if ($user->getProtected() == TRUE) {
         $this->session->set_flashdata ('message_error', 'Unable to delete.  Account is protected.');
-        redirect (base_url () . 'user/crud');
+        redirect (base_url () . 'user/crud/');
       }
       else {
-        $this->session->set_flashdata ('message_error', 'Unable to delete your account.  Please contact administrator.');
-        redirect (base_url ());
+        try {
+          $this->doctrine->em->remove($user);
+          $this->doctrine->em->flush();
+          $this->session->set_flashdata ('message_success', 'Your account has been deleted.');
+          redirect (base_url () . 'user/logout');
+        }
+        catch (Exception $e) {
+          $this->session->set_flashdata ('message_error', 'Unable to delete your account.  Please contact administrator.');
+          redirect (base_url () . 'user/crud/');
+        }
       }
     }
     elseif ($id == NULL) {
       redirect (base_url ());
     }
     else {
-      if ($result = $this->user_model->get_user_by_id ($id)) {
-        $user = $result->row ();
-      }
       self::$data['user'] = $user;
       self::$data['view_file'] = 'user_delete';
       echo Modules::run ($this->template, self::$data);

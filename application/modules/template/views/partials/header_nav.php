@@ -14,7 +14,7 @@
       <li><a href="<?php echo base_url () ?>crud">Crud</a></li>
       <!-- Login links -->
       <?php if ($this->session->userdata ('user_id')) : ?>
-      <li><a href="<?php echo base_url () ?>user/profile/<?php echo $this->session->userdata ('user_id'); ?>">Profile</a></li>
+      <li><a href="<?php echo base_url () ?>user/profile/">Profile</a></li>
       <?php endif; ?>
       <?php
       $user_action = 'login';

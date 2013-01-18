@@ -12,10 +12,10 @@
 
   <?php echo form_open ('user/crud'); ?>
 
-  <input type="hidden" name="id" value="<?php echo (isset ($user)) ? $user->id : set_value ('id'); ?>">
+  <input type="hidden" name="id" value="<?php echo (isset ($user)) ? $user->getId() : set_value ('id'); ?>">
 
   <label for="username">Username:</label>
-  <input class="<?php echo $class; ?>" type="text" name="username" value="<?php echo (isset ($user)) ? $user->username : set_value ('username'); ?>" />
+  <input class="<?php echo $class; ?>" type="text" name="username" value="<?php echo (isset ($user)) ? $user->getUsername() : set_value ('username'); ?>" />
 
   <label for="password">Password:</label>
   <input class="<?php echo $class; ?>" type="password" name="password" value="" autocomplete="off" />
@@ -24,16 +24,16 @@
   <input class="<?php echo $class; ?>" type="password" name="passconf" value="" />
 
   <label for="email">Email:</label>
-  <input class="<?php echo $class; ?>" type="text" name="email" value="<?php echo (isset ($user)) ? $user->email : set_value ('email'); ?>" />
+  <input class="<?php echo $class; ?>" type="text" name="email" value="<?php echo (isset ($user)) ? $user->getEmail() : set_value ('email'); ?>" />
 
   <label for="first_name">First name:</label>
-  <input class="<?php echo $class; ?>" type="text" name="first_name" value="<?php echo (isset ($user)) ? $user->first_name : set_value ('first_name'); ?>" />
+  <input class="<?php echo $class; ?>" type="text" name="first_name" value="<?php echo (isset ($user)) ? $user->getFirstName() : set_value ('first_name'); ?>" />
 
   <label for="last_name">Last name:</label>
-  <input class="<?php echo $class; ?>" type="text" name="last_name" value="<?php echo (isset ($user)) ? $user->last_name : set_value ('last_name'); ?>" />
+  <input class="<?php echo $class; ?>" type="text" name="last_name" value="<?php echo (isset ($user)) ? $user->getLastName() : set_value ('last_name'); ?>" />
 
   <?php
-  echo form_submit ('submit', 'Save');
+  echo form_submit ('save', 'Save');
   if (isset ($user)) echo form_submit ('delete', 'Delete');
   echo ' <a href="' . current_url () . '">Reset</a>';
   echo form_close ();
