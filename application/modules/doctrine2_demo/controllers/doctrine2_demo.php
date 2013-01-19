@@ -1,5 +1,18 @@
 <?php if (!defined ('BASEPATH')) exit ('No direct script access allowed.');
-
+/**
+* Doctrine 2 Demo Module
+*
+* This is a sample of basic crud in CI Starter using Doctrine 2.  The code is
+* not heavily commented as it does not do anything beyond basic Codeigniter
+* combined with HMVC and Doctrine 2.  To learn these technologies it is best
+* refer to their respective documentation sites.
+*
+* @package CI Starter
+* @subpackage Modules
+* @category Demos
+* @author Harold Villacorte
+* @link http://laughinghost.com/CI_Starter/
+*/
 class Doctrine2_Demo extends MX_Controller {
 
   protected static $data;
@@ -12,7 +25,7 @@ class Doctrine2_Demo extends MX_Controller {
     self::$data['module'] = 'doctrine2_demo';
     $this->load->module('user');
     $this->user->permission('admin');
-    $user_page = NULL;
+    self::$user_page = NULL;
     if ($this->session->userdata('doctrine2_demo_page')) {
       self::$user_page = $this->session->userdata('doctrine2_demo_page');
     }
@@ -28,8 +41,6 @@ class Doctrine2_Demo extends MX_Controller {
   public function data($page = NULL) {
     $this->load->library('table');
     $this->load->library('pagination');
-    // Set current page to session.
-    $this->session->set_userdata(array('doctrine2_demo_page' => $page));
 
     // Perpage for pagination and Doctrine
     $per_page = 10;
@@ -122,9 +133,13 @@ class Doctrine2_Demo extends MX_Controller {
     array_unshift(self::$data['scripts'], 'doctrine_demo_ajax.js');
     // Check for ajax request then pick view_file.
     if ($this->input->is_ajax_request()) {
+      // Set current page to session.
+      $this->session->set_userdata(array('doctrine2_demo_page' => $page));
       $this->load->view('doctrine2_demo_ajax', self::$data);
     }
     else {
+      // Set current page to session.
+      $this->session->set_userdata(array('doctrine2_demo_page' => $page));
       self::$data['view_file'] = 'doctrine2_demo';
       echo Modules::run('template/default_template', self::$data);
     }
@@ -163,6 +178,7 @@ class Doctrine2_Demo extends MX_Controller {
     else {
       $record = $this->doctrine->em->find('Entities\CrudDemo', $id);
       $this->benchmark->mark('stop');// Benchmark stop.
+      array_unshift(self::$data['scripts'], 'doctrine_demo_ajax.js');
       self::$data['elapsed_time'] = $this->benchmark->elapsed_time('start', 'stop');
       self::$data['record'] = $record;
       self::$data['view_file'] = 'doctrine2_demo_edit';
@@ -192,6 +208,7 @@ class Doctrine2_Demo extends MX_Controller {
       }
     }
     else {
+      array_unshift(self::$data['scripts'], 'doctrine_demo_ajax.js');
       self::$data['view_file'] = 'doctrine2_demo_add';
       echo Modules::run('template/default_template', self::$data);
     }

@@ -7,8 +7,7 @@
   </div>
   <div class="nine columns">
     <ul class="nav-bar right">
-      <li><a href="<?php echo base_url () ?>">Slider</a></li>
-
+      <li><a href="<?php echo base_url () ?>">Home</a></li>
       <!-- Template demos -->
       <li class="has-flyout">
         <a href="#">Template demos</a>
@@ -17,6 +16,12 @@
           <li><a href="<?php echo base_url () ?>default_controller/columns/one_column/">One column</a></li>
           <li><a href="<?php echo base_url () ?>default_controller/columns/two_column/">Two column</a></li>
           <li><a href="<?php echo base_url () ?>default_controller/columns/three_column/">Three column</a></li>
+          <li><a href="<?php echo base_url () ?>default_controller/columns/branded/">Branded</a></li>
+          <li><a href="<?php echo base_url () ?>default_controller/columns/blog/">Blog</a></li>
+          <li><a href="<?php echo base_url () ?>default_controller/columns/feed/">Feed</a></li>
+          <li><a href="<?php echo base_url () ?>default_controller/columns/grid/">Grid</a></li>
+          <li><a href="<?php echo base_url () ?>default_controller/columns/workspace/">Workspace</a></li>
+          <li><a href="<?php echo base_url () ?>default_controller/columns/so_boxy/">So Boxy</a></li>
         </ul>
 
       </li>

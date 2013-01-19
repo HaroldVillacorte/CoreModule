@@ -2,7 +2,7 @@
 <?php $class = ''; ?>
 <?php $class = (validation_errors ()) ? $class = 'error' : $class = ''; ?>
 <div class="twelve columns">
-  <h4>User CRUD.</h4>
+  <h4>User Edit</h4>
   <?php if (validation_errors ()) : ?>
   <div class="ten columns centered alert-box secondary">
     <?php echo validation_errors (); ?>
@@ -10,7 +10,7 @@
   </div>
   <?php endif; ?>
 
-  <?php echo form_open ('user/crud'); ?>
+  <?php echo form_open ('user/edit'); ?>
 
   <input type="hidden" name="id" value="<?php echo (isset ($user)) ? $user->getId() : set_value ('id'); ?>">
 

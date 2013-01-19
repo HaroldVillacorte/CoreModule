@@ -8,6 +8,6 @@
   <p>Last name: <?php echo $user->getLastName(); ?></p>
   <p>Role: <?php echo $user->getRole(); ?></p>
   <p>Member since: <?php $date_time = $user->getCreated();echo $date_time->format('D M, d Y h:i:s a'); ?></p>
-  <p><a class="button" href="<?php echo base_url ();?>user/crud/">Edit</a></p>
+  <p><a class="button" href="<?php echo base_url ();?>user/edit/">Edit</a></p>
 </div>
 <?php endif; ?>

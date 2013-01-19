@@ -1,5 +1,18 @@
 <?php if (!defined ('BASEPATH')) exit ('No direct script access allowed');
-
+/**
+* Grocery CRUD Demo Module
+*
+* This is a sample of basic crud in CI Starter using Grocery CRUD.  The code is
+* not heavily commented as it does not do anything beyond basic Codeigniter
+* combined with HMVC and Grocery CRUD.  To learn these technologies it is best
+* refer to their respective documentation sites.
+*
+* @package CI Starter
+* @subpackage Modules
+* @category Demos
+* @author Harold Villacorte
+* @link http://laughinghost.com/CI_Starter/
+*/
 class Grocery_Crud_Demo extends MX_Controller {
 
   protected static $data;
@@ -25,4 +38,5 @@ class Grocery_Crud_Demo extends MX_Controller {
     echo Modules::run ('template/default_template', self::$data);
   }
 }
+
 /* End of file grocery_crud_demo.php */
