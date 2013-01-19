@@ -8,10 +8,28 @@
   <div class="nine columns">
     <ul class="nav-bar right">
       <li><a href="<?php echo base_url () ?>">Slider</a></li>
-      <li><a href="<?php echo base_url () ?>default_controller/columns/one_column">One column</a></li>
-      <li><a href="<?php echo base_url () ?>default_controller/columns/two_column">Two column</a></li>
-      <li><a href="<?php echo base_url () ?>default_controller/columns/three_column">Three column</a></li>
-      <li><a href="<?php echo base_url () ?>crud">Crud</a></li>
+
+      <!-- Template demos -->
+      <li class="has-flyout">
+        <a href="#">Template demos</a>
+        <a href="#" class="flyout-toggle"><span> </span></a>
+        <ul class="flyout">
+          <li><a href="<?php echo base_url () ?>default_controller/columns/one_column/">One column</a></li>
+          <li><a href="<?php echo base_url () ?>default_controller/columns/two_column/">Two column</a></li>
+          <li><a href="<?php echo base_url () ?>default_controller/columns/three_column/">Three column</a></li>
+        </ul>
+
+      </li>
+
+      <!-- Crud demos -->
+      <li class="has-flyout">
+        <a href="#">Crud demos</a>
+        <a href="#" class="flyout-toggle"><span> </span></a>
+        <ul class="flyout">
+          <li><a href="<?php echo base_url () ?>grocery_crud_demo/">Grocery Crud demo</a></li>
+          <li><a href="<?php echo base_url () ?>doctrine2_demo/">Doctrine 2 demo</a></li>
+        </ul>
+      </li>
       <!-- Login links -->
       <?php if ($this->session->userdata ('user_id')) : ?>
       <li><a href="<?php echo base_url () ?>user/profile/">Profile</a></li>

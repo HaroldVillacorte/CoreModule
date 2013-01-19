@@ -1,6 +1,7 @@
 <div class="twelve columns">
-  <h4>This is CRUD.</h4>
+  <h5>This is Grocery CRUD.</h5>
   <div>
+    <p>Render time: <?php if(isset($elapsed_time)) echo $elapsed_time ;?></p>
     <?php if (isset ($output->output)) : ?>
     <?php echo $output->output; ?>
     <?php endif; ?>

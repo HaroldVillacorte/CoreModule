@@ -10,6 +10,7 @@
 <!-- Load js files from Asset Loader module -->
 <?php echo Modules::run('asset_loader/javascript');?>
 <!-- Initialize JS Plugins -->
+<script src="<?php echo $js_url; ?>jquery.foundation.navigation.js"></script>
 <script src="<?php echo $js_url; ?>app.js"></script>
 <script type="text/javascript">
   $(window).load(function() {
