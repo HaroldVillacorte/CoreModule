@@ -16,7 +16,7 @@ class User extends MX_Controller {
   // Sets the $data property.
   protected static $data;
   // Set the default template.
-  protected $template = 'template/default_template';
+  protected $template = 'core_template/default_template';
 
   /**
    * The data property is set to the site_info() array which passes an array
@@ -24,7 +24,7 @@ class User extends MX_Controller {
    * information.  self::$data['module'] is the name of this module which is
    * passed to the Template module.
    *
-   * @see default_model.php
+   * @see core_model.php
    */
   public function __construct() {
     parent::__construct ();
@@ -33,7 +33,7 @@ class User extends MX_Controller {
     // Loads the Codeigniter system library.
     $this->load->library ('form_validation');
     // Sets the the data array.
-    self::$data = $this->default_model->site_info ();
+    self::$data = $this->core_model->site_info ();
     // Sets the module to be sent to the Template module.
     self::$data['module'] = 'user';
     // Loads the Doctrine library.
@@ -125,7 +125,7 @@ class User extends MX_Controller {
       // Code to run form does not validate.
       if ($this->form_validation->run () == FALSE) {
         self::$data['view_file'] = 'user_login';
-        echo Modules::run ('template/default_template', self::$data);
+        echo Modules::run ('core_template/default_template', self::$data);
       }
       // Code to run when form validates.
       else {
@@ -175,7 +175,7 @@ class User extends MX_Controller {
       redirect(base_url() . 'user/profile/');
     }
     self::$data['view_file'] = 'user_login';
-    echo Modules::run ('template/default_template', self::$data);
+    echo Modules::run ('core_template/default_template', self::$data);
   }
 
   /**
