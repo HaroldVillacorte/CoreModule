@@ -3,7 +3,7 @@
 * User Module
 *
 * The User module provides full user CRUD, authentication, and a very simple yet
-* highly effective permissions system.  This module user Doctrine.
+* highly effective permissions system.  This module uses Doctrine.
 *
 * @package CI Starter
 * @subpackage Modules

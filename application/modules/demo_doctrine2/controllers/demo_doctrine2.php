@@ -72,8 +72,8 @@ class Demo_Doctrine2 extends MX_Controller {
     $pagination_config['total_rows'] = $count;
     $pagination_config['per_page'] = $per_page;
     // Style pagination Foundation 3
-      // Full open
-      $pagination_config['full_tag_open'] = '<ul class="pagination">';
+    // Full open
+    $pagination_config['full_tag_open'] = '<ul class="pagination">';
       // Digits
       $pagination_config['num_tag_open'] = '<li>';
       $pagination_config['num_tag_close'] = '</li>';
@@ -103,7 +103,8 @@ class Demo_Doctrine2 extends MX_Controller {
     $add_link = base_url() . 'demo_doctrine2/add/';
     $heading = array(
         'ID', 'Order number', 'Product Code', 'Quantity',
-        'Price','Line number', 'Comments', '<a href="' . $add_link . '" class="right">Add record +</a>',
+        'Price','Line number', 'Comments', '<a href="' . $add_link
+        . '" class="right">Add record +</a>',
     );
     $this->table->set_heading($heading);
 
