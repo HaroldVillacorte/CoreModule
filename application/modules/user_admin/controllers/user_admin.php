@@ -12,7 +12,6 @@ class User_Admin extends MX_Controller {
     $this->load->module('user');
     $this->load->model('user_admin_model');
     $this->load->model('core_functions/core_functions');
-    $this->load->library('doctrine');
     self::$data = $this->core_model->site_info();
     self::$data['module'] = 'user_admin';
     $this->user->permission('admin');
