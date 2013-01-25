@@ -21,9 +21,12 @@ class Core_Model extends CI_Model {
    * @return array $data An array containing site wide information.
    */
   public function site_info() {
+    $meta_description = 'A Codeigniter boilerplate.';
     $data = array(
       // The name of the Website or application.
       'site_name' => 'CI Starter',
+      // The site description te be echoed in the head meta descrition.
+      'site_description' => $meta_description,
       // Sets the $template_url variable available application-wide.
       'template_url' => base_url () . 'assets/templates/default_template/',
       // Sets the $css_url variable available application-wide.  This is not

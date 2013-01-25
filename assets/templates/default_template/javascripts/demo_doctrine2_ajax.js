@@ -1,8 +1,5 @@
 $(document).ready(function() {
 
-  // Show button on Edit and Add pages.
-  $('#ajax-back-button').show();
-
   function updatePage(html) {
     $('#ajax-content').html(html);
   }
@@ -23,7 +20,9 @@ $(document).ready(function() {
         updatePage(html);
       }
     });
+
   });
+
 });
 
 

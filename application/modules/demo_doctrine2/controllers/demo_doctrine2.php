@@ -60,7 +60,7 @@ class Demo_Doctrine2 extends MX_Controller {
             ->setMaxResults($per_page)
             ->setFirstResult($start);
     $output = $query2->getArrayResult();
-    $count = count($query1->getResult());
+    $count = count($query1->getArrayResult());
     // Get first and last id's.
     self::$data['first'] = $page + 1;
     self::$data['last'] = $page + count($output);
@@ -131,7 +131,7 @@ class Demo_Doctrine2 extends MX_Controller {
     // Page render
     self::$data['count'] = $count;
     self::$data['elapsed_time'] = $this->benchmark->elapsed_time('start', 'stop');
-    array_unshift(self::$data['scripts'], 'doctrine_demo_ajax.js');
+    array_unshift(self::$data['scripts'], 'demo_doctrine2_ajax.js');
     // Check for ajax request then pick view_file.
     if ($this->input->is_ajax_request()) {
       // Set current page to session.
@@ -178,7 +178,7 @@ class Demo_Doctrine2 extends MX_Controller {
     else {
       $record = $this->doctrine->em->find('Entities\CrudDemo', $id);
       $this->benchmark->mark('stop');// Benchmark stop.
-      array_unshift(self::$data['scripts'], 'doctrine_demo_ajax.js');
+      array_unshift(self::$data['scripts'], 'demo_doctrine2_ajax.js');
       self::$data['elapsed_time'] = $this->benchmark->elapsed_time('start', 'stop');
       self::$data['record'] = $record;
       self::$data['view_file'] = 'demo_doctrine2_edit';
@@ -208,7 +208,7 @@ class Demo_Doctrine2 extends MX_Controller {
       }
     }
     else {
-      array_unshift(self::$data['scripts'], 'doctrine_demo_ajax.js');
+      array_unshift(self::$data['scripts'], 'demo_doctrine2_ajax.js');
       self::$data['view_file'] = 'demo_doctrine2_add';
       echo Modules::run('core_template/default_template', self::$data);
     }

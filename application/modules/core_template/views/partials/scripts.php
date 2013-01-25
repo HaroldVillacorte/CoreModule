@@ -12,8 +12,3 @@
 <!-- Initialize JS Plugins -->
 <script src="<?php echo $js_url; ?>jquery.foundation.navigation.js"></script>
 <script src="<?php echo $js_url; ?>app.js"></script>
-<script type="text/javascript">
-  $(window).load(function() {
-    $('#slider').orbit();
-  });
-</script>

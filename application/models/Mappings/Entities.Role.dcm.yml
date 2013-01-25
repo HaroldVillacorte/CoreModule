@@ -1,0 +1,15 @@
+Entities\Role:
+  type: entity
+  table: roles
+  uniqueConstraints:
+    username_index:
+      columns:
+        - role
+  fields:
+    id:
+      type: integer
+      id: true
+      generator:
+        strategy: AUTO
+    role:
+      length: 50

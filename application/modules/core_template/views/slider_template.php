@@ -12,5 +12,10 @@
   <?php $this->load->view ('call_to_action_panel', $data); ?>
   <?php $this->load->view ('footer', $data); ?>
   <?php $this->load->view ('scripts', $data); ?>
+  <script type="text/javascript">
+    $(window).load(function() {
+      $('#slider').orbit();
+    });
+  </script>
 </body>
 </html>

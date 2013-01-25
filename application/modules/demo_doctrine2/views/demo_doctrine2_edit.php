@@ -28,10 +28,14 @@
   <p style="margin-top:1em;"><?php echo form_submit('save', 'Save')?>
 
     <noscript>
-    <a href="<?php echo base_url() . 'demo_doctrine2/data/' . $user_page;?>">Back to list</a>
+      <a href="<?php echo base_url() . 'demo_doctrine2/data/' . $user_page;?>">Back to list</a>
     </noscript>
 
-    <a id="ajax-back-button" href="back" ONCLICK="history.go(-1)" style="display:none;">Back to list</a>
+    <script>
+      document.write(
+        '<a id="ajax-back-button" href="back" ONCLICK="history.go(-1)">Back to list</a>'
+      );
+    </script>
 
   </p>
   <?php echo form_close();?>
