@@ -1,83 +1,66 @@
-<?php if (!defined('BASEPATH')) exit ('No direct script access allowed');
+<?php if (!defined('BASEPATH')) exit('No direct script access allowed');
 
 class User_Admin_Model extends CI_Model {
 
   function __construct() {
     parent::__construct();
     $this->load->library('doctrine');
+    $this->load->database();
   }
 
-  public function find_user ($id = NULL) {
-    $user = $this->doctrine->em->find('Entities\User', $id);
-    return ($user) ? $user : FALSE ;
+  public function find_user($id = NULL) {
+    $user = $this->db->get_where('users', array('id' => $id));
+    return ($user) ? $user : FALSE;
   }
 
-  public function save_user($post, $user = NULL) {
+  public function save_user($post) {
+
+    $post['protected'] = $post['protected_value'];
+    $post['password'] = sha1($post['password']);
+    unset($post['protected_value']);
+    unset($post['passconf']);
+    unset($post['save']);
+
     switch ($post) {
       case !isset($post['id']):
-        $password = sha1($post['password']);
-        $new_user = new Entities\User;
-        $new_user->setUsername($post['username']);
-        $new_user->setPassword($password);
-        $new_user->setEmail($post['email']);
-        $new_user->setFirstName($post['first_name']);
-        $new_user->setLastName($post['last_name']);
-        $new_user->setRole($post['role']);
-        $new_user->setCreated(new DateTime);
-        $new_user->setProtected($post['protected_value']);
-        $this->doctrine->em->persist($new_user);
+        $post['created'] = time();
+        $result = $this->db->insert('users', $post);
         break;
       case isset($post['id']):
-        $user->setUsername($post['username']);
-        $user->setEmail($post['email']);
-        $user->setFirstname($post['first_name']);
-        $user->setLastname($post['last_name']);
-        $user->setRole($post['role']);
-        $user->setProtected($post['protected_value']);
+        $result = $this->db
+                ->where('id', $post['id'])
+                ->limit(1)
+                ->update('users', $post);
         break;
     }
-    try {
-      $this->doctrine->em->flush();
-      return TRUE;
-    }
-    catch (Exception $e) {
-      return FALSE;
-    }
+    return ($result) ? TRUE : FALSE;
   }
 
   public function delete_user($id = NULL) {
     $user = $this->find_user($id);
-    switch ($user) {
-      case $user->getProtected() == TRUE:
-        return 'protected';
-        break;
-      case $user->getProtected() == FALSE:
-        try {
-          $this->doctrine->em->remove($user);
-          $this->doctrine->em->flush();
-          return 'deleted';
-        }
-        catch (Exception $e) {
-          return FALSE;
-        }
-        break;
+    if ($user->potected == 'protected') {
+      return 'protected';
+    }
+    else {
+      $this->db->delete('users', array('id' => $id), 1);
+      return ($this->db->affected_rows() > 0) ? 'deleted' : FALSE ;
     }
   }
 
-  public function add_role_set_validation_rules ($rules) {
+  public function save_role_set_validation_rules($rules) {
     // Set the validation rules for inserting a new user.
     $rules_insert = array(
         array(
-          'field' => 'role',
-          'label' => 'Role',
-          'rules' => 'required|is_unique[roles.role]',
+            'field' => 'role',
+            'label' => 'Role',
+            'rules' => 'required|is_unique[roles.role]',
         ),
     );
     $rules_update = array(
         array(
-          'field' => 'role',
-          'label' => 'Role',
-          'rules' => 'required',
+            'field' => 'role',
+            'label' => 'Role',
+            'rules' => 'required',
         ),
     );
     $rule_set = NULL;
@@ -92,82 +75,82 @@ class User_Admin_Model extends CI_Model {
     return $rule_set;
   }
 
-  public function add_edit_user_set_validation_rules ($rules) {
+  public function add_edit_user_set_validation_rules($rules) {
     // Set the validation rules for inserting a new user.
     $rules_insert = array(
-          array(
+        array(
             'field' => 'username',
             'label' => 'Username',
             'rules' => 'required|is_unique[users.username]',
-          ),
-          array(
+        ),
+        array(
             'field' => 'password',
             'label' => 'Password',
             'rules' => 'required|valid_base64|trim|max_length[12]|matches[passconf]',
-          ),
-          array(
+        ),
+        array(
             'field' => 'passconf',
             'label' => 'Password confirmation',
             'rules' => 'required',
-          ),
-          array(
+        ),
+        array(
             'field' => 'email',
             'label' => 'Email',
             'rules' => 'required|valid_email|is_unique[users.email]'
-          ),
-          array(
+        ),
+        array(
             'field' => 'first_name',
             'label' => 'First name',
             'rules' => 'required',
-          ),
-          array(
+        ),
+        array(
             'field' => 'last_name',
             'label' => 'Last name',
             'rules' => 'required',
-          ),
-          array(
+        ),
+        array(
             'field' => 'role',
             'label' => 'Role',
             'rules' => 'required',
-          ),
-          array(
+        ),
+        array(
             'field' => 'protected_value',
             'label' => 'Protected',
             'rules' => 'required',
-          ),
+        ),
     );
     // Set the validation rules for updating a user.
     $rules_update = array(
-          array(
+        array(
             'field' => 'username',
             'label' => 'Username',
             'rules' => 'required',
-          ),
-          array(
+        ),
+        array(
             'field' => 'email',
             'label' => 'Email',
             'rules' => 'required|valid_email'
-          ),
-          array(
+        ),
+        array(
             'field' => 'first_name',
             'label' => 'First name',
             'rules' => 'required',
-          ),
-          array(
+        ),
+        array(
             'field' => 'last_name',
             'label' => 'Last name',
             'rules' => 'required',
-          ),
-          array(
+        ),
+        array(
             'field' => 'role',
             'label' => 'Role',
             'rules' => 'required',
-          ),
-          array(
+        ),
+        array(
             'field' => 'protected_value',
             'label' => 'Protected',
             'rules' => 'required',
-          ),
+        ),
     );
     $rule_set = NULL;
     switch ($rules) {
@@ -181,39 +164,48 @@ class User_Admin_Model extends CI_Model {
     return $rule_set;
   }
 
-  public function get_all_roles () {
-    $dql = 'SELECT u FROM Entities\Role u';
-    $query1 = $this->doctrine->em->createQuery($dql);
-    $roles = $query1->getResult();
-    return ($roles) ? $roles : FALSE;
+  public function get_role($id = NULL) {
+    $query = $this->db->where('id', $id)->get('roles');
+    $role = $query->row();
+    return ($query->num_rows() > 0) ? $role : FALSE;
   }
 
-  public function insert_role ($post) {
-    $role = new Entities\Role;
-    $role->setRole($post['role']);
-    $this->doctrine->em->persist($role);
-    try {
-      $this->doctrine->em->flush();
-      return TRUE;
-    }
-    catch (Exception $e) {
-      return FALSE;
+  public function get_all_roles() {
+    $query = $this->db->get('roles');
+    return ($query->num_rows() > 0) ? $query->result() : FALSE;
+  }
+
+  public function save_role($post) {
+    unset($post['save']);
+    switch ($post) {
+      case!isset($post['id']):
+        $query = $this->db->insert('roles', $post);
+        $id = $this->db->insert_id();
+        return ($id) ? $id : FALSE;
+        break;
+      case isset($post['id']):
+        $query = $this->db
+                ->where('id', $post['id'])
+                ->update('roles', $post);
+        return ($this->db->affected_rows() > 0) ? TRUE : FALSE;
+        break;
     }
   }
 
-  public function get_all_users () {
-    $dql = 'SELECT u FROM Entities\User u';
-    $query = $this->doctrine->em->createQuery($dql);
-    return ($query) ?  $query : FALSE ;
+  public function delete_role($id = NULL) {
+    $query = $this->db->delete('roles', array('id' => $id), 1);
+    $result = $this->db->affected_rows();
+    return ($result) ? TRUE : FALSE;
+  }
+
+  public function get_all_users() {
+    $query = $this->db->get('users');
+    return ($query->num_rows() > 0) ? $query->result_array() : FALSE;
   }
 
   public function get_limit_offset($per_page, $start) {
-    $dql = 'SELECT u FROM Entities\User u';
-    $query = $this->doctrine->em
-            ->createQuery($dql)
-            ->setMaxResults($per_page)
-            ->setFirstResult($start);
-    return ($query) ? $query  : FALSE ;
+    $query = $this->db->get('users', $per_page, $start);
+    return ($query->num_rows() > 0) ? $query->result_array() : FALSE;
   }
 
   public function user_page_pagination_setup($count, $per_page) {
@@ -227,24 +219,24 @@ class User_Admin_Model extends CI_Model {
     // Style pagination Foundation 3
     // Full open
     $pagination_config['full_tag_open'] = '<ul class="pagination">';
-      // Digits
-      $pagination_config['num_tag_open'] = '<li>';
-      $pagination_config['num_tag_close'] = '</li>';
-      // Current
-      $pagination_config['cur_tag_open'] = '<li class="current"><a href="#">';
-      $pagination_config['cur_tag_close'] = '</a></li>';
-      // Previous link
-      $pagination_config['prev_tag_open'] = '<li class="arrow">';
-      $pagination_config['prev_tag_close'] = '</li>';
-      // Next link
-      $pagination_config['next_tag_open'] = '<li class="arrow">';
-      $pagination_config['nect_tag_close'] = '<li>';
-      // First link
-      $pagination_config['first_tag_open'] = '<li>';
-      $pagination_config['first_tag_close'] = '</li>';
-      // Last link
-      $pagination_config['last_tag_open'] = '<li>';
-      $pagination_config['last_tag_close'] = '</li>';
+    // Digits
+    $pagination_config['num_tag_open'] = '<li>';
+    $pagination_config['num_tag_close'] = '</li>';
+    // Current
+    $pagination_config['cur_tag_open'] = '<li class="current"><a href="#">';
+    $pagination_config['cur_tag_close'] = '</a></li>';
+    // Previous link
+    $pagination_config['prev_tag_open'] = '<li class="arrow">';
+    $pagination_config['prev_tag_close'] = '</li>';
+    // Next link
+    $pagination_config['next_tag_open'] = '<li class="arrow">';
+    $pagination_config['nect_tag_close'] = '<li>';
+    // First link
+    $pagination_config['first_tag_open'] = '<li>';
+    $pagination_config['first_tag_close'] = '</li>';
+    // Last link
+    $pagination_config['last_tag_open'] = '<li>';
+    $pagination_config['last_tag_close'] = '</li>';
     // Full close
     $pagination_config['full_tag_close'] = '</ul>';
 
@@ -252,7 +244,7 @@ class User_Admin_Model extends CI_Model {
   }
 
   public function user_page_table_setup($output) {
-
+    $this->load->helper('date');
     $result = $output;
 
     foreach ($result as $key => $value) { // add edit link.
@@ -265,11 +257,10 @@ class User_Admin_Model extends CI_Model {
               . '<a href="' . base_url()
               . 'user_admin/edit_user/' . $result[$key]['id']
               . '" class="label secondary round right">Edit</a>';
-      $result[$key]['created'] = $result[$key]['created']->format('D M, d Y h:i:s a');
+      $result[$key]['created'] = unix_to_human($result[$key]['created']);
       if ($result[$key]['protected']) {
         $result[$key]['protected'] = 'Yes';
-      }
-      else {
+      } else {
         $result[$key]['protected'] = 'No';
       }
     }

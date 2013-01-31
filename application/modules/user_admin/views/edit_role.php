@@ -12,9 +12,13 @@
 
 <?php echo form_open('user_admin/edit_role');?>
 
-<label for="role">Role:</label>
-<input class="<?php echo $class; ?>" type="text" name="role" value="<?php echo set_value('role');?>" />
+<?php if (isset($role)):?>
+<input type="hidden" name="id" value="<?php echo isset ($role) ? $role->id : set_value('id') ;?>" />
+<?php endif;?>
 
-<?php echo form_submit('add', 'Add');?>
+<label for="role">Role:</label>
+<input class="<?php echo $class; ?>" type="text" name="role" value="<?php echo isset ($role) ? $role->role : set_value('role') ;?>" />
+
+<?php echo form_submit('save', 'Save');?>
 
 <?php echo form_close();?>

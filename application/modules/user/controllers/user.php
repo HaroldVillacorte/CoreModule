@@ -36,8 +36,10 @@ class User extends MX_Controller {
     self::$data = $this->core_model->site_info ();
     // Sets the module to be sent to the Template module.
     self::$data['module'] = 'user';
-    // Loads the Doctrine library.
-    $this->load->library('doctrine');
+    // Load the User model
+    $this->load->model('user_model');
+    // Load the Date helper
+    $this->load->helper('date');
   }
 
   /**
@@ -60,8 +62,7 @@ class User extends MX_Controller {
     if (!$id) {
       redirect (base_url ());
     }
-    // Instantiates the User Doctrine Entity then sends it to the view.
-    $user = $this->doctrine->em->find('Entities\User', $id);
+    $user = $this->user_model->find_user($id);
     self::$data['user'] = $user;
     self::$data['view_file'] = 'user_profile';
     echo Modules::run ($this->template, self::$data);
@@ -75,6 +76,7 @@ class User extends MX_Controller {
    * @param string $role User role from the CI session cookie.
    */
   public function permission($role) {
+
     // Sets the $user_role variable.
     if ($this->session->userdata ('role')) {
       $user_role = $this->session->userdata ('role');
@@ -133,26 +135,13 @@ class User extends MX_Controller {
         $password = sha1 ($this->input->post('password'));
         // Set the $username variable.
         $username = $this->input->post('username');
-        // Attemt to instantaite the Doctrine Entity with username and password.
-        $user = $this->doctrine->em->getRepository('Entities\User')->findOneBy(array(
-            'username' => $username,
-            'password' => $password,)
-                );
-        // If the user is found by Doctrine.
+        // Attemt to find user with username and password.
+        $user = $this->user_model->login($username, $password);
+        // If the user is found.
         if ($user) {
           // Login success.
           $this->session->set_flashdata ('message_success', 'You are now logged in as ' . $username . '.');
-          // Use Doctrine to set the $userarray.
-          $userarray = array(
-              'user_id' => $user->getId(),
-              'username' => $user->getUsername(),
-              'email' => $user->getEmail(),
-              'first_name' => $user->getFirstName(),
-              'last_name' => $user->getLastName(),
-              'role' => $user->getRole(),
-              );
-          // Set userdata session information.
-          $this->session->set_userdata ($userarray);
+          $this->user_model->set_user_session_data($user);
           redirect (base_url () . 'user/profile/');
         }
 
@@ -189,6 +178,75 @@ class User extends MX_Controller {
     redirect (base_url ());
   }
 
+  public function add () {
+    if ($this->input->post('add')) {
+      $rules = array(
+            array(
+              'field' => 'username',
+              'label' => 'Username',
+              'rules' => 'required|is_unique[users.username]',
+            ),
+            array(
+              'field' => 'password',
+              'label' => 'Password',
+              'rules' => 'required|valid_base64|trim|max_length[12]|matches[passconf]',
+            ),
+            array(
+              'field' => 'passconf',
+              'label' => 'Password confirmation',
+              'rules' => 'required',
+            ),
+            array(
+              'field' => 'email',
+              'label' => 'Email',
+              'rules' => 'required|valid_email|is_unique[users.email]'
+            ),
+            array(
+              'field' => 'first_name',
+              'label' => 'First name',
+              'rules' => 'required',
+            ),
+            array(
+              'field' => 'last_name',
+              'label' => 'Last name',
+              'rules' => 'required',
+            ),
+        );
+      // Set the rules depending on if it is an insert or an update.  If the
+      // $_POST['id'] is set it will be an update.
+      $this->form_validation->set_rules ($rules);
+
+      // Set the message for valid_base64 validation error since it is missing
+      // from the Codeigniter language files.
+
+      $valid_base64_error = 'Password may only contain alpha-numeric characters, +\'s, and /\'s';
+      $this->form_validation->set_message ('valid_base64', $valid_base64_error);
+      // Code to run when the the form does not validate.
+      if ($this->form_validation->run () == FALSE) {
+        // Form does not validate.
+        self::$data['view_file'] = 'user_edit';
+        echo Modules::run ($this->template, self::$data);
+      }
+      else {
+        $result_id = $this->user_model->add_user($this->input->post());
+        switch ($result_id) {
+          case TRUE:
+            $this->session->set_flashdata('message_success', 'Acount was successfully created.');
+            redirect(base_url() . 'user/login/');
+            break;
+          case FALSE:
+            $this->session->set_flashdata('message_error', 'There was a problem adding your account.');
+            redirect(current_url());
+            break;
+        }
+      }
+    }
+    else {
+      self::$data['view_file'] = 'user_add';
+      echo Modules::run('core_template/default_template', self::$data);
+    }
+  }
+
   /**
    * Add user and edit user are combined into one method called "edit" using a
    * single view.  There are two fields which are not editable by this method:
@@ -205,8 +263,9 @@ class User extends MX_Controller {
     // self::$data['user'] property to send to the view so the user edit form
     // can be prepopulated.
 
-    if ($id = $this->session->userdata ('user_id')) {
-      $user = $this->doctrine->em->find('Entities\User', $id);
+    if ($this->session->userdata ('user_id')) {
+      $id = $this->session->userdata ('user_id');
+      $user = $this->user_model->find_user($id);
       self::$data['user'] = $user;
     }
     // When the user hits the delete button rediect them to the delete method.
@@ -218,40 +277,8 @@ class User extends MX_Controller {
     // Code to run when the user hits the save button.
     if ($this->input->post('save')) {
       // Set the validation rules for inserting a new user.
-      $rules_insert = array(
-          array(
-            'field' => 'username',
-            'label' => 'Username',
-            'rules' => 'required|is_unique[users.username]',
-          ),
-          array(
-            'field' => 'password',
-            'label' => 'Password',
-            'rules' => 'required|valid_base64|trim|max_length[12]|matches[passconf]',
-          ),
-          array(
-            'field' => 'passconf',
-            'label' => 'Password confirmation',
-            'rules' => 'required',
-          ),
-          array(
-            'field' => 'email',
-            'label' => 'Email',
-            'rules' => 'required|valid_email|is_unique[users.email]'
-          ),
-          array(
-            'field' => 'first_name',
-            'label' => 'First name',
-            'rules' => 'required',
-          ),
-          array(
-            'field' => 'last_name',
-            'label' => 'Last name',
-            'rules' => 'required',
-          ),
-      );
       // Set the validation rules for updating a user.
-      $rules_update = array(
+      $rules = array(
           array(
             'field' => 'username',
             'label' => 'Username',
@@ -286,13 +313,7 @@ class User extends MX_Controller {
 
       // Set the rules depending on if it is an insert or an update.  If the
       // $_POST['id'] is set it will be an update.
-
-      if ($this->input->post('id')) {
-        $this->form_validation->set_rules ($rules_update);
-      }
-      else {
-        $this->form_validation->set_rules ($rules_insert);
-      }
+      $this->form_validation->set_rules ($rules);
 
       // Set the message for valid_base64 validation error since it is missing
       // from the Codeigniter language files.
@@ -307,53 +328,20 @@ class User extends MX_Controller {
       }
       // Code to run when the form passes validation.
       elseif ($this->form_validation->run () != FALSE) {
-        // Encrypt password.
-        $password = sha1 ($this->input->post('password'));
-        // Code to run if this is an insert.
-        if (!$this->input->post('id')) {
-
-          // Instantiate User Entity and set its properties from the post
-          // variable.
-
-          $user = new Entities\User;
-          $user->setUsername($this->input->post('username'));
-          $user->setPassword($password);
-          $user->setEmail($this->input->post('email'));
-          $user->setFirstName($this->input->post('first_name'));
-          $user->setLastName($this->input->post('last_name'));
-          $user->setRole('authenticated');
-          $user->setCreated(new DateTime());
-          $user->setProtected(FALSE);
-          $this->doctrine->em->persist($user);
-        }
-        // Code to run if this is an update.
-        else {
-          // Instantiate User Entity from the post('id').
-          $found_user = $this->doctrine->em->find('Entities\User', $this->input->post('id'));
-          // Check if account prtoected field is TRUE.  If so then redirect.
-          if($found_user->getProtected() == TRUE) {
-            $this->session->set_flashdata ('message_error', 'Unable to save.  Account is protected.');
-            redirect (current_url ());
-          }
-          // Set user data.
-          else {
-            $found_user->setUsername($this->input->post('username'));
-            $found_user->setPassword($password);
-            $found_user->setEmail($this->input->post('email'));
-            $found_user->setFirstName($this->input->post('first_name'));
-            $found_user->setLastName($this->input->post('last_name'));
-            $found_user->setRole('authenticated');
-          }
-        }
-        // Doctrine flush() method or catch exception.
-        try {
-          $this->doctrine->em->flush();
-          $this->session->set_flashdata ('message_success', $this->input->post('username') . ' saved succesfully.');
-          redirect (base_url () . 'user/login/');
-        }
-        catch (Exception $e) {
-          $this->session->set_flashdata ('message_error', 'Unable to save user. Please contact administrator.');
-          redirect (current_url ());
+        $result = $this->user_model->edit_user($this->input->post());
+        switch ($result) {
+          case 'updated':
+            $this->session->set_flashdata('message_success', 'Account was successfully saved.');
+            redirect(base_url() . 'user/profile/');
+            break;
+          case 'fail':
+            $this->session->set_flashdata('message_error', 'There was a problem adding your account.');
+            redirect(current_url());
+            break;
+          case 'protected':
+            $this->session->set_flashdata('message_error', 'Unable to save.  Account is protected.');
+            redirect(current_url());
+            break;
         }
       }
     }
@@ -372,27 +360,27 @@ class User extends MX_Controller {
   public function delete() {
     // Instanitate User Entity based on session userdata('user_id').
     if ($id = $this->session->userdata('user_id')) {
-      $user = $this->doctrine->em->find('Entities\User', $id);
+      $user = $this->user_model->find_user($id);
+    }
+    else {
+      redirect(base_url());
     }
     // Code to run when user hits the final delete button.
     if ($this->input->post('delete')) {
       // Check first if account is protected.  Redirect if true.
-      if ($user->getProtected() == TRUE) {
-        $this->session->set_flashdata ('message_error', 'Unable to delete.  Account is protected.');
-        redirect (base_url () . 'user/edit/');
-      }
-      // Delete the account.
-      else {
-        try {
-          $this->doctrine->em->remove($user);
-          $this->doctrine->em->flush();
-          $this->session->set_flashdata ('message_success', 'Your account has been deleted.');
+      $result = $this->user_model->delete_user($id);
+      switch ($result) {
+        case 'protected':
+          $this->session->set_flashdata ('message_error', 'Unable to delete.  Account is protected.');
+          redirect (base_url () . 'user/edit/');
+          break;
+        case 'deleted':
           redirect (base_url () . 'user/logout');
-        }
-        catch (Exception $e) {
+          break;
+        case FALSE:
           $this->session->set_flashdata ('message_error', 'Unable to delete your account.  Please contact administrator.');
           redirect (base_url () . 'user/edit/');
-        }
+          break;
       }
     }
     // Redirect user if they come to this page without being logged in.

@@ -24,7 +24,7 @@
 
   <?php echo form_submit ('submit', 'Login'); ?>
 
-  <a href="<?php echo base_url () . 'user/edit'; ?>">Create account</a>
+  <a href="<?php echo base_url () . 'user/add/'; ?>">Create account</a>
 
   <?php echo form_close (); ?>
 </div>

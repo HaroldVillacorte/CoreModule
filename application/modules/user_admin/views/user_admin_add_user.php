@@ -34,12 +34,20 @@
   <input class="<?php echo $this->core_functions->form_error_class('last_name');?>" type="text" name="last_name"
          value="<?php echo set_value('last_name');?>" />
 
-  <label for="role">Role:</label>
-  <input class="<?php echo $this->core_functions->form_error_class('role');?>" type="text" name="role"
-         value="<?php echo set_value('role');?>" />
+  <!-- Role form select -->
+  <label class="<?php echo $this->core_functions->form_error_class('protected_value');?>" for="role">Role:</label>
+  <?php
+  $role_select = array();
+  foreach ($all_roles as $value) {
+    $role_select[$value->role] = $value->role;
+  }
+  echo form_dropdown('role', $role_select, set_value('role'));
+  ?>
+  <!-- // Role form select -->
 
   <label class="<?php echo $this->core_functions->form_error_class('protected_value');?>" for="protected_value">Protected:</label>
-  <?php echo form_dropdown('protected_value', array(FALSE => 'No', TRUE => 'Yes',), set_value('protected_value'));?>
+  <?php echo form_dropdown('protected_value', array(TRUE => 'Yes', FALSE => 'No'), set_value('protected_value'));?>
+
 
   <p style="margin-top:1em;">
 
