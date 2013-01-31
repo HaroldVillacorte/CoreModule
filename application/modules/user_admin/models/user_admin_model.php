@@ -15,8 +15,10 @@ class User_Admin_Model extends CI_Model {
 
   public function save_user($post) {
 
+    if (isset($post['password'])) {
+      $post['password'] = sha1($post['password']);
+    }
     $post['protected'] = $post['protected_value'];
-    $post['password'] = sha1($post['password']);
     unset($post['protected_value']);
     unset($post['passconf']);
     unset($post['save']);
