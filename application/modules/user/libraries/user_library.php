@@ -172,15 +172,22 @@ class User_library
             // the model loads the library.
             if (self::$CI->input->cookie($name))
             {
-                $remember_code_encoded = self::$CI->input->cookie($name);
+                $remember_code_encoded = self::$CI->db->escape_str(self::$CI->input->cookie($name));
                 $remember_code         = self::$CI->encrypt->decode($remember_code_encoded);
+                $ip_address            = self::$CI->db->escape_str(self::$CI->session->userdata('ip_address'));
+                $user_agent            = self::$CI->db->escape_str(self::$CI->session->userdata('user_agent'));
 
                 $result = self::$CI->db
                     ->select('users.id, users.protected, username, email, created, role')
                     ->join('join_users_roles', 'join_users_roles.user_id = users.id')
                     ->join('roles', 'roles.id = join_users_roles.role_id')
-                    ->get_where('users', array('users.remember_code' => $remember_code));
-                $user                 = $result->row();
+                    ->get_where('users', array(
+                        'users.remember_code' => $remember_code,
+                        'ip_address'          => $ip_address,
+                        'user_agent'          => $user_agent,
+                        ));
+
+                $user = $result->row();
 
                 if ($user)
                 {

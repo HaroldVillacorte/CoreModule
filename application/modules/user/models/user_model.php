@@ -82,7 +82,13 @@ class User_model extends CI_Model
 
     public function store_remember_code($remember_code = NULL, $id = NULL)
     {
-        $this->db->set('remember_code', $remember_code)
+        $ip_address = $this->session->userdata('ip_address');
+        $user_agent = $this->session->userdata('user_agent');
+
+        $this->db
+            ->set('remember_code', $remember_code)
+            ->set('ip_address', $ip_address)
+            ->set('user_agent', $user_agent)
             ->where('id', (int) $id)
             ->update('users');
         $num_rows = $this->db->affected_rows();
