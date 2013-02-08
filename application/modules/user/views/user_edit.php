@@ -26,12 +26,6 @@
   <label for="email">Email:</label>
   <input class="<?php echo $class; ?>" type="text" name="email" value="<?php echo (isset ($user)) ? $user->email : set_value ('email'); ?>" />
 
-  <label for="first_name">First name:</label>
-  <input class="<?php echo $class; ?>" type="text" name="first_name" value="<?php echo (isset ($user)) ? $user->first_name : set_value ('first_name'); ?>" />
-
-  <label for="last_name">Last name:</label>
-  <input class="<?php echo $class; ?>" type="text" name="last_name" value="<?php echo (isset ($user)) ? $user->last_name : set_value ('last_name'); ?>" />
-
   <?php
   echo form_submit ('save', 'Save');
   if (isset ($user)) echo form_submit ('delete', 'Delete');

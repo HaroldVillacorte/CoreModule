@@ -22,6 +22,9 @@
   <label for="password">Password:</label>
   <input class="<?php echo $class; ?>" type="password" name="password" value="" autocomplete="off" />
 
+  <label for="set_persistent_login">Remember me for two weeks?</label>
+  <p><?php echo form_checkbox('set_persistent_login', TRUE, set_value('set_persistent_login'));?></p>
+
   <?php echo form_submit ('submit', 'Login'); ?>
 
   <a href="<?php echo base_url () . 'user/add/'; ?>">Create account</a>

@@ -12,8 +12,6 @@
 
   <?php echo form_open ('user/add'); ?>
 
-  <input type="hidden" name="id" value="<?php echo set_value ('id'); ?>">
-
   <label for="username">Username:</label>
   <input class="<?php echo $class; ?>" type="text" name="username" value="<?php echo set_value ('username'); ?>" />
 
@@ -25,12 +23,6 @@
 
   <label for="email">Email:</label>
   <input class="<?php echo $class; ?>" type="text" name="email" value="<?php echo set_value ('email'); ?>" />
-
-  <label for="first_name">First name:</label>
-  <input class="<?php echo $class; ?>" type="text" name="first_name" value="<?php echo set_value ('first_name'); ?>" />
-
-  <label for="last_name">Last name:</label>
-  <input class="<?php echo $class; ?>" type="text" name="last_name" value="<?php echo set_value ('last_name'); ?>" />
 
   <?php
   echo form_submit ('add', 'Add acccount');

@@ -48,7 +48,7 @@
 
       <!-- Login links -->
       <?php if ($this->session->userdata ('user_id')):?>
-      <li><a href="<?php echo base_url();?>user/profile/">Profile</a></li>
+      <li><a href="<?php echo base_url();?>user/">Profile</a></li>
       <?php endif; ?>
       <?php
       $user_action = 'login';

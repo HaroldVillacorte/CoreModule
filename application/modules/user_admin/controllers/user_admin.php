@@ -1,266 +1,273 @@
-<?php if (!defined('BASEPATH')) exit ('No direct script access allowed');
+<?php
 
-class User_Admin extends MX_Controller {
+if (!defined('BASEPATH'))
+    exit('No direct script access allowed');
 
-  protected static $data;
-  protected static $user_page;
+class User_admin extends MX_Controller {
 
-  function __construct () {
-    parent::__construct();
-    $this->load->helper('form');
-    $this->load->library('form_validation');
-    $this->load->module('user');
-    $this->load->model('user_admin_model');
-    $this->load->model('core_functions/core_functions');
-    self::$data = $this->core_model->site_info();
-    self::$data['module'] = 'user_admin';
-    $this->user->permission('admin');
+    protected static $data;
+    protected static $user_page;
 
-    self::$user_page = NULL;
-    if ($this->session->userdata('user_admin_page')) {
-      self::$user_page = $this->session->userdata('user_admin_page');
+    function __construct() {
+        parent::__construct();
+        $this->load->library('user_admin_library');
+
+        // Check logged in.
+        $this->load->library('user/user_library');
+        $this->user_library->check_logged_in();
+        
+        $this->load->helper('form');
+        $this->load->model('user_admin_model');
+        $this->load->library('core_library/core_library');
+        self::$data = $this->core_model->site_info();
+        self::$data['module'] = 'user_admin';
+
+        // Set the permission from the User module.
+        $this->load->library('user/user_library');
+        $this->user_library->permission(array('admin', 'super_user'));
+
+        // Remember paginated page.
+        self::$user_page = NULL;
+        if ($this->session->userdata('user_admin_page')) {
+            self::$user_page = $this->session->userdata('user_admin_page');
+        }
+        self::$data['user_page'] = self::$user_page;
     }
-    self::$data['user_page'] = self::$user_page;
 
-  }
+    public function index() {
+        $this->session->keep_flashdata('message_success');
+        $this->session->keep_flashdata('message_error');
+        redirect(base_url() . 'user_admin/users/');
+    }
 
-  public function index() {
-    $this->session->keep_flashdata('message_success');
-    $this->session->keep_flashdata('message_error');
-    redirect(base_url() . 'user_admin/users/');
-  }
+    public function roles() {
+        // Generate table
+        $roles = $this->user_admin_model->get_all_roles('array');
+        $role_table = $this->user_admin_library->role_table($roles);
 
-  public function roles () {
-    self::$data['view_file'] = 'roles';
-    self::$data['roles'] = $this->user_admin_model->get_all_roles();
-    echo Modules::run('core_template/default_template', self::$data);
-  }
-
-  public function edit_role($id = NULL) {
-    self::$data['view_file'] = 'edit_role';
-    self::$data['role'] = ($id) ? $this->user_admin_model->get_role($id) : NULL ;
-    if ($this->input->post('save')) {
-      switch ($this->input->post('id')) {
-        case TRUE:
-          $rules = $this->user_admin_model->save_role_set_validation_rules ('update');
-          break;
-        case FALSE:
-          $rules = $this->user_admin_model->save_role_set_validation_rules ('insert');
-          break;
-      }
-      $this->form_validation->set_rules($rules);
-      if ($this->form_validation->run() == FALSE) {
+        self::$data['view_file'] = 'roles';
+        self::$data['output'] = $role_table;
         echo Modules::run('core_template/default_template', self::$data);
-      }
-      else {
-        $result = $this->user_admin_model->save_role($this->input->post());
-        if ($result) {
-          $this->session->set_flashdata('message_success', 'Role was successfully saved.');
-          redirect(base_url() . 'user_admin/roles/');
+    }
+
+    public function add_role() {
+        self::$data['view_file'] = 'user_admin_add_role';
+        if ($this->input->post('save')) {
+
+            $this->user_admin_library->set_validation_rules('role_insert');
+
+            if ($this->form_validation->run() == FALSE) {
+                echo Modules::run('core_template/default_template', self::$data);
+            }
+            else {
+                $result = $this->user_admin_model->save_role($this->input->post());
+                if ($result) {
+                    $this->session->set_flashdata('message_success', 'Role was successfully added.');
+                    redirect(current_url());
+                }
+                else {
+                    $this->session->set_flashdata('message_error', 'There was problem adding the role.');
+                    redirect(current_url());
+                }
+            }
         }
         else {
-          $this->session->set_flashdata('message_error', 'There was a problem adding the role.');
-          redirect(current_url());
+            echo Modules::run('core_template/default_template', self::$data);
         }
-      }
-    }
-    else {
-      echo Modules::run('core_template/default_template', self::$data);
-    }
-  }
-
-  public function delete_role ($id = NULL) {
-    if (!$id) redirect(base_url() . 'user_admin/roles/');
-    $result = $this->user_admin_model->delete_role($id);
-    switch ($result) {
-      case TRUE:
-        $this->session->set_flashdata('message_success', 'Role was deleted.');
-        redirect(base_url() . 'user_admin/roles/');
-        break;
-      case FALSE:
-        $this->session->set_flashdata('message_error', 'Unable to delete role.');
-        redirect(current_url());
-        break;
-    }
-  }
-
-  public function users($page = NULL) {
-    $this->load->library('table');
-    $this->load->library('pagination');
-
-    // Perpage for pagination and Doctrine
-    $per_page = 1;
-
-    // Set start record for Doctrine.
-    $start = 0;
-    if ($page) {
-      $start = $page;
-    }
-    // Doctrine
-    $query1 = $this->user_admin_model->get_limit_offset($per_page, $start);
-    $query2 = $this->user_admin_model->get_all_users();
-    $count = count($query2);
-    $output = $query1;
-    // Get first and last id's.
-    self::$data['first'] = $page + 1;
-    self::$data['last'] = $page + count($output);
-
-    // Pagination setup
-    $pagination_config = $this->user_admin_model
-            ->user_page_pagination_setup($count, $per_page);
-
-    // Pagination render
-    $this->pagination->initialize($pagination_config);
-    self::$data['pagination_links'] = $this->pagination->create_links();
-
-    // Generate table
-    // Table headings
-    $add_link = base_url() . 'user_admin/add_user/';
-    $heading = array(
-        'ID', 'Username', 'Email', 'First name',
-        'Last name','Role', 'Member since', 'Protected',
-        '<a href="' . $add_link . '" class="right">Add user +</a>',
-    );
-    $this->table->set_heading($heading);
-
-    // Table template
-    $template = array (
-        'table_open'  => '<table width="100%">',
-        'table_close' => '</table>',
-        );
-    $this->table->set_template($template);
-
-    // Table render
-    $table_output = $this->user_admin_model->user_page_table_setup($output);
-
-    self::$data['output'] = $this->table->generate($table_output);
-
-    // Page render
-    self::$data['count'] = $count;
-    array_unshift(self::$data['scripts'], 'user_admin_ajax.js');
-    // Check for ajax request then pick view_file.
-    if ($this->input->is_ajax_request()) {
-      // Set current page to session.
-      $this->session->set_userdata(array('user_admin_page' => $page));
-      $this->load->view('user_admin_ajax', self::$data);
-    }
-    else {
-      // Set current page to session.
-      $this->session->set_userdata(array('user_admin_page' => $page));
-      self::$data['view_file'] = 'users';
-      echo Modules::run('core_template/default_template', self::$data);
     }
 
-  }
+    public function edit_role($id = NULL) {
+        $role = $this->user_admin_model->get_role($id);
+        self::$data['view_file'] = 'user_admin_edit_role';
+        self::$data['role'] = ($role) ? $role : NULL;
+        if ($this->input->post('save')) {
 
-  public function edit_user ($id = NULL) {
-    self::$data['all_roles'] = $this->user_admin_model->get_all_roles();
-    if ($id == NULL && !$this->input->post('save')) {
-      redirect(base_url() . 'user_admin/');
-    }
-    elseif ($this->input->post('save')) {
+            $role = $this->user_admin_model->get_role($this->input->post('id'));
+            $this->user_admin_library->check_role_protected($role);
 
-      $rules = $this->user_admin_model-> add_edit_user_set_validation_rules('update');
-      $this->form_validation->set_rules($rules);
+            $this->user_admin_library->set_validation_rules('role_update');
 
-      if ($this->form_validation->run() == FALSE) {
-        self::$data['view_file'] = 'user_admin_edit_user';
-        echo Modules::run('core_template/default_template', self::$data);
-      }
-
-      else {
-
-        $user = $this->user_admin_model->find_user($this->input->post('id'));
-
-        if ($user->protected) {
-          $this->session->set_flashdata('message_error', 'Unable to save.  User account is protected.');
-          redirect(base_url() . 'user_admin/users/' . self::$user_page);
+            if ($this->form_validation->run() == FALSE) {
+                echo Modules::run('core_template/default_template', self::$data);
+            }
+            else {
+                $result = $this->user_admin_model->save_role($this->input->post());
+                if ($result) {
+                    $this->session->set_flashdata('message_success', 'Role was successfully saved.');
+                    redirect(base_url() . 'user_admin/roles/');
+                }
+                else {
+                    $this->session->set_flashdata('message_error', 'There was a problem saving the role.');
+                    redirect(current_url());
+                }
+            }
         }
+        else {
+            echo Modules::run('core_template/default_template', self::$data);
+        }
+    }
 
-        $result = $this->user_admin_model->save_user($this->input->post(), $user);
+    public function delete_role($id = NULL) {
+        if (!$id) redirect(base_url() . 'user_admin/roles/');
+        $role = $this->user_admin_model->get_role($id);
+        $this->user_admin_library->check_role_protected($role);
 
+        $result = $this->user_admin_model->delete_role($id);
         switch ($result) {
-          case TRUE:
-            $this->session->set_flashdata('message_success', 'User was successfully saved.');
-            redirect(current_url() . '/' . $this->input->post('id'));
-            break;
-          case FALSE:
-            $this->session->set_flashdata('message_error', 'User could not be saved');
-            redirect(current_url() . '/' . $this->input->post('id'));
-            break;
+            case TRUE:
+                $this->session->set_flashdata('message_success', 'Role was deleted.');
+                redirect(base_url() . 'user_admin/roles/');
+                break;
+            case FALSE:
+                $this->session->set_flashdata('message_error', 'Unable to delete role.');
+                redirect(current_url());
+                break;
         }
-      }
     }
-    else {
-      $result = $this->user_admin_model->find_user($id);
-      $user = $result->row();
-      array_unshift(self::$data['scripts'], 'user_admin_ajax.js');
-      self::$data['user'] = $user;
-      self::$data['view_file'] = 'user_admin_edit_user';
-      echo Modules::run('core_template/default_template', self::$data);
-    }
-  }
 
-  public function add_user () {
-    self::$data['all_roles'] = $this->user_admin_model->get_all_roles();
-    if ($this->input->post('save')) {
+    public function users($page = NULL) {
 
-      $rules = $this->user_admin_model-> add_edit_user_set_validation_rules('insert');
-      $this->form_validation->set_rules($rules);
-      $valid_base64_error = 'Password may only contain alpha-numeric characters, +\'s, and /\'s';
-      $this->form_validation->set_message ('valid_base64', $valid_base64_error);
+        // Per_page for pagination and model query.
+        $per_page = 1;
 
-      if ($this->form_validation->run() == FALSE) {
-        self::$data['view_file'] = 'user_admin_add_user';
-        echo Modules::run('core_template/default_template', self::$data);
-      }
-      else {
-
-        $result = $this->user_admin_model->save_user($this->input->post(), NULL);
-
-        switch ($result) {
-          case TRUE:
-            $this->session->set_flashdata('message_success', 'User was successfully saved.');
-            redirect(base_url() . 'user_admin/');
-            break;
-          case FALSE:
-            $this->session->set_flashdata('message_error', 'User could not be saved');
-            redirect(base_url() . 'user_admin/');
-            break;
+        // Set start record for query.
+        $start = 0;
+        if ($page) {
+            $start = $page;
         }
-      }
-    }
-    else {
-      array_unshift(self::$data['scripts'], 'user_admin_ajax.js');
-      self::$data['view_file'] = 'user_admin_add_user';
-      echo Modules::run('core_template/default_template', self::$data);
-    }
-  }
 
-  public function delete ($id = NULL) {
-    if ($id == NULL) {
-      redirect(base_url());
-    }
-    else {
-      $result = $this->user_admin_model->delete_user($id);
+        // Database queries.
+        $query1 = $this->user_admin_model->get_limit_offset_users($per_page, $start);
+        $query2 = $this->user_admin_model->get_all_users();
+        $count = count($query2);
+        $output = $query1;
+        // Get first and last id's.
+        self::$data['first'] = $page + 1;
+        self::$data['last'] = $page + count($output);
 
-      switch ($result) {
-        case $result == 'protected':
-          $this->session->set_flashdata('message_error', 'Unable to delete.  User account is protected.');
-          redirect(base_url() . 'user_admin/users/' . self::$user_page);
-          break;
-        case $result == 'deleted':
-          $this->session->set_flashdata('message_success', 'Record was successfully deleted.');
-          redirect(base_url() . 'user_admin/users/' . self::$user_page);
-          break;
-        case $result == FALSE:
-          $this->session->set_flashdata('message_error', 'Record could not be deleted.');
-          redirect(base_url() . 'user_admin/users/' . self::$user_page);
-          break;
+        // Pagination setup
+        $pagination_config = $this->user_admin_library
+                ->user_page_pagination_setup($count, $per_page);
 
-      }
+        // Table render
+        $table_output = $this->user_admin_library->user_page_table_setup($output);
+
+        // Page setup
+        self::$data['pagination_links'] = $pagination_config;
+        self::$data['output'] = $table_output;
+        self::$data['count'] = $count;
+
+        // Add the javascript.
+        array_unshift(self::$data['scripts'], 'user_admin_ajax.js');
+
+        // Check for ajax request then pick view_file.
+        if ($this->input->is_ajax_request()) {
+            // Set current page to session.
+            $this->session->set_userdata(array('user_admin_page' => $page));
+            $this->load->view('user_admin_ajax', self::$data);
+        } else {
+            // Set current page to session.
+            $this->session->set_userdata(array('user_admin_page' => $page));
+            self::$data['view_file'] = 'users';
+            echo Modules::run('core_template/default_template', self::$data);
+        }
     }
-  }
+
+    public function edit_user($id = NULL) {
+        self::$data['all_roles'] = $this->user_admin_model->get_all_roles('object');
+
+        if ($id == NULL && !$this->input->post('save')) {
+            redirect(base_url() . 'user_admin/');
+        }
+        elseif ($this->input->post('save')) {
+
+            $this->user_admin_library->set_validation_rules('user_update');
+
+            if ($this->form_validation->run() == FALSE) {
+                self::$data['view_file'] = 'user_admin_edit_user';
+                echo Modules::run('core_template/default_template', self::$data);
+            }
+            else {
+                $id = $this->input->post('id');
+                $user = $this->user_admin_model->find_user($id)->row();
+                $this->user_admin_library->check_user_protected($user);
+
+                $result = $this->user_admin_model->save_user($this->input->post());
+
+                switch ($result) {
+                    case TRUE:
+                        $this->session->set_flashdata('message_success', 'User was successfully saved.');
+                        redirect(base_url() . 'user_admin/edit_user/' . $id);
+                        break;
+                    case FALSE:
+                        $this->session->set_flashdata('message_error', 'User could not be saved');
+                        redirect(base_url() . 'user_admin/edit_user/' . $id);
+                        break;
+                }
+            }
+        }
+        else {
+            $result = $this->user_admin_model->find_user((int) $id);
+            $user = $result->row();
+            array_unshift(self::$data['scripts'], 'user_admin_ajax.js');
+            self::$data['user'] = $user;
+            self::$data['view_file'] = 'user_admin_edit_user';
+            echo Modules::run('core_template/default_template', self::$data);
+        }
+    }
+
+    public function add_user() {
+        self::$data['all_roles'] = $this->user_admin_model->get_all_roles('object');
+        if ($this->input->post('save')) {
+
+            $this->user_admin_library->set_validation_rules('user_insert');
+
+            if ($this->form_validation->run() == FALSE) {
+                self::$data['view_file'] = 'user_admin_add_user';
+                echo Modules::run('core_template/default_template', self::$data);
+            } else {
+
+                $result = $this->user_admin_model->save_user($this->input->post(), NULL);
+
+                switch ($result) {
+                    case TRUE:
+                        $this->session->set_flashdata('message_success', 'User was successfully saved.');
+                        redirect(base_url() . 'user_admin/');
+                        break;
+                    case FALSE:
+                        $this->session->set_flashdata('message_error', 'User could not be saved');
+                        redirect(base_url() . 'user_admin/');
+                        break;
+                }
+            }
+        } else {
+            array_unshift(self::$data['scripts'], 'user_admin_ajax.js');
+            self::$data['view_file'] = 'user_admin_add_user';
+            echo Modules::run('core_template/default_template', self::$data);
+        }
+    }
+
+    public function delete($id = NULL) {
+        if ($id == NULL) {
+            redirect(base_url());
+        }
+        else {
+            $user = $this->user_admin_model->find_user($id)->row();
+            $this->user_admin_library->check_user_protected($user);
+            $result = $this->user_admin_model->delete_user($id);
+
+                switch ($result) {
+                    case $result == 'deleted':
+                        $this->session->set_flashdata('message_success', 'Record was successfully deleted.');
+                        redirect(base_url() . 'user_admin/users/');
+                        break;
+                    case $result == FALSE:
+                        $this->session->set_flashdata('message_error', 'Record could not be deleted.');
+                        redirect(base_url() . 'user_admin/users/' . self::$user_page);
+                        break;
+                }
+        }
+    }
 
 }
 

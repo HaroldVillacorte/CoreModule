@@ -28,10 +28,11 @@ class User extends MX_Controller {
    */
   public function __construct() {
     parent::__construct ();
-    // Loads the Codeigniter system library.
-    $this->load->library ('encrypt');
-    // Loads the Codeigniter system library.
-    $this->load->library ('form_validation');
+    // Load the User library.
+    $this->load->library('user_library');
+    $this->user_library->check_logged_in();
+    // Load the Core library.
+    $this->load->library('core_library/core_library');
     // Sets the the data array.
     self::$data = $this->core_model->site_info ();
     // Sets the module to be sent to the Template module.
@@ -46,62 +47,23 @@ class User extends MX_Controller {
    * Redirects user to the profile page.  Currently the index method does not
    * work with this module and HMVC.
    */
-  public function index() {
-    redirect (base_url () . 'user/profile');
-  }
 
   /**
    * The user profile page.
    */
-  public function profile() {
+  public function index() {
 
     // Checks if the user is logged in.  If not user is redirected to the
     // base_url().
 
     $id = $this->session->userdata('user_id');
     if (!$id) {
-      redirect (base_url ());
+      redirect (base_url () . 'user/login/');
     }
     $user = $this->user_model->find_user($id);
     self::$data['user'] = $user;
     self::$data['view_file'] = 'user_profile';
     echo Modules::run ($this->template, self::$data);
-  }
-
-  /**
-   * The permissions method.  If the role set in the session does not match the
-   * role specified by the method that calls this method user will be
-   * redirected.
-   *
-   * @param string $role User role from the CI session cookie.
-   */
-  public function permission($role) {
-
-    // Sets the $user_role variable.
-    if ($this->session->userdata ('role')) {
-      $user_role = $this->session->userdata ('role');
-    }
-    else {
-      $user_role = '';
-    }
-
-    // If the $role set by the method that calls this method does not match the
-    // $user_role variable user will be redirected.
-
-    if ($role != $user_role) {
-      // If the user is logged send user to the profile page.
-      if ($this->session->userdata ('user_id')) {
-        $message = 'That page requires ' . $role . ' permission. Please login as admin.';
-        $this->session->set_flashdata ('message_error', $message);
-        redirect (base_url () . 'user/profile/' . $this->session->userdata ('user_id'));
-      }
-      // If the user is not logged in send user to the login page.
-      else {
-        $message = 'That page requires ' . $role . ' permission. Please login.';
-        $this->session->set_flashdata ('message_error', $message);
-        redirect (base_url () . 'user/login');
-      }
-    }
   }
 
   /**
@@ -111,19 +73,7 @@ class User extends MX_Controller {
     // Code to run when the user hits the Login button.
     if ($this->input->post('submit')) {
       // Sets the CI validation rules.
-      $rules = array(
-          array(
-            'field' => 'username',
-            'label' => 'Username',
-            'rules' => 'required',
-          ),
-          array(
-            'field' => 'password',
-            'label' => 'Password',
-            'rules' => 'required',
-          ),
-      );
-      $this->form_validation->set_rules ($rules);
+      $this->user_library->set_validation_rules('login');
       // Code to run form does not validate.
       if ($this->form_validation->run () == FALSE) {
         self::$data['view_file'] = 'user_login';
@@ -131,18 +81,24 @@ class User extends MX_Controller {
       }
       // Code to run when form validates.
       else {
-        // Encrypt password.
-        $password = sha1 ($this->input->post('password'));
-        // Set the $username variable.
         $username = $this->input->post('username');
-        // Attemt to find user with username and password.
+        $password = $this->input->post('password');
         $user = $this->user_model->login($username, $password);
-        // If the user is found.
         if ($user) {
           // Login success.
+          log_message('error', $username . ' logged in.');
           $this->session->set_flashdata ('message_success', 'You are now logged in as ' . $username . '.');
-          $this->user_model->set_user_session_data($user);
-          redirect (base_url () . 'user/profile/');
+          $this->user_library->set_user_session_data($user);
+
+          if ($this->input->post('set_persistent_login')) {
+              $remember_code = $this->user_library->set_persistent_login();
+              $store_remember_code = $this->user_model->store_remember_code($remember_code, $user->id);
+              if (!$store_remember_code) {
+                  $this->session->set_flashdata('message_notice', 'Persistent login failed.');
+                  $this->user_library->unset_persistent_login();
+              }
+          }
+          redirect (base_url () . 'user/');
         }
 
         // Code to run if username and password combination is not found in the
@@ -160,8 +116,8 @@ class User extends MX_Controller {
     // button.
 
     if ($this->session->userdata('user_id')) {
-      $this->session->keep_flashdata('message_success');
-      redirect(base_url() . 'user/profile/');
+      $this->core_library->keep_flashdata_messages();
+      redirect(base_url() . 'user/');
     }
     self::$data['view_file'] = 'user_login';
     echo Modules::run ('core_template/default_template', self::$data);
@@ -172,55 +128,21 @@ class User extends MX_Controller {
    * userdata set by the login method then destroys the session.
    */
   public function logout() {
-    $userarray = array('user_id', 'username', 'password', 'email', 'first_name', 'last_name', 'role',);
-    $this->session->unset_userdata ($userarray);
-    $this->session->sess_destroy ();
-    redirect (base_url ());
+    $username = $this->session->userdata('username');
+    $id = $this->session->userdata('user_id');
+    log_message('error', $username . ' logged out.');
+    $result = $this->user_model->delete_remember_code($id);
+    if (!$result) {
+        log_message('error', $username . ' delete remember code failed.');
+    }
+    $this->user_library->logout('user/login/');
   }
 
-  public function add () {
+  public function add() {
     if ($this->input->post('add')) {
-      $rules = array(
-            array(
-              'field' => 'username',
-              'label' => 'Username',
-              'rules' => 'required|is_unique[users.username]',
-            ),
-            array(
-              'field' => 'password',
-              'label' => 'Password',
-              'rules' => 'required|valid_base64|trim|max_length[12]|matches[passconf]',
-            ),
-            array(
-              'field' => 'passconf',
-              'label' => 'Password confirmation',
-              'rules' => 'required',
-            ),
-            array(
-              'field' => 'email',
-              'label' => 'Email',
-              'rules' => 'required|valid_email|is_unique[users.email]'
-            ),
-            array(
-              'field' => 'first_name',
-              'label' => 'First name',
-              'rules' => 'required',
-            ),
-            array(
-              'field' => 'last_name',
-              'label' => 'Last name',
-              'rules' => 'required',
-            ),
-        );
-      // Set the rules depending on if it is an insert or an update.  If the
-      // $_POST['id'] is set it will be an update.
-      $this->form_validation->set_rules ($rules);
 
-      // Set the message for valid_base64 validation error since it is missing
-      // from the Codeigniter language files.
+      $this->user_library->set_validation_rules ('user_insert');
 
-      $valid_base64_error = 'Password may only contain alpha-numeric characters, +\'s, and /\'s';
-      $this->form_validation->set_message ('valid_base64', $valid_base64_error);
       // Code to run when the the form does not validate.
       if ($this->form_validation->run () == FALSE) {
         // Form does not validate.
@@ -259,10 +181,6 @@ class User extends MX_Controller {
    */
   public function edit() {
 
-    // If the user is logged in instatiate the Doctrine User Entity ans set the
-    // self::$data['user'] property to send to the view so the user edit form
-    // can be prepopulated.
-
     if ($this->session->userdata ('user_id')) {
       $id = $this->session->userdata ('user_id');
       $user = $this->user_model->find_user($id);
@@ -270,56 +188,15 @@ class User extends MX_Controller {
     }
     // When the user hits the delete button rediect them to the delete method.
     if ($this->input->post('delete')) {
-      if ($this->input->post('id')) {
+      if ($this->session->userdata('user_id')) {
         redirect (base_url () . 'user/delete/');
       }
     }
     // Code to run when the user hits the save button.
     if ($this->input->post('save')) {
-      // Set the validation rules for inserting a new user.
       // Set the validation rules for updating a user.
-      $rules = array(
-          array(
-            'field' => 'username',
-            'label' => 'Username',
-            'rules' => 'required',
-          ),
-          array(
-            'field' => 'password',
-            'label' => 'Password',
-            'rules' => 'required|valid_base64|trim|max_length[12]|matches[passconf]',
-          ),
-          array(
-            'field' => 'passconf',
-            'label' => 'Password confirmation',
-            'rules' => 'required',
-          ),
-          array(
-            'field' => 'email',
-            'label' => 'Email',
-            'rules' => 'required|valid_email'
-          ),
-          array(
-            'field' => 'first_name',
-            'label' => 'First name',
-            'rules' => 'required',
-          ),
-          array(
-            'field' => 'last_name',
-            'label' => 'Last name',
-            'rules' => 'required',
-          ),
-      );
+      $this->user_library->set_validation_rules('user_update');
 
-      // Set the rules depending on if it is an insert or an update.  If the
-      // $_POST['id'] is set it will be an update.
-      $this->form_validation->set_rules ($rules);
-
-      // Set the message for valid_base64 validation error since it is missing
-      // from the Codeigniter language files.
-
-      $valid_base64_error = 'Password may only contain alpha-numeric characters, +\'s, and /\'s';
-      $this->form_validation->set_message ('valid_base64', $valid_base64_error);
       // Code to run when the the form does not validate.
       if ($this->form_validation->run () == FALSE) {
         // Form does not validate.
@@ -327,19 +204,19 @@ class User extends MX_Controller {
         echo Modules::run ($this->template, self::$data);
       }
       // Code to run when the form passes validation.
-      elseif ($this->form_validation->run () != FALSE) {
+      else {
+
+        $this->user_library->check_user_protected($user, 'edit');
+
         $result = $this->user_model->edit_user($this->input->post());
+
         switch ($result) {
-          case 'updated':
+          case TRUE:
             $this->session->set_flashdata('message_success', 'Account was successfully saved.');
-            redirect(base_url() . 'user/profile/');
+            redirect(base_url() . 'user/');
             break;
-          case 'fail':
+          case FALSE:
             $this->session->set_flashdata('message_error', 'There was a problem adding your account.');
-            redirect(current_url());
-            break;
-          case 'protected':
-            $this->session->set_flashdata('message_error', 'Unable to save.  Account is protected.');
             redirect(current_url());
             break;
         }
@@ -358,7 +235,7 @@ class User extends MX_Controller {
    * if they are logged in.
    */
   public function delete() {
-    // Instanitate User Entity based on session userdata('user_id').
+    // Instanitate User based on session userdata('user_id').
     if ($id = $this->session->userdata('user_id')) {
       $user = $this->user_model->find_user($id);
     }
@@ -367,18 +244,21 @@ class User extends MX_Controller {
     }
     // Code to run when user hits the final delete button.
     if ($this->input->post('delete')) {
-      // Check first if account is protected.  Redirect if true.
+
+      // Check first if account is protected.
+      $this->user_library->check_user_protected($user, 'delete');
+
       $result = $this->user_model->delete_user($id);
       switch ($result) {
-        case 'protected':
-          $this->session->set_flashdata ('message_error', 'Unable to delete.  Account is protected.');
-          redirect (base_url () . 'user/edit/');
-          break;
-        case 'deleted':
+        case TRUE:
           redirect (base_url () . 'user/logout');
           break;
         case FALSE:
-          $this->session->set_flashdata ('message_error', 'Unable to delete your account.  Please contact administrator.');
+          $this->session
+                ->set_flashdata(
+                            'message_error', 'Unable to delete your account.'
+                            . '  Please contact administrator.'
+                        );
           redirect (base_url () . 'user/edit/');
           break;
       }

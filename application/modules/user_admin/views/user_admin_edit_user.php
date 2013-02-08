@@ -10,48 +10,45 @@
 
   <?php echo form_open('user_admin/edit_user');?>
 
-  <input type="hidden" name="id" value="<?php echo set_value('id', isset($user) ? $user->id : '' );?>" />
+  <input type="hidden" name="id" value="<?php echo isset($user) ? $user->id : set_value ('id'); ?>" />
 
   <label for="username">Username:</label>
-  <input class="<?php echo $this->core_functions->form_error_class('username');?>" type="text" name="username"
+  <input class="<?php echo $this->core_library->form_error_class('username');?>" type="text" name="username"
          value="<?php echo isset($user) ? $user->username : set_value('username');?>" />
 
   <label for="email">Email:</label>
-  <input class="<?php echo $this->core_functions->form_error_class('email');?>" type="text" name="email"
+  <input class="<?php echo $this->core_library->form_error_class('email');?>" type="text" name="email"
          value="<?php echo isset($user) ? $user->email : set_value('email');?>" />
 
-  <label for="first_name">First name:</label>
-  <input class="<?php echo $this->core_functions->form_error_class('first_name');?>" type="text" name="first_name"
-         value="<?php echo  isset($user) ? $user->first_name : set_value('first_name');?>" />
-
-  <label for="last_name">Last name:</label>
-  <input class="<?php echo $this->core_functions->form_error_class('last_name');?>" type="text" name="last_name"
-         value="<?php echo isset($user) ? $user->last_name : set_value('last_name');?>" />
-
   <!-- Role form select -->
-  <label class="<?php echo $this->core_functions->form_error_class('protected_value');?>" for="role">Role:</label>
+  <label class="<?php echo $this->core_library->form_error_class('protected_value');?>" for="role">Role:</label>
   <?php
   $role_select = array();
   foreach ($all_roles as $value) {
-    $role_select[$value->role] = $value->role;
+      $role_select[$value->id] = $value->role;
+      if ($this->session->userdata('role') != 'super_user') {
+          unset($role_select[1]);
+      }
   }
-  $role_selected = isset($user)  ? $user->role : set_value('role');
+  $role_selected = isset($user) ? $user->role_id : set_value('role');
   echo form_dropdown('role', $role_select, $role_selected);
   ?>
   <!-- // Role form select -->
 
   <!-- Protected form select -->
-  <label class="<?php echo $this->core_functions->form_error_class('protected_value');?>" for="protected_value">Protected:</label>
-  <?php
-  $selected = FALSE;
-  if (isset($user)) {
-    $selected = ($user->protected) ? TRUE : FALSE ;
-  }
-  else {
-    $selected = set_value('protected_value');
-  }
-  echo form_dropdown('protected_value', array(TRUE => 'Yes', FALSE => 'No'), $selected);
-  ?>
+  <?php if ($this->session->userdata('role') == 'super_user') :?>
+    <label class="<?php echo $this->core_library->form_error_class('protected_value');?>" for="protected_value">Protected:</label>
+    <?php
+    $selected = 0;
+    if (isset($user)) {
+      $selected = $user->protected;
+    }
+    else {
+      $selected = set_value('protected_value');
+    }
+    echo form_dropdown('protected_value', array(1 => 'Yes', 0 => 'No'), $selected);
+    ?>
+  <?php endif ;?>
   <!-- // Protected form select -->
 
   <p style="margin-top:1em;">
