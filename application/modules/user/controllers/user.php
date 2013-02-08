@@ -15,9 +15,9 @@ class User extends MX_Controller
 {
 
     // Sets the $data property.
-    protected static $data;
+    private static $data;
     // Set the default template.
-    protected $template = 'core_template/default_template';
+    private static $template = 'core_template/default_template';
 
     /**
      * The data property is set to the site_info() array which passes an array
@@ -66,7 +66,7 @@ class User extends MX_Controller
         $user = $this->user_model->find_user($id);
         self::$data['user'] = $user;
         self::$data['view_file'] = 'user_profile';
-        echo Modules::run($this->template, self::$data);
+        echo Modules::run(self::$template, self::$data);
     }
 
     /**
@@ -83,7 +83,7 @@ class User extends MX_Controller
             if ($this->form_validation->run() == FALSE)
             {
                 self::$data['view_file'] = 'user_login';
-                echo Modules::run('core_template/default_template', self::$data);
+                echo Modules::run(self::$template, self::$data);
             }
             // Code to run when form validates.
             else
@@ -98,7 +98,8 @@ class User extends MX_Controller
                     $this->session->set_flashdata('message_success', 'You are now logged in as ' . $username . '.');
                     $this->user_library->set_user_session_data($user);
 
-                    if ($this->input->post('set_persistent_login'))
+                    $set_persistent_login = (bool) $this->input->post('set_persistent_login');
+                    if ($set_persistent_login)
                     {
                         $remember_code       = $this->user_library->set_persistent_login();
                         $store_remember_code = $this->user_model->store_remember_code($remember_code, $user->id);
@@ -133,7 +134,7 @@ class User extends MX_Controller
         }
 
         self::$data['view_file'] = 'user_login';
-        echo Modules::run('core_template/default_template', self::$data);
+        echo Modules::run(self::$template, self::$data);
     }
 
     /**
@@ -166,7 +167,7 @@ class User extends MX_Controller
             {
                 // Form does not validate.
                 self::$data['view_file'] = 'user_edit';
-                echo Modules::run($this->template, self::$data);
+                echo Modules::run(self::$template, self::$data);
             }
             else
             {
@@ -188,7 +189,7 @@ class User extends MX_Controller
         else
         {
             self::$data['view_file'] = 'user_add';
-            echo Modules::run('core_template/default_template', self::$data);
+            echo Modules::run(self::$template, self::$data);
         }
     }
 
@@ -232,7 +233,7 @@ class User extends MX_Controller
             {
                 // Form does not validate.
                 self::$data['view_file'] = 'user_edit';
-                echo Modules::run($this->template, self::$data);
+                echo Modules::run(self::$template, self::$data);
             }
 
             // Code to run when the form passes validation.
@@ -260,7 +261,7 @@ class User extends MX_Controller
         else
         {
             self::$data['view_file'] = 'user_edit';
-            echo Modules::run($this->template, self::$data);
+            echo Modules::run(self::$template, self::$data);
         }
     }
 
@@ -316,7 +317,7 @@ class User extends MX_Controller
         {
             self::$data['user'] = $user;
             self::$data['view_file'] = 'user_delete';
-            echo Modules::run($this->template, self::$data);
+            echo Modules::run(self::$template, self::$data);
         }
     }
 

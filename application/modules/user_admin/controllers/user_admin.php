@@ -3,8 +3,9 @@
 class User_admin extends MX_Controller
 {
 
-    protected static $data;
-    protected static $user_page;
+    private static $data;
+    private static $user_page;
+    private static $template = 'core_template/default_template';
 
     function __construct()
     {
@@ -51,7 +52,7 @@ class User_admin extends MX_Controller
 
         self::$data['view_file'] = 'roles';
         self::$data['output'] = $role_table;
-        echo Modules::run('core_template/default_template', self::$data);
+        echo Modules::run(self::$template, self::$data);
     }
 
     public function add_role()
@@ -64,7 +65,7 @@ class User_admin extends MX_Controller
 
             if ($this->form_validation->run() == FALSE)
             {
-                echo Modules::run('core_template/default_template', self::$data);
+                echo Modules::run(self::$template, self::$data);
             }
             else
             {
@@ -84,7 +85,7 @@ class User_admin extends MX_Controller
         }
         else
         {
-            echo Modules::run('core_template/default_template', self::$data);
+            echo Modules::run(self::$template, self::$data);
         }
     }
 
@@ -103,7 +104,7 @@ class User_admin extends MX_Controller
 
             if ($this->form_validation->run() == FALSE)
             {
-                echo Modules::run('core_template/default_template', self::$data);
+                echo Modules::run(self::$template, self::$data);
             }
             else
             {
@@ -123,7 +124,7 @@ class User_admin extends MX_Controller
         }
         else
         {
-            echo Modules::run('core_template/default_template', self::$data);
+            echo Modules::run(self::$template, self::$data);
         }
     }
 
@@ -198,7 +199,7 @@ class User_admin extends MX_Controller
             // Set current page to session.
             $this->session->set_userdata(array('user_admin_page' => $page));
             self::$data['view_file'] = 'users';
-            echo Modules::run('core_template/default_template', self::$data);
+            echo Modules::run(self::$template, self::$data);
         }
     }
 
@@ -217,7 +218,7 @@ class User_admin extends MX_Controller
             if ($this->form_validation->run() == FALSE)
             {
                 self::$data['view_file'] = 'user_admin_edit_user';
-                echo Modules::run('core_template/default_template', self::$data);
+                echo Modules::run(self::$template, self::$data);
             }
             else
             {
@@ -247,7 +248,7 @@ class User_admin extends MX_Controller
             array_unshift(self::$data['scripts'], 'user_admin_ajax.js');
             self::$data['user'] = $user;
             self::$data['view_file'] = 'user_admin_edit_user';
-            echo Modules::run('core_template/default_template', self::$data);
+            echo Modules::run(self::$template, self::$data);
         }
     }
 
@@ -262,7 +263,7 @@ class User_admin extends MX_Controller
             if ($this->form_validation->run() == FALSE)
             {
                 self::$data['view_file'] = 'user_admin_add_user';
-                echo Modules::run('core_template/default_template', self::$data);
+                echo Modules::run(self::$template, self::$data);
             }
             else
             {
@@ -285,7 +286,7 @@ class User_admin extends MX_Controller
         {
             array_unshift(self::$data['scripts'], 'user_admin_ajax.js');
             self::$data['view_file'] = 'user_admin_add_user';
-            echo Modules::run('core_template/default_template', self::$data);
+            echo Modules::run(self::$template, self::$data);
         }
     }
 
