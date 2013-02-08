@@ -1,21 +1,19 @@
-<?php
+<?php if (!defined('BASEPATH')) exit('No direct script access allowed');
 
-if (!defined('BASEPATH'))
-    exit('No direct script access allowed');
-
-class User_admin extends MX_Controller {
-
+class User_admin extends MX_Controller
+{
     protected static $data;
     protected static $user_page;
 
-    function __construct() {
+    function __construct()
+    {
         parent::__construct();
         $this->load->library('user_admin_library');
 
         // Check logged in.
         $this->load->library('user/user_library');
         $this->user_library->check_logged_in();
-        
+
         $this->load->helper('form');
         $this->load->model('user_admin_model');
         $this->load->library('core_library/core_library');
@@ -28,19 +26,24 @@ class User_admin extends MX_Controller {
 
         // Remember paginated page.
         self::$user_page = NULL;
-        if ($this->session->userdata('user_admin_page')) {
+
+        if ($this->session->userdata('user_admin_page'))
+        {
             self::$user_page = $this->session->userdata('user_admin_page');
         }
+
         self::$data['user_page'] = self::$user_page;
     }
 
-    public function index() {
+    public function index()
+    {
         $this->session->keep_flashdata('message_success');
         $this->session->keep_flashdata('message_error');
         redirect(base_url() . 'user_admin/users/');
     }
 
-    public function roles() {
+    public function roles()
+    {
         // Generate table
         $roles = $this->user_admin_model->get_all_roles('array');
         $role_table = $this->user_admin_library->role_table($roles);
@@ -50,70 +53,96 @@ class User_admin extends MX_Controller {
         echo Modules::run('core_template/default_template', self::$data);
     }
 
-    public function add_role() {
+    public function add_role()
+    {
         self::$data['view_file'] = 'user_admin_add_role';
-        if ($this->input->post('save')) {
 
+        if ($this->input->post('save'))
+        {
             $this->user_admin_library->set_validation_rules('role_insert');
 
-            if ($this->form_validation->run() == FALSE) {
+            if ($this->form_validation->run() == FALSE)
+            {
                 echo Modules::run('core_template/default_template', self::$data);
             }
-            else {
+
+            else
+            {
                 $result = $this->user_admin_model->save_role($this->input->post());
-                if ($result) {
+
+                if ($result)
+                {
                     $this->session->set_flashdata('message_success', 'Role was successfully added.');
                     redirect(current_url());
                 }
-                else {
+
+                else
+                {
                     $this->session->set_flashdata('message_error', 'There was problem adding the role.');
                     redirect(current_url());
                 }
             }
         }
-        else {
+
+        else
+        {
             echo Modules::run('core_template/default_template', self::$data);
         }
     }
 
-    public function edit_role($id = NULL) {
+    public function edit_role($id = NULL)
+    {
         $role = $this->user_admin_model->get_role($id);
         self::$data['view_file'] = 'user_admin_edit_role';
         self::$data['role'] = ($role) ? $role : NULL;
-        if ($this->input->post('save')) {
 
+        if ($this->input->post('save'))
+        {
             $role = $this->user_admin_model->get_role($this->input->post('id'));
             $this->user_admin_library->check_role_protected($role);
 
             $this->user_admin_library->set_validation_rules('role_update');
 
-            if ($this->form_validation->run() == FALSE) {
+            if ($this->form_validation->run() == FALSE)
+            {
                 echo Modules::run('core_template/default_template', self::$data);
             }
-            else {
+
+            else
+            {
                 $result = $this->user_admin_model->save_role($this->input->post());
-                if ($result) {
+
+                if ($result)
+                {
                     $this->session->set_flashdata('message_success', 'Role was successfully saved.');
                     redirect(base_url() . 'user_admin/roles/');
                 }
-                else {
+
+                else
+                {
                     $this->session->set_flashdata('message_error', 'There was a problem saving the role.');
                     redirect(current_url());
                 }
             }
         }
-        else {
+
+        else
+        {
             echo Modules::run('core_template/default_template', self::$data);
         }
     }
 
-    public function delete_role($id = NULL) {
-        if (!$id) redirect(base_url() . 'user_admin/roles/');
+    public function delete_role($id = NULL)
+    {
+        if (!$id)
+            redirect(base_url() . 'user_admin/roles/');
         $role = $this->user_admin_model->get_role($id);
         $this->user_admin_library->check_role_protected($role);
 
         $result = $this->user_admin_model->delete_role($id);
-        switch ($result) {
+
+        switch ($result)
+        {
             case TRUE:
                 $this->session->set_flashdata('message_success', 'Role was deleted.');
                 redirect(base_url() . 'user_admin/roles/');
@@ -125,14 +154,16 @@ class User_admin extends MX_Controller {
         }
     }
 
-    public function users($page = NULL) {
-
+    public function users($page = NULL)
+    {
         // Per_page for pagination and model query.
         $per_page = 1;
 
         // Set start record for query.
         $start = 0;
-        if ($page) {
+
+        if ($page)
+        {
             $start = $page;
         }
 
@@ -141,6 +172,7 @@ class User_admin extends MX_Controller {
         $query2 = $this->user_admin_model->get_all_users();
         $count = count($query2);
         $output = $query1;
+
         // Get first and last id's.
         self::$data['first'] = $page + 1;
         self::$data['last'] = $page + count($output);
@@ -161,11 +193,15 @@ class User_admin extends MX_Controller {
         array_unshift(self::$data['scripts'], 'user_admin_ajax.js');
 
         // Check for ajax request then pick view_file.
-        if ($this->input->is_ajax_request()) {
+        if ($this->input->is_ajax_request())
+        {
             // Set current page to session.
             $this->session->set_userdata(array('user_admin_page' => $page));
             $this->load->view('user_admin_ajax', self::$data);
-        } else {
+        }
+
+        else
+        {
             // Set current page to session.
             $this->session->set_userdata(array('user_admin_page' => $page));
             self::$data['view_file'] = 'users';
@@ -173,28 +209,35 @@ class User_admin extends MX_Controller {
         }
     }
 
-    public function edit_user($id = NULL) {
+    public function edit_user($id = NULL)
+    {
         self::$data['all_roles'] = $this->user_admin_model->get_all_roles('object');
 
-        if ($id == NULL && !$this->input->post('save')) {
+        if ($id == NULL && !$this->input->post('save'))
+        {
             redirect(base_url() . 'user_admin/');
         }
-        elseif ($this->input->post('save')) {
 
+        elseif ($this->input->post('save'))
+        {
             $this->user_admin_library->set_validation_rules('user_update');
 
-            if ($this->form_validation->run() == FALSE) {
+            if ($this->form_validation->run() == FALSE)
+            {
                 self::$data['view_file'] = 'user_admin_edit_user';
                 echo Modules::run('core_template/default_template', self::$data);
             }
-            else {
+
+            else
+            {
                 $id = $this->input->post('id');
                 $user = $this->user_admin_model->find_user($id)->row();
                 $this->user_admin_library->check_user_protected($user);
 
                 $result = $this->user_admin_model->save_user($this->input->post());
 
-                switch ($result) {
+                switch ($result)
+                {
                     case TRUE:
                         $this->session->set_flashdata('message_success', 'User was successfully saved.');
                         redirect(base_url() . 'user_admin/edit_user/' . $id);
@@ -206,7 +249,9 @@ class User_admin extends MX_Controller {
                 }
             }
         }
-        else {
+
+        else
+        {
             $result = $this->user_admin_model->find_user((int) $id);
             $user = $result->row();
             array_unshift(self::$data['scripts'], 'user_admin_ajax.js');
@@ -216,20 +261,26 @@ class User_admin extends MX_Controller {
         }
     }
 
-    public function add_user() {
+    public function add_user()
+    {
         self::$data['all_roles'] = $this->user_admin_model->get_all_roles('object');
-        if ($this->input->post('save')) {
 
+        if ($this->input->post('save'))
+        {
             $this->user_admin_library->set_validation_rules('user_insert');
 
-            if ($this->form_validation->run() == FALSE) {
+            if ($this->form_validation->run() == FALSE)
+            {
                 self::$data['view_file'] = 'user_admin_add_user';
                 echo Modules::run('core_template/default_template', self::$data);
-            } else {
+            }
 
+            else
+            {
                 $result = $this->user_admin_model->save_user($this->input->post(), NULL);
 
-                switch ($result) {
+                switch ($result)
+                {
                     case TRUE:
                         $this->session->set_flashdata('message_success', 'User was successfully saved.');
                         redirect(base_url() . 'user_admin/');
@@ -240,32 +291,40 @@ class User_admin extends MX_Controller {
                         break;
                 }
             }
-        } else {
+        }
+
+        else
+        {
             array_unshift(self::$data['scripts'], 'user_admin_ajax.js');
             self::$data['view_file'] = 'user_admin_add_user';
             echo Modules::run('core_template/default_template', self::$data);
         }
     }
 
-    public function delete($id = NULL) {
-        if ($id == NULL) {
+    public function delete($id = NULL)
+    {
+        if ($id == NULL)
+        {
             redirect(base_url());
         }
-        else {
+
+        else
+        {
             $user = $this->user_admin_model->find_user($id)->row();
             $this->user_admin_library->check_user_protected($user);
             $result = $this->user_admin_model->delete_user($id);
 
-                switch ($result) {
-                    case $result == 'deleted':
-                        $this->session->set_flashdata('message_success', 'Record was successfully deleted.');
-                        redirect(base_url() . 'user_admin/users/');
-                        break;
-                    case $result == FALSE:
-                        $this->session->set_flashdata('message_error', 'Record could not be deleted.');
-                        redirect(base_url() . 'user_admin/users/' . self::$user_page);
-                        break;
-                }
+            switch ($result)
+            {
+                case $result == 'deleted':
+                    $this->session->set_flashdata('message_success', 'Record was successfully deleted.');
+                    redirect(base_url() . 'user_admin/users/');
+                    break;
+                case $result == FALSE:
+                    $this->session->set_flashdata('message_error', 'Record could not be deleted.');
+                    redirect(base_url() . 'user_admin/users/' . self::$user_page);
+                    break;
+            }
         }
     }
 

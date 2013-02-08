@@ -14,12 +14,13 @@
  * @author Harold Villacorte
  * @link http://laughinghost.com/CI_Starter/
  */
-class Demo_Doctrine2 extends MX_Controller {
-
+class Demo_Doctrine2 extends MX_Controller
+{
     protected static $data;
     protected static $user_page;
 
-    function __construct() {
+    function __construct()
+    {
         parent::__construct();
         $this->load->library('doctrine');
         self::$data = $this->core_model->site_info();
@@ -33,13 +34,15 @@ class Demo_Doctrine2 extends MX_Controller {
         self::$data['user_page'] = self::$user_page;
     }
 
-    public function index() {
+    public function index()
+    {
         $this->session->keep_flashdata('message_success');
         $this->session->keep_flashdata('message_error');
         redirect(base_url() . 'demo_doctrine2/data/');
     }
 
-    public function data($page = NULL) {
+    public function data($page = NULL)
+    {
         $this->load->library('table');
         $this->load->library('pagination');
 
@@ -48,7 +51,8 @@ class Demo_Doctrine2 extends MX_Controller {
 
         // Set start record for Doctrine.
         $start = 0;
-        if ($page) {
+        if ($page)
+        {
             $start = $page;
         }
         // Doctrine
@@ -116,7 +120,8 @@ class Demo_Doctrine2 extends MX_Controller {
         $this->table->set_template($template);
 
         // Table render
-        foreach ($output as $key => $value) { // add edit link.
+        foreach ($output as $key => $value)
+        {   // add edit link.
             $output[$key]['edit'] =
                     '<a href="' . base_url() . 'demo_doctrine2/delete/'
                     . $output[$key]['id']
@@ -133,11 +138,14 @@ class Demo_Doctrine2 extends MX_Controller {
         self::$data['elapsed_time'] = $this->benchmark->elapsed_time('start', 'stop');
         array_unshift(self::$data['scripts'], 'demo_doctrine2_ajax.js');
         // Check for ajax request then pick view_file.
-        if ($this->input->is_ajax_request()) {
+        if ($this->input->is_ajax_request())
+        {
             // Set current page to session.
             $this->session->set_userdata(array('demo_doctrine2_page' => $page));
             $this->load->view('demo_doctrine2_ajax', self::$data);
-        } else {
+        }
+        else
+        {
             // Set current page to session.
             $this->session->set_userdata(array('demo_doctrine2_page' => $page));
             self::$data['view_file'] = 'demo_doctrine2';
@@ -145,12 +153,16 @@ class Demo_Doctrine2 extends MX_Controller {
         }
     }
 
-    public function edit($id = NULL) {
+    public function edit($id = NULL)
+    {
         $this->load->helper('form');
         $this->benchmark->mark('start'); // Benchmark start.
-        if ($id == NULL && !$this->input->post('save')) {
+        if ($id == NULL && !$this->input->post('save'))
+        {
             redirect(base_url() . 'demo_doctrine2/');
-        } elseif ($this->input->post('save')) {
+        }
+        elseif ($this->input->post('save'))
+        {
             //Doctrine
             $record = $this->doctrine->em->find('Entities\CrudDemo', $this->input->post('id'));
             $record->setOrdernumber($this->input->post('order_number'));
@@ -160,17 +172,22 @@ class Demo_Doctrine2 extends MX_Controller {
             $record->setOrderlinenumber($this->input->post('line_number'));
             $record->setText($this->input->post('text'));
 
-            try {
+            try
+            {
                 $this->doctrine->em->flush();
                 $this->session->set_flashdata('message_success', 'Message was successfully saved.');
                 redirect(current_url() . '/' . $this->input->post('id'));
-            } catch (Exception $e) {
+            }
+            catch (Exception $e)
+            {
                 $this->session->set_flashdata('message_error', 'Record could not be saved');
                 redirect(current_url() . '/' . $this->input->post('id'));
             }
             $this->benchmark->mark('stop'); // Benchmark stop.
             // End Doctrine
-        } else {
+        }
+        else
+        {
             $record = $this->doctrine->em->find('Entities\CrudDemo', $id);
             $this->benchmark->mark('stop'); // Benchmark stop.
             array_unshift(self::$data['scripts'], 'demo_doctrine2_ajax.js');
@@ -181,8 +198,10 @@ class Demo_Doctrine2 extends MX_Controller {
         }
     }
 
-    public function add() {
-        if ($this->input->post('save')) {
+    public function add()
+    {
+        if ($this->input->post('save'))
+        {
             // Doctrine
             $record = new Entities\CrudDemo;
             $record->setOrdernumber($this->input->post('order_number'));
@@ -192,32 +211,44 @@ class Demo_Doctrine2 extends MX_Controller {
             $record->setOrderlinenumber($this->input->post('line_number'));
             $record->setText($this->input->post('text'));
             $this->doctrine->em->persist($record);
-            try {
+            try
+            {
                 $this->doctrine->em->flush();
                 $this->session->set_flashdata('message_success', 'Record was successfully added.');
                 redirect(base_url() . 'demo_doctrine2/data/' . self::$user_page);
-            } catch (Exception $e) {
+            }
+            catch (Exception $e)
+            {
                 $this->session->set_flashdata('message_error', 'Record could not be saved.');
                 redirect(base_url() . 'demo_doctrine2/data/' . self::$user_page);
             }
-        } else {
+        }
+        else
+        {
             array_unshift(self::$data['scripts'], 'demo_doctrine2_ajax.js');
             self::$data['view_file'] = 'demo_doctrine2_add';
             echo Modules::run('core_template/default_template', self::$data);
         }
     }
 
-    public function delete($id = NULL) {
-        if ($id == NULL) {
+    public function delete($id = NULL)
+    {
+        if ($id == NULL)
+        {
             redirect(base_url());
-        } else {
+        }
+        else
+        {
             $record = $this->doctrine->em->find('Entities\CrudDemo', $id);
             $this->doctrine->em->remove($record);
-            try {
+            try
+            {
                 $this->doctrine->em->flush();
                 $this->session->set_flashdata('message_success', 'Record was successfully deleted.');
                 redirect(base_url() . 'demo_doctrine2/data/' . self::$user_page);
-            } catch (Exception $e) {
+            }
+            catch (Exception $e)
+            {
                 $this->session->set_flashdata('message_error', 'Record could not be deleted.');
                 redirect(base_url() . 'demo_doctrine2/data/' . self::$user_page);
             }

@@ -4,20 +4,24 @@ class Core_library
 {
     private static $CI;
 
-    function __construct() {
-        self::$CI =& get_instance();
+    function __construct()
+    {
+        self::$CI = & get_instance();
         self::$CI->load->library('session');
     }
 
-    public function form_error_class($field) {
+    public function form_error_class($field)
+    {
         $class = '';
-        if (form_error($field)) {
+        if (form_error($field))
+        {
             $class = 'error';
         }
         return $class;
     }
 
-    public function keep_flashdata_messages() {
+    public function keep_flashdata_messages()
+    {
         self::$CI->session->keep_flashdata('message_success');
         self::$CI->session->keep_flashdata('message_error');
         self::$CI->session->keep_flashdata('message_notice');

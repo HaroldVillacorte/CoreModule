@@ -1,175 +1,175 @@
 <div class="twelve columns"> <!--Twelve columns container-->
 
-  <!-- Main Grid Section -->
+    <!-- Main Grid Section -->
 
-  <div class="row">
+    <div class="row">
 
-    <div class="three columns">
+        <div class="three columns">
 
-      <div class="panel">
+            <div class="panel">
 
-        <h5>Panel Title</h5>
+                <h5>Panel Title</h5>
 
-        <p>This is a three columns grid panel with an arbitrary height.</p>
+                <p>This is a three columns grid panel with an arbitrary height.</p>
 
-      </div>
+            </div>
 
-    </div>
+        </div>
 
-    <div class="six columns">
+        <div class="six columns">
 
-      <div class="panel">
+            <div class="panel">
 
-        <h5>Panel Title</h5>
+                <h5>Panel Title</h5>
 
-        <p>This is a six columns grid panel with an arbitrary height. Bacon ipsum dolor sit amet salami ham hock biltong ball tip drumstick sirloin pancetta meatball short loin.</p>
+                <p>This is a six columns grid panel with an arbitrary height. Bacon ipsum dolor sit amet salami ham hock biltong ball tip drumstick sirloin pancetta meatball short loin.</p>
 
-      </div>
+            </div>
 
-    </div>
+        </div>
 
-    <div class="three columns">
+        <div class="three columns">
 
-      <div class="panel">
+            <div class="panel">
 
-        <h5>Panel Title</h5>
+                <h5>Panel Title</h5>
 
-        <p>This is a three columns grid panel with an arbitrary height.</p>
+                <p>This is a three columns grid panel with an arbitrary height.</p>
 
-      </div>
+            </div>
 
-    </div>
-
-  </div>
-
-  <div class="row">
-
-    <div class="six columns">
-
-      <div class="panel">
-
-        <h5>Panel Title</h5>
-
-        <p>This is a six columns grid panel with an arbitrary height. Bacon ipsum dolor sit amet salami ham hock biltong ball tip drumstick sirloin pancetta meatball short loin.</p>
-
-      </div>
+        </div>
 
     </div>
 
-    <div class="two columns">
+    <div class="row">
 
-      <div class="panel">
+        <div class="six columns">
 
-        <p>
+            <div class="panel">
 
-          <img src="http://placehold.it/200x200" />
+                <h5>Panel Title</h5>
 
-        </p>
+                <p>This is a six columns grid panel with an arbitrary height. Bacon ipsum dolor sit amet salami ham hock biltong ball tip drumstick sirloin pancetta meatball short loin.</p>
 
-      </div>
+            </div>
 
-    </div>
+        </div>
 
-    <div class="four columns">
+        <div class="two columns">
 
-      <div class="panel">
+            <div class="panel">
 
-        <h5>Panel Title</h5>
+                <p>
 
-        <p>This is a four columns grid panel with an arbitrary height. Bacon ipsum dolor sit amet salami.</p>
+                    <img src="http://placehold.it/200x200" />
 
-      </div>
+                </p>
 
-    </div>
+            </div>
 
-  </div>
+        </div>
 
-  <div class="row">
+        <div class="four columns">
 
-    <div class="four columns">
+            <div class="panel">
 
-      <div class="panel">
+                <h5>Panel Title</h5>
 
-        <p>
+                <p>This is a four columns grid panel with an arbitrary height. Bacon ipsum dolor sit amet salami.</p>
 
-          <img src="http://placehold.it/400x300" />
+            </div>
 
-        </p>
-
-      </div>
+        </div>
 
     </div>
 
-    <div class="four columns">
+    <div class="row">
 
-      <div class="panel">
+        <div class="four columns">
 
-        <p>
+            <div class="panel">
 
-          <img src="http://placehold.it/400x300" />
+                <p>
 
-        </p>
+                    <img src="http://placehold.it/400x300" />
 
-      </div>
+                </p>
 
-    </div>
+            </div>
 
-    <div class="four columns">
+        </div>
 
-      <div class="panel">
+        <div class="four columns">
 
-        <p>
+            <div class="panel">
 
-          <img src="http://placehold.it/400x300" />
+                <p>
 
-        </p>
+                    <img src="http://placehold.it/400x300" />
 
-      </div>
+                </p>
 
-    </div>
+            </div>
 
-  </div>
+        </div>
 
-  <div class="row">
+        <div class="four columns">
 
-    <div class="six columns">
+            <div class="panel">
 
-      <div class="panel">
+                <p>
 
-        <h5>Panel Title</h5>
+                    <img src="http://placehold.it/400x300" />
 
-        <p>This is a six columns grid panel with an arbitrary height. Bacon ipsum dolor sit amet salami ham hock biltong ball tip drumstick sirloin pancetta meatball short loin.</p>
+                </p>
 
-      </div>
+            </div>
 
-    </div>
-
-    <div class="three columns">
-
-      <div class="panel">
-
-        <h5>Panel Title</h5>
-
-        <p>This is a three columns grid panel with an arbitrary height.</p>
-
-      </div>
+        </div>
 
     </div>
 
-    <div class="three columns">
+    <div class="row">
 
-      <div class="panel">
+        <div class="six columns">
 
-        <h5>Panel Title</h5>
+            <div class="panel">
 
-        <p>This is a three columns grid panel with an arbitrary height.</p>
+                <h5>Panel Title</h5>
 
-      </div>
+                <p>This is a six columns grid panel with an arbitrary height. Bacon ipsum dolor sit amet salami ham hock biltong ball tip drumstick sirloin pancetta meatball short loin.</p>
+
+            </div>
+
+        </div>
+
+        <div class="three columns">
+
+            <div class="panel">
+
+                <h5>Panel Title</h5>
+
+                <p>This is a three columns grid panel with an arbitrary height.</p>
+
+            </div>
+
+        </div>
+
+        <div class="three columns">
+
+            <div class="panel">
+
+                <h5>Panel Title</h5>
+
+                <p>This is a three columns grid panel with an arbitrary height.</p>
+
+            </div>
+
+        </div>
 
     </div>
 
-  </div>
-
-  <!-- End Grid Section -->
+    <!-- End Grid Section -->
 
 </div> <!-- End twelve columns container -->

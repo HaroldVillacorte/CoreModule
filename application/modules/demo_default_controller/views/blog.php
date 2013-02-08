@@ -1,115 +1,115 @@
 <div class="twelve columns"> <!--Twelve columns container-->
 
-  <!-- Main Page Content and Sidebar -->
+    <!-- Main Page Content and Sidebar -->
 
-  <div class="row">
+    <div class="row">
 
-    <!-- Main Blog Content -->
+        <!-- Main Blog Content -->
 
-    <div class="nine columns" role="content">
+        <div class="nine columns" role="content">
 
-      <article>
+            <article>
 
-        <h3><a href="#">Blog Post Title</a></h3>
+                <h3><a href="#">Blog Post Title</a></h3>
 
-        <h6>Written by <a href="#">John Smith</a> on August 12, 2012.</h6>
+                <h6>Written by <a href="#">John Smith</a> on August 12, 2012.</h6>
 
-        <div class="row">
+                <div class="row">
 
-          <div class="six columns">
+                    <div class="six columns">
 
-            <p>Bacon ipsum dolor sit amet nulla ham qui sint exercitation eiusmod commodo, chuck duis velit. Aute in reprehenderit, dolore aliqua non est magna in labore pig pork biltong. Eiusmod swine spare ribs reprehenderit culpa.</p>
+                        <p>Bacon ipsum dolor sit amet nulla ham qui sint exercitation eiusmod commodo, chuck duis velit. Aute in reprehenderit, dolore aliqua non est magna in labore pig pork biltong. Eiusmod swine spare ribs reprehenderit culpa.</p>
 
-            <p>Boudin aliqua adipisicing rump corned beef. Nulla corned beef sunt ball tip, qui bresaola enim jowl. Capicola short ribs minim salami nulla nostrud pastrami.</p>
+                        <p>Boudin aliqua adipisicing rump corned beef. Nulla corned beef sunt ball tip, qui bresaola enim jowl. Capicola short ribs minim salami nulla nostrud pastrami.</p>
 
-          </div>
+                    </div>
 
-          <div class="six columns">
+                    <div class="six columns">
 
-            <img src="http://placehold.it/400x240&text=[img]" />
+                        <img src="http://placehold.it/400x240&text=[img]" />
 
-          </div>
+                    </div>
+
+                </div>
+
+                <p>Pork drumstick turkey fugiat. Tri-tip elit turducken pork chop in. Swine short ribs meatball irure bacon nulla pork belly cupidatat meatloaf cow. Nulla corned beef sunt ball tip, qui bresaola enim jowl. Capicola short ribs minim salami nulla nostrud pastrami. Nulla corned beef sunt ball tip, qui bresaola enim jowl. Capicola short ribs minim salami nulla nostrud pastrami.</p>
+
+                <p>Pork drumstick turkey fugiat. Tri-tip elit turducken pork chop in. Swine short ribs meatball irure bacon nulla pork belly cupidatat meatloaf cow. Nulla corned beef sunt ball tip, qui bresaola enim jowl. Capicola short ribs minim salami nulla nostrud pastrami.</p>
+
+            </article>
+
+            <hr />
+
+            <article>
+
+                <h3><a href="#">Blog Post Title</a></h3>
+
+                <h6>Written by <a href="#">John Smith</a> on August 12, 2012.</h6>
+
+                <div class="row">
+
+                    <div class="six columns">
+
+                        <p>Bacon ipsum dolor sit amet nulla ham qui sint exercitation eiusmod commodo, chuck duis velit. Aute in reprehenderit, dolore aliqua non est magna in labore pig pork biltong. Eiusmod swine spare ribs reprehenderit culpa.</p>
+
+                        <p>Boudin aliqua adipisicing rump corned beef. Nulla corned beef sunt ball tip, qui bresaola enim jowl. Capicola short ribs minim salami nulla nostrud pastrami.</p>
+
+                    </div>
+
+                    <div class="six columns">
+
+                        <img src="http://placehold.it/400x240&text=[img]" />
+
+                    </div>
+
+                </div>
+
+                <p>Pork drumstick turkey fugiat. Tri-tip elit turducken pork chop in. Swine short ribs meatball irure bacon nulla pork belly cupidatat meatloaf cow. Nulla corned beef sunt ball tip, qui bresaola enim jowl. Capicola short ribs minim salami nulla nostrud pastrami. Nulla corned beef sunt ball tip, qui bresaola enim jowl. Capicola short ribs minim salami nulla nostrud pastrami.</p>
+
+                <p>Pork drumstick turkey fugiat. Tri-tip elit turducken pork chop in. Swine short ribs meatball irure bacon nulla pork belly cupidatat meatloaf cow. Nulla corned beef sunt ball tip, qui bresaola enim jowl. Capicola short ribs minim salami nulla nostrud pastrami.</p>
+
+            </article>
 
         </div>
 
-        <p>Pork drumstick turkey fugiat. Tri-tip elit turducken pork chop in. Swine short ribs meatball irure bacon nulla pork belly cupidatat meatloaf cow. Nulla corned beef sunt ball tip, qui bresaola enim jowl. Capicola short ribs minim salami nulla nostrud pastrami. Nulla corned beef sunt ball tip, qui bresaola enim jowl. Capicola short ribs minim salami nulla nostrud pastrami.</p>
+        <!-- End Main Content -->
 
-        <p>Pork drumstick turkey fugiat. Tri-tip elit turducken pork chop in. Swine short ribs meatball irure bacon nulla pork belly cupidatat meatloaf cow. Nulla corned beef sunt ball tip, qui bresaola enim jowl. Capicola short ribs minim salami nulla nostrud pastrami.</p>
+        <!-- Sidebar -->
 
-      </article>
+        <aside class="three columns">
 
-      <hr />
+            <h5>Categories</h5>
 
-      <article>
+            <ul class="side-nav">
 
-        <h3><a href="#">Blog Post Title</a></h3>
+                <li><a href="#">News</a></li>
 
-        <h6>Written by <a href="#">John Smith</a> on August 12, 2012.</h6>
+                <li><a href="#">Code</a></li>
 
-        <div class="row">
+                <li><a href="#">Design</a></li>
 
-          <div class="six columns">
+                <li><a href="#">Fun</a></li>
 
-            <p>Bacon ipsum dolor sit amet nulla ham qui sint exercitation eiusmod commodo, chuck duis velit. Aute in reprehenderit, dolore aliqua non est magna in labore pig pork biltong. Eiusmod swine spare ribs reprehenderit culpa.</p>
+                <li><a href="#">Weasels</a></li>
 
-            <p>Boudin aliqua adipisicing rump corned beef. Nulla corned beef sunt ball tip, qui bresaola enim jowl. Capicola short ribs minim salami nulla nostrud pastrami.</p>
+            </ul>
 
-          </div>
+            <div class="panel">
 
-          <div class="six columns">
+                <h5>Featured</h5>
 
-            <img src="http://placehold.it/400x240&text=[img]" />
+                <p>Pork drumstick turkey fugiat. Tri-tip elit turducken pork chop in. Swine short ribs meatball irure bacon nulla pork belly cupidatat meatloaf cow.</p>
 
-          </div>
+                <a href="#">Read More &rarr;</a>
 
-        </div>
+            </div>
 
-        <p>Pork drumstick turkey fugiat. Tri-tip elit turducken pork chop in. Swine short ribs meatball irure bacon nulla pork belly cupidatat meatloaf cow. Nulla corned beef sunt ball tip, qui bresaola enim jowl. Capicola short ribs minim salami nulla nostrud pastrami. Nulla corned beef sunt ball tip, qui bresaola enim jowl. Capicola short ribs minim salami nulla nostrud pastrami.</p>
+        </aside>
 
-        <p>Pork drumstick turkey fugiat. Tri-tip elit turducken pork chop in. Swine short ribs meatball irure bacon nulla pork belly cupidatat meatloaf cow. Nulla corned beef sunt ball tip, qui bresaola enim jowl. Capicola short ribs minim salami nulla nostrud pastrami.</p>
-
-      </article>
+        <!-- End Sidebar -->
 
     </div>
 
-    <!-- End Main Content -->
-
-    <!-- Sidebar -->
-
-    <aside class="three columns">
-
-      <h5>Categories</h5>
-
-      <ul class="side-nav">
-
-        <li><a href="#">News</a></li>
-
-        <li><a href="#">Code</a></li>
-
-        <li><a href="#">Design</a></li>
-
-        <li><a href="#">Fun</a></li>
-
-        <li><a href="#">Weasels</a></li>
-
-      </ul>
-
-      <div class="panel">
-
-        <h5>Featured</h5>
-
-        <p>Pork drumstick turkey fugiat. Tri-tip elit turducken pork chop in. Swine short ribs meatball irure bacon nulla pork belly cupidatat meatloaf cow.</p>
-
-        <a href="#">Read More &rarr;</a>
-
-      </div>
-
-    </aside>
-
-    <!-- End Sidebar -->
-
-  </div>
-
-  <!-- End Main Content and Sidebar -->
+    <!-- End Main Content and Sidebar -->
 
 </div> <!-- End twelve columns container -->

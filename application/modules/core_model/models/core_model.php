@@ -11,9 +11,10 @@
  * @author Harold Villacorte
  * @link http://laughinghost.com/CI_Starter/
  */
-class Core_Model extends CI_Model {
-
-    function __construct() {
+class Core_Model extends CI_Model
+{
+    function __construct()
+    {
         parent::__construct();
     }
 
@@ -25,7 +26,8 @@ class Core_Model extends CI_Model {
      *
      * @return array $data An array containing site wide information.
      */
-    public function site_info() {
+    public function site_info()
+    {
         $meta_description = 'A Codeigniter boilerplate.';
         $data = array(
             // The name of the Website or application.
