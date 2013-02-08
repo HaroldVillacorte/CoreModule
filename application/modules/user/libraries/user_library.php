@@ -2,6 +2,7 @@
 
 class User_library
 {
+
     private static $CI;
     private static $data;
 
@@ -116,10 +117,10 @@ class User_library
     public function set_user_session_data($user = NULL)
     {
         $userarray = array(
-            'user_id' => $user->id,
+            'user_id'  => $user->id,
             'username' => $user->username,
-            'email' => $user->email,
-            'role' => $user->role,
+            'email'    => $user->email,
+            'role'     => $user->role,
         );
 
         // Set userdata session information.
@@ -132,13 +133,13 @@ class User_library
         self::$CI->load->library('encrypt');
         self::$CI->load->helper('inflector');
 
-        $name = underscore(self::$data['site_name']) . '_login';
-        $remember_code = random_string('alnum', 32);
+        $name                  = underscore(self::$data['site_name']) . '_login';
+        $remember_code         = random_string('alnum', 32);
         $remember_code_encoded = self::$CI->encrypt->encode($remember_code);
 
         $data = array(
-            'name' => $name,
-            'value' => $remember_code_encoded,
+            'name'   => $name,
+            'value'  => $remember_code_encoded,
             'expire' => 1209600,
         );
 
@@ -172,14 +173,14 @@ class User_library
             if (self::$CI->input->cookie($name))
             {
                 $remember_code_encoded = self::$CI->input->cookie($name);
-                $remember_code = self::$CI->encrypt->decode($remember_code_encoded);
+                $remember_code         = self::$CI->encrypt->decode($remember_code_encoded);
 
                 $result = self::$CI->db
-                        ->select('users.id, users.protected, username, email, created, role')
-                        ->join('join_users_roles', 'join_users_roles.user_id = users.id')
-                        ->join('roles', 'roles.id = join_users_roles.role_id')
-                        ->get_where('users', array('users.remember_code' => $remember_code));
-                $user = $result->row();
+                    ->select('users.id, users.protected, username, email, created, role')
+                    ->join('join_users_roles', 'join_users_roles.user_id = users.id')
+                    ->join('roles', 'roles.id = join_users_roles.role_id')
+                    ->get_where('users', array('users.remember_code' => $remember_code));
+                $user                 = $result->row();
 
                 if ($user)
                 {
@@ -239,5 +240,4 @@ class User_library
     }
 
 }
-
 /* End of file user_library.php */

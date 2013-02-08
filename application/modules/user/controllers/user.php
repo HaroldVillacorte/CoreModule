@@ -13,6 +13,7 @@
  * @link http://laughinghost.com/CI_Starter/ */
 class User extends MX_Controller
 {
+
     // Sets the $data property.
     protected static $data;
     // Set the default template.
@@ -58,7 +59,8 @@ class User extends MX_Controller
         // base_url().
 
         $id = $this->session->userdata('user_id');
-        if (!$id) {
+        if (!$id)
+        {
             redirect(base_url() . 'user/login/');
         }
         $user = $this->user_model->find_user($id);
@@ -88,7 +90,7 @@ class User extends MX_Controller
             {
                 $username = $this->input->post('username');
                 $password = $this->input->post('password');
-                $user = $this->user_model->login($username, $password);
+                $user     = $this->user_model->login($username, $password);
                 if ($user)
                 {
                     // Login success.
@@ -98,7 +100,7 @@ class User extends MX_Controller
 
                     if ($this->input->post('set_persistent_login'))
                     {
-                        $remember_code = $this->user_library->set_persistent_login();
+                        $remember_code       = $this->user_library->set_persistent_login();
                         $store_remember_code = $this->user_model->store_remember_code($remember_code, $user->id);
 
                         if (!$store_remember_code)
@@ -141,9 +143,9 @@ class User extends MX_Controller
     public function logout()
     {
         $username = $this->session->userdata('username');
-        $id = $this->session->userdata('user_id');
+        $id       = $this->session->userdata('user_id');
         log_message('error', $username . ' logged out.');
-        $result = $this->user_model->delete_remember_code($id);
+        $result   = $this->user_model->delete_remember_code($id);
 
         if (!$result)
         {
@@ -166,12 +168,12 @@ class User extends MX_Controller
                 self::$data['view_file'] = 'user_edit';
                 echo Modules::run($this->template, self::$data);
             }
-
             else
             {
                 $result_id = $this->user_model->add_user($this->input->post());
 
-                switch ($result_id) {
+                switch ($result_id)
+                {
                     case TRUE:
                         $this->session->set_flashdata('message_success', 'Acount was successfully created.');
                         redirect(base_url() . 'user/login/');
@@ -183,7 +185,6 @@ class User extends MX_Controller
                 }
             }
         }
-
         else
         {
             self::$data['view_file'] = 'user_add';
@@ -205,7 +206,7 @@ class User extends MX_Controller
     {
         if ($this->session->userdata('user_id'))
         {
-            $id = $this->session->userdata('user_id');
+            $id   = $this->session->userdata('user_id');
             $user = $this->user_model->find_user($id);
             self::$data['user'] = $user;
         }
@@ -275,7 +276,6 @@ class User extends MX_Controller
         {
             $user = $this->user_model->find_user($id);
         }
-
         else
         {
             redirect(base_url());
@@ -296,9 +296,9 @@ class User extends MX_Controller
                     break;
                 case FALSE:
                     $this->session
-                            ->set_flashdata(
-                                    'message_error', 'Unable to delete your account.'
-                                    . '  Please contact administrator.'
+                        ->set_flashdata(
+                            'message_error', 'Unable to delete your account.'
+                            . '  Please contact administrator.'
                     );
                     redirect(base_url() . 'user/edit/');
                     break;
@@ -321,5 +321,4 @@ class User extends MX_Controller
     }
 
 }
-
 /* End of file user.php */

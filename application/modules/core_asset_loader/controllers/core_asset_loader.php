@@ -13,6 +13,7 @@
  */
 class Core_Asset_Loader extends MX_Controller
 {
+
     // Loads the associated view file.
     public function javascript()
     {
@@ -26,5 +27,4 @@ class Core_Asset_Loader extends MX_Controller
     }
 
 }
-
 /* End of file core_asset_loader.php */

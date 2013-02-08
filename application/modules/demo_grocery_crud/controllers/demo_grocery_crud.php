@@ -16,6 +16,7 @@
  */
 class Demo_Grocery_Crud extends MX_Controller
 {
+
     protected static $data;
 
     public function __construct()
@@ -23,14 +24,15 @@ class Demo_Grocery_Crud extends MX_Controller
         parent::__construct();
         self::$data = $this->core_model->site_info();
         self::$data['module'] = 'demo_grocery_crud';
+
+        // Load User library for permissions.
+        $this->load->library('user/user_library');
+        $this->user_library->permission(array('admin', 'super_user'));
     }
 
     public function index()
     {
-        $this->load->module('user');
-        $this->user->permission('admin');
         $this->load->library('grocery_crud');
-
         $this->benchmark->mark('code_start');
         $crud = new grocery_CRUD ();
         $crud->set_table('crud_demo');
@@ -42,5 +44,4 @@ class Demo_Grocery_Crud extends MX_Controller
     }
 
 }
-
 /* End of file demo_grocery_crud_.php */

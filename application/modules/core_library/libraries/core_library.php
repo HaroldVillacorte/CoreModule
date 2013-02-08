@@ -2,6 +2,7 @@
 
 class Core_library
 {
+
     private static $CI;
 
     function __construct()
@@ -28,5 +29,4 @@ class Core_library
     }
 
 }
-
 /* End of file core_library.php */

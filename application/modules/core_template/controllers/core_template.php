@@ -16,6 +16,7 @@
  */
 class Core_Template extends MX_Controller
 {
+
     public function slider_template($data)
     {
         // The entire $data array is nested within itself and passed to the template
@@ -33,5 +34,4 @@ class Core_Template extends MX_Controller
     }
 
 }
-
 /* End of file core_template.php */

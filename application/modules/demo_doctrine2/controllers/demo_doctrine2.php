@@ -16,6 +16,7 @@
  */
 class Demo_Doctrine2 extends MX_Controller
 {
+
     protected static $data;
     protected static $user_page;
 
@@ -25,10 +26,14 @@ class Demo_Doctrine2 extends MX_Controller
         $this->load->library('doctrine');
         self::$data = $this->core_model->site_info();
         self::$data['module'] = 'demo_doctrine2';
-        $this->load->module('user');
-        $this->user->permission('admin');
+
+        // Load User library for permissions.
+        $this->load->library('user/user_library');
+        $this->user_library->permission(array('admin', 'super_user'));
+
         self::$user_page = NULL;
-        if ($this->session->userdata('demo_doctrine2_page')) {
+        if ($this->session->userdata('demo_doctrine2_page'))
+        {
             self::$user_page = $this->session->userdata('demo_doctrine2_page');
         }
         self::$data['user_page'] = self::$user_page;
@@ -58,46 +63,46 @@ class Demo_Doctrine2 extends MX_Controller
         // Doctrine
         $this->benchmark->mark('start'); // Benchmark start
 
-        $dql = 'SELECT u FROM Entities\CrudDemo u';
+        $dql    = 'SELECT u FROM Entities\CrudDemo u';
         $query1 = $this->doctrine->em->createQuery($dql);
         $query2 = $this->doctrine->em
-                ->createQuery($dql)
-                ->setMaxResults($per_page)
-                ->setFirstResult($start);
+            ->createQuery($dql)
+            ->setMaxResults($per_page)
+            ->setFirstResult($start);
         $output = $query2->getArrayResult();
-        $count = count($query1->getArrayResult());
+        $count  = count($query1->getArrayResult());
         // Get first and last id's.
         self::$data['first'] = $page + 1;
         self::$data['last'] = $page + count($output);
 
         $this->benchmark->mark('stop'); // Benchmark end
         // Pagination setup
-        $pagination_config['base_url'] = base_url() . 'demo_doctrine2/data/';
-        $pagination_config['total_rows'] = $count;
-        $pagination_config['per_page'] = $per_page;
+        $pagination_config['base_url']        = base_url() . 'demo_doctrine2/data/';
+        $pagination_config['total_rows']      = $count;
+        $pagination_config['per_page']        = $per_page;
         // Style pagination Foundation 3
         // Full open
-        $pagination_config['full_tag_open'] = '<ul class="pagination">';
+        $pagination_config['full_tag_open']   = '<ul class="pagination">';
         // Digits
-        $pagination_config['num_tag_open'] = '<li>';
-        $pagination_config['num_tag_close'] = '</li>';
+        $pagination_config['num_tag_open']    = '<li>';
+        $pagination_config['num_tag_close']   = '</li>';
         // Current
-        $pagination_config['cur_tag_open'] = '<li class="current"><a href="#">';
-        $pagination_config['cur_tag_close'] = '</a></li>';
+        $pagination_config['cur_tag_open']    = '<li class="current"><a href="#">';
+        $pagination_config['cur_tag_close']   = '</a></li>';
         // Previous link
-        $pagination_config['prev_tag_open'] = '<li class="arrow">';
-        $pagination_config['prev_tag_close'] = '</li>';
+        $pagination_config['prev_tag_open']   = '<li class="arrow">';
+        $pagination_config['prev_tag_close']  = '</li>';
         // Next link
-        $pagination_config['next_tag_open'] = '<li class="arrow">';
-        $pagination_config['nect_tag_close'] = '<li>';
+        $pagination_config['next_tag_open']   = '<li class="arrow">';
+        $pagination_config['nect_tag_close']  = '<li>';
         // First link
-        $pagination_config['first_tag_open'] = '<li>';
+        $pagination_config['first_tag_open']  = '<li>';
         $pagination_config['first_tag_close'] = '</li>';
         // Last link
-        $pagination_config['last_tag_open'] = '<li>';
-        $pagination_config['last_tag_close'] = '</li>';
+        $pagination_config['last_tag_open']   = '<li>';
+        $pagination_config['last_tag_close']  = '</li>';
         // Full close
-        $pagination_config['full_tag_close'] = '</ul>';
+        $pagination_config['full_tag_close']  = '</ul>';
         // Pagination render
         $this->pagination->initialize($pagination_config);
         self::$data['pagination_links'] = $this->pagination->create_links();
@@ -105,7 +110,7 @@ class Demo_Doctrine2 extends MX_Controller
         // Generate table
         // Table headings
         $add_link = base_url() . 'demo_doctrine2/add/';
-        $heading = array(
+        $heading  = array(
             'ID', 'Order number', 'Product Code', 'Quantity',
             'Price', 'Line number', 'Comments', '<a href="' . $add_link
             . '" class="right">Add record +</a>',
@@ -114,7 +119,7 @@ class Demo_Doctrine2 extends MX_Controller
 
         // Table template
         $template = array(
-            'table_open' => '<table width="100%">',
+            'table_open'  => '<table width="100%">',
             'table_close' => '</table>',
         );
         $this->table->set_template($template);
@@ -123,13 +128,13 @@ class Demo_Doctrine2 extends MX_Controller
         foreach ($output as $key => $value)
         {   // add edit link.
             $output[$key]['edit'] =
-                    '<a href="' . base_url() . 'demo_doctrine2/delete/'
-                    . $output[$key]['id']
-                    . '" class="label alert round right" style="margin-left:10px;"'
-                    . 'onClick="return confirm(\'Are you sure?\')">Del</a>'
-                    . '<a href="' . base_url()
-                    . 'demo_doctrine2/edit/' . $output[$key]['id']
-                    . '" class="label secondary round right">Edit</a>';
+                '<a href="' . base_url() . 'demo_doctrine2/delete/'
+                . $output[$key]['id']
+                . '" class="label alert round right" style="margin-left:10px;"'
+                . 'onClick="return confirm(\'Are you sure?\')">Del</a>'
+                . '<a href="' . base_url()
+                . 'demo_doctrine2/edit/' . $output[$key]['id']
+                . '" class="label secondary round right">Edit</a>';
         }
         self::$data['output'] = $this->table->generate($output);
 
@@ -256,5 +261,4 @@ class Demo_Doctrine2 extends MX_Controller
     }
 
 }
-
 /* End of file demo_doctrine2.php */

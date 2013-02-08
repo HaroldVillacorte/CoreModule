@@ -2,6 +2,7 @@
 
 class User_admin_library
 {
+
     private static $CI;
 
     function __construct()
@@ -136,7 +137,7 @@ class User_admin_library
 
         // Table template
         $template = array(
-            'table_open' => '<table width="100%">',
+            'table_open'  => '<table width="100%">',
             'table_close' => '</table>',
         );
 
@@ -145,19 +146,18 @@ class User_admin_library
         foreach ($output as $key => $value)
         {   // add edit link.
             $output[$key]['edit'] =
-                    '<a href="' . base_url() . 'user_admin/delete_role/'
-                    . $output[$key]['id']
-                    . '" class="label alert round right" style="margin-left:10px;"'
-                    . 'onClick="return confirm(\'Are you sure?\')">Del</a>'
-                    . '<a href="' . base_url()
-                    . 'user_admin/edit_role/' . $output[$key]['id']
-                    . '" class="label secondary round right">Edit</a>';
+                '<a href="' . base_url() . 'user_admin/delete_role/'
+                . $output[$key]['id']
+                . '" class="label alert round right" style="margin-left:10px;"'
+                . 'onClick="return confirm(\'Are you sure?\')">Del</a>'
+                . '<a href="' . base_url()
+                . 'user_admin/edit_role/' . $output[$key]['id']
+                . '" class="label secondary round right">Edit</a>';
 
             if ($output[$key]['protected'])
             {
                 $output[$key]['protected'] = 'Yes';
             }
-
             else
             {
                 $output[$key]['protected'] = 'No';
@@ -173,36 +173,36 @@ class User_admin_library
         $pagination_config = array();
 
         // Pagination setup
-        $pagination_config['base_url'] = base_url() . 'user_admin/users/';
+        $pagination_config['base_url']   = base_url() . 'user_admin/users/';
         $pagination_config['total_rows'] = $count;
-        $pagination_config['per_page'] = $per_page;
+        $pagination_config['per_page']   = $per_page;
 
         // Style pagination Foundation 3
         // Full open
         $pagination_config['full_tag_open'] = '<ul class="pagination">';
 
         // Digits
-        $pagination_config['num_tag_open'] = '<li>';
+        $pagination_config['num_tag_open']  = '<li>';
         $pagination_config['num_tag_close'] = '</li>';
 
         // Current
-        $pagination_config['cur_tag_open'] = '<li class="current"><a href="#">';
+        $pagination_config['cur_tag_open']  = '<li class="current"><a href="#">';
         $pagination_config['cur_tag_close'] = '</a></li>';
 
         // Previous link
-        $pagination_config['prev_tag_open'] = '<li class="arrow">';
+        $pagination_config['prev_tag_open']  = '<li class="arrow">';
         $pagination_config['prev_tag_close'] = '</li>';
 
         // Next link
-        $pagination_config['next_tag_open'] = '<li class="arrow">';
+        $pagination_config['next_tag_open']  = '<li class="arrow">';
         $pagination_config['nect_tag_close'] = '<li>';
 
         // First link
-        $pagination_config['first_tag_open'] = '<li>';
+        $pagination_config['first_tag_open']  = '<li>';
         $pagination_config['first_tag_close'] = '</li>';
 
         // Last link
-        $pagination_config['last_tag_open'] = '<li>';
+        $pagination_config['last_tag_open']  = '<li>';
         $pagination_config['last_tag_close'] = '</li>';
 
         // Full close
@@ -220,7 +220,7 @@ class User_admin_library
 
         // Table headings
         $add_link = base_url() . 'user_admin/add_user/';
-        $heading = array(
+        $heading  = array(
             'ID', 'Username', 'Email', 'Role', 'Member since', 'Protected',
             '<a href="' . $add_link . '" class="right">Add user +</a>',
         );
@@ -229,7 +229,7 @@ class User_admin_library
 
         // Table template
         $template = array(
-            'table_open' => '<table width="100%">',
+            'table_open'  => '<table width="100%">',
             'table_close' => '</table>',
         );
 
@@ -240,13 +240,13 @@ class User_admin_library
             unset($output[$key]['password']);
 
             $output[$key]['edit'] =
-                    '<a href="' . base_url() . 'user_admin/delete/'
-                    . $output[$key]['id']
-                    . '" class="label alert round right" style="margin-left:10px;"'
-                    . 'onClick="return confirm(\'Are you sure?\')">Del</a>'
-                    . '<a href="' . base_url()
-                    . 'user_admin/edit_user/' . $output[$key]['id']
-                    . '" class="label secondary round right">Edit</a>';
+                '<a href="' . base_url() . 'user_admin/delete/'
+                . $output[$key]['id']
+                . '" class="label alert round right" style="margin-left:10px;"'
+                . 'onClick="return confirm(\'Are you sure?\')">Del</a>'
+                . '<a href="' . base_url()
+                . 'user_admin/edit_user/' . $output[$key]['id']
+                . '" class="label secondary round right">Edit</a>';
 
             $output[$key]['created'] = unix_to_human($output[$key]['created']);
 
@@ -254,7 +254,6 @@ class User_admin_library
             {
                 $output[$key]['protected'] = 'Yes';
             }
-
             else
             {
                 $output[$key]['protected'] = 'No';
@@ -285,5 +284,4 @@ class User_admin_library
     }
 
 }
-
 /* End of file user_admin_library.php */

@@ -2,6 +2,7 @@
 
 class User_admin_model extends CI_Model
 {
+
     function __construct()
     {
         parent::__construct();
@@ -29,10 +30,10 @@ class User_admin_model extends CI_Model
     public function find_user($id = NULL)
     {
         $user = $this->db
-                ->select('users.id, users.protected, username, email, created, role_id, role')
-                ->join('join_users_roles', 'join_users_roles.user_id = users.id')
-                ->join('roles', 'roles.id = join_users_roles.role_id')
-                ->get_where('users', array('users.id' => (int) $id));
+            ->select('users.id, users.protected, username, email, created, role_id, role')
+            ->join('join_users_roles', 'join_users_roles.user_id = users.id')
+            ->join('roles', 'roles.id = join_users_roles.role_id')
+            ->get_where('users', array('users.id' => (int) $id));
 
         return ($user) ? $user : FALSE;
     }
@@ -57,31 +58,31 @@ class User_admin_model extends CI_Model
         {
             case!isset($post['id']):
                 $post['created'] = time();
-                $result = $this->db->insert('users', $post);
-                $id = $this->db->insert_id();
+                $result          = $this->db->insert('users', $post);
+                $id              = $this->db->insert_id();
 
                 if ($id)
                 {
                     $result2 = $this->db->insert(
-                            'join_users_roles', array(
-                            'user_id' => $id,
-                            'role_id' => $role,
-                            ));
+                        'join_users_roles', array(
+                        'user_id' => $id,
+                        'role_id' => $role,
+                        ));
                 }
                 break;
 
             case isset($post['id']):
                 $result = $this->db
-                        ->where('id', $post['id'])
-                        ->limit(1)
-                        ->update('users', $post);
+                    ->where('id', $post['id'])
+                    ->limit(1)
+                    ->update('users', $post);
 
                 if ($result)
                 {
                     $result2 = $this->db
-                            ->where('user_id', $post['id'])
-                            ->limit(1)
-                            ->update('join_users_roles', array('role_id' => $role));
+                        ->where('user_id', $post['id'])
+                        ->limit(1)
+                        ->update('join_users_roles', array('role_id' => $role));
                 }
                 break;
         }
@@ -96,7 +97,7 @@ class User_admin_model extends CI_Model
         if ($result)
         {
             $result2 = $this->db
-                    ->delete('join_users_roles', array('user_id' => (int) $id), 1);
+                ->delete('join_users_roles', array('user_id' => (int) $id), 1);
             return ($this->db->affected_rows() > 1) ? 'deleted' : FALSE;
         }
     }
@@ -104,13 +105,13 @@ class User_admin_model extends CI_Model
     public function get_role($id = NULL)
     {
         $query = $this->db->where('id', (int) $id)->get('roles');
-        $role = $query->row();
+        $role  = $query->row();
         return ($query->num_rows() > 0) ? $role : FALSE;
     }
 
     public function get_all_roles($data_type = 'array')
     {
-        $query = $this->db->get('roles');
+        $query       = $this->db->get('roles');
         $return_type = NULL;
 
         switch ($data_type)
@@ -141,14 +142,14 @@ class User_admin_model extends CI_Model
         {
             case!isset($post['id']):
                 $query = $this->db->insert('roles', $post);
-                $id = $this->db->insert_id();
+                $id    = $this->db->insert_id();
                 return ($id) ? $id : FALSE;
                 break;
 
             case isset($post['id']):
                 $query = $this->db
-                        ->where('id', (int) $post['id'])
-                        ->update('roles', $post);
+                    ->where('id', (int) $post['id'])
+                    ->update('roles', $post);
                 return ($this->db->affected_rows() > 0) ? TRUE : FALSE;
                 break;
         }
@@ -172,14 +173,13 @@ class User_admin_model extends CI_Model
     public function get_limit_offset_users($per_page, $start)
     {
         $query = $this->db
-                ->select('users.id, username, email, role, created, users.protected')
-                ->join('join_users_roles', 'join_users_roles.user_id = users.id')
-                ->join('roles', 'roles.id = join_users_roles.role_id')
-                ->get('users', (int) $per_page, (int) $start);
+            ->select('users.id, username, email, role, created, users.protected')
+            ->join('join_users_roles', 'join_users_roles.user_id = users.id')
+            ->join('roles', 'roles.id = join_users_roles.role_id')
+            ->get('users', (int) $per_page, (int) $start);
 
         return ($query->num_rows() > 0) ? $query->result_array() : FALSE;
     }
 
 }
-
 /* End of file user_admin_model.php */

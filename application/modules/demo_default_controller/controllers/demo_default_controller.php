@@ -13,6 +13,7 @@
  */
 class Demo_Default_Controller extends MX_Controller
 {
+
     // Sets the $data property.
     protected static $data;
     // Optionally set the default template.
@@ -74,5 +75,4 @@ class Demo_Default_Controller extends MX_Controller
     }
 
 }
-
 /* End of file demo_default_controller.php */

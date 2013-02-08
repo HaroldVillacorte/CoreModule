@@ -18,19 +18,20 @@
  */
 class Core_Messages extends MX_Controller
 {
+
     // Automatically sets the $message_TYPE variable then loads the view.
     public function load()
     {
         $data = array();
-        if($message_success = $this->session->flashdata('message_success'))
+        if ($message_success = $this->session->flashdata('message_success'))
         {
             $data['message_success'] = $message_success;
         }
-        if($message_error = $this->session->flashdata('message_error'))
+        if ($message_error           = $this->session->flashdata('message_error'))
         {
             $data['message_error'] = $message_error;
         }
-        if($message_notice = $this->session->flashdata('message_notice'))
+        if ($message_notice        = $this->session->flashdata('message_notice'))
         {
             $data['message_notice'] = $message_notice;
         }
@@ -38,5 +39,4 @@ class Core_Messages extends MX_Controller
     }
 
 }
-
 /* End of file core_messages.php */
