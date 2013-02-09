@@ -10,47 +10,48 @@ class User_admin extends MX_Controller
     function __construct()
     {
         parent::__construct();
+
+        // Load libraries.
         $this->load->library('user_admin_library');
-
-        // Check logged in.
         $this->load->library('user/user_library');
-        $this->user_library->check_logged_in();
-
-        $this->load->helper('form');
-        $this->load->model('user_admin_model');
         $this->load->library('core_library/core_library');
+
+        // Load helpers.
+        $this->load->helper('form');
+
+        // Load models.
+        $this->load->model('user_admin_model');
+
+        // Check logged in and set permission.
+        $this->user_library->check_logged_in();
+        $this->user_library->permission(array('admin', 'super_user'));
+
         self::$data = $this->core_model->site_info();
         self::$data['module'] = 'user_admin';
 
-        // Set the permission from the User module.
-        $this->load->library('user/user_library');
-        $this->user_library->permission(array('admin', 'super_user'));
-
         // Remember paginated page.
         self::$user_page = NULL;
-
         if ($this->session->userdata('user_admin_page'))
         {
             self::$user_page = $this->session->userdata('user_admin_page');
         }
-
         self::$data['user_page'] = self::$user_page;
     }
 
     public function index()
     {
-        $this->session->keep_flashdata('message_success');
-        $this->session->keep_flashdata('message_error');
+        $this->core_library->keep_flashdata_messages();
         redirect(base_url() . 'user_admin/users/');
     }
 
     public function roles()
     {
+        self::$data['view_file'] = 'roles';
+
         // Generate table
         $roles      = $this->user_admin_model->get_all_roles('array');
         $role_table = $this->user_admin_library->role_table($roles);
 
-        self::$data['view_file'] = 'roles';
         self::$data['output'] = $role_table;
         echo Modules::run(self::$template, self::$data);
     }
@@ -91,8 +92,9 @@ class User_admin extends MX_Controller
 
     public function edit_role($id = NULL)
     {
-        $role = $this->user_admin_model->get_role($id);
         self::$data['view_file'] = 'user_admin_edit_role';
+
+        $role = $this->user_admin_model->get_role($id);
         self::$data['role'] = ($role) ? $role : NULL;
 
         if ($this->input->post('save'))
@@ -205,6 +207,7 @@ class User_admin extends MX_Controller
 
     public function edit_user($id = NULL)
     {
+        self::$data['view_file'] = 'user_admin_edit_user';
         self::$data['all_roles'] = $this->user_admin_model->get_all_roles('object');
 
         if ($id == NULL && !$this->input->post('save'))
@@ -217,7 +220,6 @@ class User_admin extends MX_Controller
 
             if ($this->form_validation->run() == FALSE)
             {
-                self::$data['view_file'] = 'user_admin_edit_user';
                 echo Modules::run(self::$template, self::$data);
             }
             else
@@ -247,13 +249,13 @@ class User_admin extends MX_Controller
             $user   = $result->row();
             array_unshift(self::$data['scripts'], 'user_admin_ajax.js');
             self::$data['user'] = $user;
-            self::$data['view_file'] = 'user_admin_edit_user';
             echo Modules::run(self::$template, self::$data);
         }
     }
 
     public function add_user()
     {
+        self::$data['view_file'] = 'user_admin_add_user';
         self::$data['all_roles'] = $this->user_admin_model->get_all_roles('object');
 
         if ($this->input->post('save'))
@@ -262,7 +264,6 @@ class User_admin extends MX_Controller
 
             if ($this->form_validation->run() == FALSE)
             {
-                self::$data['view_file'] = 'user_admin_add_user';
                 echo Modules::run(self::$template, self::$data);
             }
             else
@@ -285,7 +286,6 @@ class User_admin extends MX_Controller
         else
         {
             array_unshift(self::$data['scripts'], 'user_admin_ajax.js');
-            self::$data['view_file'] = 'user_admin_add_user';
             echo Modules::run(self::$template, self::$data);
         }
     }

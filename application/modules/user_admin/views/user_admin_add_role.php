@@ -1,14 +1,4 @@
-<?php $class = '' ;?>
-<?php $class = (validation_errors()) ? 'error' : '' ;?>
-
 <h4>Add Role</h4>
-
-<?php if (validation_errors()) :?>
-    <div class="ten columns centered alert-box secondary">
-        <?php echo validation_errors() ;?>
-        <a href="" class="close">&times;</a>
-    </div>
-<?php endif ;?>
 
 <?php echo form_open('user_admin/add_role') ;?>
 
@@ -21,8 +11,7 @@
           name="description"><?php echo set_value('description') ;?></textarea>
 
 <?php if ($this->session->userdata('role') == 'super_user') :?>
-    <label class="<?php echo $this->core_library->form_error_class('protected_value') ;?>"
-           for="protected_value">Protected:</label>
+    <label for="protected_value">Protected:</label>
            <?php
            $options = array(
                1 => 'Yes',
