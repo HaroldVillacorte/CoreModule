@@ -19,6 +19,13 @@
 class Core_Messages extends MX_Controller
 {
 
+    function __construct()
+    {
+        parent::__construct();
+
+        $this->load->helper('form');
+    }
+
     // Automatically sets the $message_TYPE variable then loads the view.
     public function load()
     {
@@ -35,6 +42,11 @@ class Core_Messages extends MX_Controller
         {
             $data['message_notice'] = $message_notice;
         }
+        if ($validation_errors = validation_errors())
+        {
+            $data['validation_errors'] = $validation_errors;
+        }
+
         $this->load->view('core_messages', $data);
     }
 

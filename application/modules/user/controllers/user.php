@@ -30,19 +30,27 @@ class User extends MX_Controller
     public function __construct()
     {
         parent::__construct();
-        // Load the User library.
+        // Load libraries.
         $this->load->library('user_library');
-        $this->user_library->check_logged_in();
-        // Load the Core library.
         $this->load->library('core_library/core_library');
+
+        // Load helpers.
+        $this->load->helper('date');
+        $this->load->helper('form');
+
+        // Load models.
+        $this->load->model('user_model');
+
+        // Check if a user is logged in.
+        $this->user_library->check_logged_in();
+
         // Sets the the data array.
         self::$data = $this->core_model->site_info();
+
         // Sets the module to be sent to the Template module.
         self::$data['module'] = 'user';
-        // Load the User model
-        $this->load->model('user_model');
-        // Load the Date helper
-        $this->load->helper('date');
+
+
     }
 
     /**
@@ -55,6 +63,8 @@ class User extends MX_Controller
      */
     public function index()
     {
+        self::$data['view_file'] = 'user_profile';
+
         // Checks if the user is logged in.  If not user is redirected to the
         // base_url().
 
@@ -65,7 +75,7 @@ class User extends MX_Controller
         }
         $user = $this->user_model->find_user($id);
         self::$data['user'] = $user;
-        self::$data['view_file'] = 'user_profile';
+
         echo Modules::run(self::$template, self::$data);
     }
 
@@ -74,6 +84,8 @@ class User extends MX_Controller
      */
     public function login()
     {
+        self::$data['view_file'] = 'user_login';
+
         // Code to run when the user hits the Login button.
         if ($this->input->post('submit'))
         {
@@ -82,7 +94,6 @@ class User extends MX_Controller
             // Code to run form does not validate.
             if ($this->form_validation->run() == FALSE)
             {
-                self::$data['view_file'] = 'user_login';
                 echo Modules::run(self::$template, self::$data);
             }
             // Code to run when form validates.
@@ -133,7 +144,6 @@ class User extends MX_Controller
             redirect(base_url() . 'user/');
         }
 
-        self::$data['view_file'] = 'user_login';
         echo Modules::run(self::$template, self::$data);
     }
 
@@ -158,6 +168,8 @@ class User extends MX_Controller
 
     public function add()
     {
+        self::$data['view_file'] = 'user_add';
+
         if ($this->input->post('add'))
         {
             $this->user_library->set_validation_rules('user_insert');
@@ -166,7 +178,6 @@ class User extends MX_Controller
             if ($this->form_validation->run() == FALSE)
             {
                 // Form does not validate.
-                self::$data['view_file'] = 'user_edit';
                 echo Modules::run(self::$template, self::$data);
             }
             else
@@ -188,7 +199,6 @@ class User extends MX_Controller
         }
         else
         {
-            self::$data['view_file'] = 'user_add';
             echo Modules::run(self::$template, self::$data);
         }
     }
@@ -205,6 +215,8 @@ class User extends MX_Controller
      */
     public function edit()
     {
+        self::$data['view_file'] = 'user_edit';
+
         if ($this->session->userdata('user_id'))
         {
             $id   = $this->session->userdata('user_id');
@@ -232,7 +244,6 @@ class User extends MX_Controller
             if ($this->form_validation->run() == FALSE)
             {
                 // Form does not validate.
-                self::$data['view_file'] = 'user_edit';
                 echo Modules::run(self::$template, self::$data);
             }
 
@@ -260,7 +271,6 @@ class User extends MX_Controller
         // Code to run when user first visits the page without hitting submit.
         else
         {
-            self::$data['view_file'] = 'user_edit';
             echo Modules::run(self::$template, self::$data);
         }
     }
@@ -272,6 +282,8 @@ class User extends MX_Controller
      */
     public function delete()
     {
+        self::$data['view_file'] = 'user_delete';
+
         // Instanitate User based on session userdata('user_id').
         if ($id = $this->session->userdata('user_id'))
         {
@@ -316,7 +328,6 @@ class User extends MX_Controller
         else
         {
             self::$data['user'] = $user;
-            self::$data['view_file'] = 'user_delete';
             echo Modules::run(self::$template, self::$data);
         }
     }

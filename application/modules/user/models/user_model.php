@@ -66,18 +66,17 @@ class User_model extends CI_Model
         // Sanitize username.
         $sanitized_username = $this->db->escape_str($username);
         // Sanitize and encrypt password.
-        $encrypted_password = $this->db->escape_str($password);
+        $sanitized_password = $this->db->escape_str($password);
         // Run the query.
-        $result             = $this->db
+        $result = $this->db
             ->select('users.id, username, email, created, role')
             ->join('join_users_roles', 'join_users_roles.user_id = users.id')
             ->join('roles', 'roles.id = join_users_roles.role_id')
             ->get_where('users', array(
             'username' => $sanitized_username,
-            'password' => $encrypted_password,), 1);
-        $user      = $result->row();
+            'password' => $sanitized_password,), 1);
 
-        return ($result->num_rows() == 1) ? $user : FALSE;
+        return ($result->num_rows() == 1) ? $result->row() : FALSE;
     }
 
     public function store_remember_code($remember_code = NULL, $id = NULL)
@@ -98,7 +97,10 @@ class User_model extends CI_Model
 
     public function delete_remember_code($id = NULL)
     {
-        $this->db->set('remember_code', '')
+        $this->db
+            ->set('remember_code', '')
+            ->set('ip_address', '')
+            ->set('user_agent', '')
             ->where('id', (int) $id)
             ->update('users');
         $num_rows = $this->db->affected_rows();
@@ -108,11 +110,9 @@ class User_model extends CI_Model
 
     public function add_user($post = NULL)
     {
-        $this->load->helper('date');
-
         $post = $this->prep_post($post);
 
-        $post['created'] = now();
+        $post['created'] = time();
         unset($post['passconf']);
         unset($post['add']);
 
@@ -155,9 +155,17 @@ class User_model extends CI_Model
         return ($result) ? TRUE : FALSE;
     }
 
-    public function delete_user($id = NULL)
+    public function delete_user()
     {
-        $this->db->delete('users', array('id' => (int) $id), 1);
+        $id = $this->session->userdata('user_id');
+
+        $result = $this->db->delete('users', array('id' => (int) $id), 1);
+
+        if ($result)
+        {
+            $result2 = $this->db
+                ->delete('join_users_roles', array('user_id' => (int) $id), 1);
+        }
 
         return ($this->db->affected_rows() > 0) ? TRUE : FALSE;
     }
