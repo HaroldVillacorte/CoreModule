@@ -41,8 +41,8 @@
                 <a href="#">Admin menu</a>
                 <a href="#" class="flyout-toggle"><span> </span></a>
                 <ul class="flyout">
-                    <li><a href="<?php echo base_url() ;?>user_admin/">Admin</a></li>
-                    <li><a href="<?php echo base_url() ;?>user_admin/roles/">User roles</a></li>
+                    <li><a href="<?php echo base_url() ;?>user/admin_users/">Admin</a></li>
+                    <li><a href="<?php echo base_url() ;?>user/admin_roles/">User roles</a></li>
                 </ul>
             </li>
 

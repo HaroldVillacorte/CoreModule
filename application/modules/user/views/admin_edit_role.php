@@ -1,6 +1,6 @@
 <h4>Add Role</h4>
 
-<?php echo form_open('user_admin/edit_role') ;?>
+<?php echo form_open('user/admin_edit_role') ;?>
 
 <input type="hidden" name="id" value="<?php echo isset($role) ? $role->id : set_value('id') ;?>" />
 

@@ -1,6 +1,6 @@
 <h4>Add Role</h4>
 
-<?php echo form_open('user_admin/add_role') ;?>
+<?php echo form_open('user/admin_add_role') ;?>
 
 <label for="role">Role:</label>
 <input class="<?php echo $this->core_library->form_error_class('role') ;?>"
