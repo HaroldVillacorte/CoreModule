@@ -24,12 +24,12 @@ class Demo_Doctrine2 extends MX_Controller
     {
         parent::__construct();
         $this->load->library('doctrine');
-        self::$data = $this->core_model->site_info();
+        self::$data = $this->core_module_model->site_info();
         self::$data['module'] = 'demo_doctrine2';
 
         // Load User library for permissions.
-        $this->load->library('user/user_library');
-        $this->user_library->permission(array('admin', 'super_user'));
+        $this->load->library('core_user/core_user_library');
+        $this->core_user_library->permission(array('admin', 'super_user'));
 
         self::$user_page = NULL;
         if ($this->session->userdata('demo_doctrine2_page'))

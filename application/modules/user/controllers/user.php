@@ -41,25 +41,25 @@ class User extends MX_Controller
         parent::__construct();
 
         // Load the config and language files.
-        $this->config->load('user_config');
-        $this->lang->load('user', $this->config->item('user_language'));
+        $this->config->load('core_user/core_user_config');
+        $this->lang->load('core_user/core_user', $this->config->item('core_user_language'));
 
         // Load libraries.
-        $this->load->library('user_library');
-        $this->load->library('core_library/core_library');
+        $this->load->library('core_user/core_user_library');
+        $this->load->library('core_module/core_module_library');
 
         // Load helpers.
         $this->load->helper('date');
         $this->load->helper('form');
 
         // Load models.
-        $this->load->model('user_model');
+        $this->load->model('core_user/core_user_model');
 
         // Check if a user is logged in.
-        $this->user_library->check_logged_in();
+        $this->core_user_library->user_check_logged_in();
 
         // Initialize the data array.
-        self::$data = $this->core_model->site_info();
+        self::$data = $this->core_module_model->site_info();
 
         // Sets the module to be sent to the Template module.
         self::$data['module'] = 'user';
@@ -87,9 +87,9 @@ class User extends MX_Controller
         $id = $this->session->userdata('user_id');
         if (!$id)
         {
-            redirect(base_url() . $this->user_library->user_login_uri);
+            redirect(base_url() . $this->core_user_library->user_login_uri);
         }
-        $user = $this->user_model->find_user($id);
+        $user = $this->core_user_library->user_find($id);
         self::$data['user'] = $user;
 
         echo Modules::run(self::$template, self::$data);
@@ -106,7 +106,7 @@ class User extends MX_Controller
         if ($this->input->post('submit'))
         {
             // Sets the CI validation rules.
-            $this->user_library->set_validation_rules('user_login');
+            $this->core_user_library->set_validation_rules('user_login');
             // Code to run form does not validate.
             if ($this->form_validation->run() == FALSE)
             {
@@ -117,38 +117,8 @@ class User extends MX_Controller
             {
                 $username = $this->input->post('username');
                 $password = $this->input->post('password');
-                $user     = $this->user_model->login($username, $password);
-                if ($user)
-                {
-                    // Login success.
-                    log_message('error', $username . ' logged in.');
-                    $this->session->set_flashdata('message_success', $this->lang->line('success_user_login') . $username . '.');
-                    $this->user_library->set_user_session_data($user);
-
-                    // Set the login cookie if checked.
-                    $set_persistent_login = (bool) $this->input->post('set_persistent_login');
-                    if ($set_persistent_login)
-                    {
-                        $remember_code       = $this->user_library->set_persistent_login();
-                        $store_remember_code = $this->user_model->store_remember_code($remember_code, $user->id);
-
-                        if (!$store_remember_code)
-                        {
-                            $this->session->set_flashdata('message_notice', $this->lang->line('notice_user_persistent_fail'));
-                            $this->user_library->unset_persistent_login();
-                        }
-                    }
-                    redirect(base_url() . $this->user_library->user_index_uri);
-                }
-
-                // Code to run if username and password combination is not found in the
-                // database.
-                else
-                {
-                    // Unsuccessful login.
-                    $this->session->set_flashdata('message_error', $this->lang->line('error_user_login_failed'));
-                    redirect(current_url());
-                }
+                $set_persistent_login = (bool) $this->input->post('set_persistent_login');
+                $this->core_user_library->user_login($username, $password, $set_persistent_login);
             }
         }
 
@@ -157,7 +127,7 @@ class User extends MX_Controller
         if ($this->session->userdata('user_id'))
         {
             $this->core_library->keep_flashdata_messages();
-            redirect(base_url() . $this->user_library->user_index_uri);
+            redirect(base_url() . $this->core_user_library->user_index_uri);
         }
 
         echo Modules::run(self::$template, self::$data);
@@ -168,17 +138,7 @@ class User extends MX_Controller
      */
     public function logout()
     {
-        $username = $this->session->userdata('username');
-        $id       = $this->session->userdata('user_id');
-        log_message('error', $username . ' logged out.');
-        $result   = $this->user_model->delete_remember_code($id);
-
-        if (!$result)
-        {
-            log_message('error', $username . $this->lang->line('error_user_delete_remember_failed'));
-        }
-
-        $this->user_library->logout('user/login/');
+        $this->core_user_library->user_logout();
     }
 
     /**
@@ -190,7 +150,7 @@ class User extends MX_Controller
 
         if ($this->input->post('add'))
         {
-            $this->user_library->set_validation_rules('user_insert');
+            $this->core_user_library->set_validation_rules('user_insert');
 
             // Code to run when the the form does not validate.
             if ($this->form_validation->run() == FALSE)
@@ -201,25 +161,25 @@ class User extends MX_Controller
             else
             {
                 // Form validation passed.
-                $result_id = $this->user_model->add_user($this->input->post());
-
-                switch ($result_id)
-                {
-                    case TRUE:
-                        $this->session->set_flashdata('message_success', $this->lang->line('success_user_account_created'));
-                        redirect(base_url() . $this->user_library->user_login_uri);
-                        break;
-                    case FALSE:
-                        $this->session->set_flashdata('message_error', $this->lang->line('error_user_account_failed'));
-                        redirect(current_url());
-                        break;
-                }
+                $this->core_user_library->user_add($this->input->post());
             }
         }
         else
         {
             // Code to run when user first visits.
             echo Modules::run(self::$template, self::$data);
+        }
+    }
+
+    public function activate($activation_code = NULL)
+    {
+        if ($activation_code == NULL)
+        {
+            redirect(base_url() . $this->core_user_library->user_login_uri);
+        }
+        else
+        {
+            $this->core_user_library->user_activate($activation_code);
         }
     }
 
@@ -233,12 +193,12 @@ class User extends MX_Controller
         // Check if a user is logged in then set the user id from the session.
         if (!$this->session->userdata('user_id'))
         {
-            redirect(base_url() . $this->user_library->user_index_uri);
+            redirect(base_url() . $this->core_user_library->user_index_uri);
         }
         else
         {
             $id   = $this->session->userdata('user_id');
-            $user = $this->user_model->find_user($id);
+            $user = $this->core_user_library->user_find($id);
             self::$data['user'] = $user;
         }
 
@@ -247,7 +207,7 @@ class User extends MX_Controller
         {
             if ($this->session->userdata('user_id'))
             {
-                redirect(base_url() . $this->user_library->user_delete_uri);
+                redirect(base_url() . $this->core_user_library->user_delete_uri);
             }
         }
 
@@ -255,7 +215,7 @@ class User extends MX_Controller
         if ($this->input->post('save'))
         {
             // Set the validation rules for updating a user.
-            $this->user_library->set_validation_rules('user_update');
+            $this->core_user_library->set_validation_rules('user_update');
 
             // Code to run when the the form does not validate.
             if ($this->form_validation->run() == FALSE)
@@ -263,26 +223,10 @@ class User extends MX_Controller
                 // Form does not validate.
                 echo Modules::run(self::$template, self::$data);
             }
-
             // Code to run when the form passes validation.
             else
             {
-                // Check first if account is protected.
-                $this->user_library->check_user_protected($user, 'edit');
-
-                $result = $this->user_model->edit_user($this->input->post());
-
-                switch ($result)
-                {
-                    case TRUE:
-                        $this->session->set_flashdata('message_success', $this->lang->line('success_user_account_edited'));
-                        redirect(base_url() . $this->user_library->user_index_uri);
-                        break;
-                    case FALSE:
-                        $this->session->set_flashdata('message_error', $this->lang->line('error_user_account_edit_failed'));
-                        redirect(current_url());
-                        break;
-                }
+                $this->core_user_library->user_edit($user, $this->input->post());
             }
         }
 
@@ -303,7 +247,7 @@ class User extends MX_Controller
         // Instanitate User based on session userdata('user_id').
         if ($id = $this->session->userdata('user_id'))
         {
-            $user = $this->user_model->find_user($id);
+            $user = $this->core_user_library->user_find($id);
         }
         else
         {
@@ -314,22 +258,10 @@ class User extends MX_Controller
         if ($this->input->post('delete'))
         {
             // Check first if account is protected.
-            $this->user_library->check_user_protected($user, 'delete');
+            $this->core_user_library->user_check_protected($user, 'delete');
 
-            // Delete the user.
-            $result = $this->user_model->delete_user($id);
-
-            switch ($result)
-            {
-                case TRUE:
-                    redirect(base_url() . $this->user_library->user_logout_uri);
-                    break;
-                case FALSE:
-                    $this->session
-                        ->set_flashdata('message_error', $this->lang->line('error_user_account_delete_failed'));
-                    redirect(base_url() . $this->user_library->user_edit_uri);
-                    break;
-            }
+            // Delete.
+            $this->core_user_library->user_delete($user);
         }
 
         // Redirect user if they come to this page without being logged in.
@@ -354,8 +286,7 @@ class User extends MX_Controller
         self::$data['view_file'] = 'admin_roles';
 
         // Generate table
-        $roles      = $this->user_model->admin_get_all_roles('array');
-        $role_table = $this->user_library->admin_role_table($roles);
+        $role_table = $this->core_user_library->admin_role_table();
 
         // Render the page.
         self::$data['output'] = $role_table;
@@ -365,13 +296,13 @@ class User extends MX_Controller
     /**
      * Admin add a role.
      */
-    public function admin_add_role()
+    public function admin_role_add()
     {
-        self::$data['view_file'] = 'admin_add_role';
+        self::$data['view_file'] = 'admin_role_add';
 
         if ($this->input->post('save'))
         {
-            $this->user_library->set_validation_rules('admin_role_insert');
+            $this->core_user_library->set_validation_rules('admin_role_insert');
 
             if ($this->form_validation->run() == FALSE)
             {
@@ -379,18 +310,7 @@ class User extends MX_Controller
             }
             else
             {
-                $result = $this->user_model->admin_save_role($this->input->post());
-
-                if ($result)
-                {
-                    $this->session->set_flashdata('message_success', $this->lang->line('success_admin_add__role'));
-                    redirect(current_url());
-                }
-                else
-                {
-                    $this->session->set_flashdata('message_error', $this->lang->line('error_admin_add_role'));
-                    redirect(current_url());
-                }
+                $this->core_user_library->admin_role_add($this->input->post());
             }
         }
         else
@@ -400,26 +320,26 @@ class User extends MX_Controller
     }
 
     /**
-     * Admin edites a role.
+     * Admin edits a role.
      *
      * @param integer $id
      */
-    public function admin_edit_role($id = NULL)
+    public function admin_role_edit($id = NULL)
     {
-        self::$data['view_file'] = 'admin_edit_role';
+        self::$data['view_file'] = 'admin_role_edit';
 
         // Instantiate the role to populate the form.
-        $role = $this->user_model->admin_get_role($id);
+        $role = $this->core_user_library->admin_role_get($id);
         self::$data['role'] = ($role) ? $role : NULL;
 
         if ($this->input->post('save'))
         {
-            $role = $this->user_model->admin_get_role($this->input->post('id'));
+            $role = $this->core_user_library->admin_role_get($this->input->post('id'));
 
             // Check first if role is protected.
-            $this->user_library->admin_check_role_protected($role);
+            $this->core_user_library->admin_check_role_protected($role);
 
-            $this->user_library->set_validation_rules('admin_role_update');
+            $this->core_user_library->set_validation_rules('admin_role_update');
 
             if ($this->form_validation->run() == FALSE)
             {
@@ -427,18 +347,7 @@ class User extends MX_Controller
             }
             else
             {
-                $result = $this->user_model->admin_save_role($this->input->post());
-
-                if ($result)
-                {
-                    $this->session->set_flashdata('message_success', $this->lang->line('success_admin_edit_role'));
-                    redirect(base_url() . $this->user_library->user_admin_roles_uri);
-                }
-                else
-                {
-                    $this->session->set_flashdata('message_error', $this->lang->line('error_admin_edit_role'));
-                    redirect(current_url());
-                }
+                $this->core_user_library->admin_role_edit($this->input->post());
             }
         }
         else
@@ -452,30 +361,18 @@ class User extends MX_Controller
      *
      * @param integer $id
      */
-    public function admin_delete_role($id = NULL)
+    public function admin_role_delete($id = NULL)
     {
         // Redirect if role id is not set.
-        if (!$id) redirect(base_url() . $this->user_library->user_admin_roles_uri);
+        if (!$id) redirect(base_url() . $this->core_user_library->user_admin_roles_uri);
 
-        $role = $this->user_model->admin_get_role($id);
+        $role = $this->core_user_library->admin_role_get($id);
 
         // Check if role is protected.
-        $this->user_library->admin_check_role_protected($role);
+        $this->core_user_library->admin_check_role_protected($role);
 
         // Delete the role.
-        $result = $this->user_model->admin_delete_role($id);
-
-        switch ($result)
-        {
-            case TRUE:
-                $this->session->set_flashdata('message_success', $this->lang->line('success_delete_role'));
-                redirect(base_url() . $this->user_library->user_admin_roles_uri);
-                break;
-            case FALSE:
-                $this->session->set_flashdata('message_error', $this->lang->line('error_admin_delete_role'));
-                redirect(current_url());
-                break;
-        }
+        $this->core_user_library->admin_role_delete($role->id);
     }
 
     /**
@@ -499,24 +396,22 @@ class User extends MX_Controller
         }
 
         // Database queries.
-        $query1 = $this->user_model->admin_get_limit_offset_users($per_page, $start);
-        $query2 = $this->user_model->admin_get_all_users();
-        $count  = count($query2);
-        $output = $query1;
+        $count = $this->core_user_library->admin_get_user_count();
+        $output = $this->core_user_library->admin_user_limit_offset_get($per_page, $start);
 
         // Get first and last id's.
         self::$data['first'] = $page + 1;
         self::$data['last'] = $page + count($output);
 
         // Pagination setup
-        $pagination_config = $this->user_library
+        $pagination_links = $this->core_user_library
             ->admin_user_page_pagination_setup($count, $per_page);
 
         // Table render
-        $table_output = $this->user_library->admin_user_page_table_setup($output);
+        $table_output = $this->core_user_library->admin_user_page_table_setup($output);
 
         // Page setup
-        self::$data['pagination_links'] = $pagination_config;
+        self::$data['pagination_links'] = $pagination_links;
         self::$data['output'] = $table_output;
         self::$data['count'] = $count;
 
@@ -543,19 +438,20 @@ class User extends MX_Controller
      *
      * @param integer $id
      */
-    public function admin_edit_user($id = NULL)
+    public function admin_user_edit($id = NULL)
     {
-        self::$data['view_file'] = 'admin_edit_user';
-        self::$data['all_roles'] = $this->user_model->admin_get_all_roles('object');
+        self::$data['view_file'] = 'admin_user_edit';
+        self::$data['all_roles'] = $this->core_user_library->admin_role_get_all();
+        $user = $this->core_user_library->user_find((int) $id);
 
         // Redirect admin user if id is not set.
         if ($id == NULL && !$this->input->post('save'))
         {
-            redirect(base_url() . $this->user_library->user_admin_users_uri);
+            redirect(base_url() . $this->core_user_library->user_admin_users_uri);
         }
         elseif ($this->input->post('save'))
         {
-            $this->user_library->set_validation_rules('admin_user_update');
+            $this->core_user_library->set_validation_rules('admin_user_update');
 
             if ($this->form_validation->run() == FALSE)
             {
@@ -564,25 +460,13 @@ class User extends MX_Controller
             else
             {
                 $id   = $this->input->post('id');
-                $user = $this->user_model->find_user($id)->row();
+                $user = $this->core_user_library->user_find($id);
 
                 // Check first if user account is protected.
-                $this->user_library->admin_check_user_protected($user);
+                $this->core_user_library->admin_check_user_protected($user);
 
-                // Delete the user account.
-                $result = $this->user_model->admin_save_user($this->input->post());
-
-                switch ($result)
-                {
-                    case TRUE:
-                        $this->session->set_flashdata('message_success', $this->lang->line('success_admin_edit_user'));
-                        redirect(base_url() . $this->user_library->user_admin_add_user_uri . $id);
-                        break;
-                    case FALSE:
-                        $this->session->set_flashdata('message_error', $this->lang->line('error_admin_edit_user'));
-                        redirect(base_url() . $this->user_library->user_admin_add_user_uri . $id);
-                        break;
-                }
+                // Edit the user account.
+                $this->core_user_library->admin_user_edit($this->input->post());
             }
         }
         else
@@ -590,7 +474,6 @@ class User extends MX_Controller
             // Add the js file.
             array_unshift(self::$data['scripts'], 'user_admin_ajax.js');
 
-            $user = $this->user_model->find_user((int) $id);
             self::$data['user'] = $user;
             echo Modules::run(self::$template, self::$data);
         }
@@ -599,14 +482,14 @@ class User extends MX_Controller
     /**
      * Admin adds a user.
      */
-    public function admin_add_user()
+    public function admin_user_add()
     {
-        self::$data['view_file'] = 'admin_add_user';
-        self::$data['all_roles'] = $this->user_model->admin_get_all_roles('object');
+        self::$data['view_file'] = 'admin_user_add';
+        self::$data['all_roles'] = $this->core_user_library->admin_role_get_all();
 
         if ($this->input->post('save'))
         {
-            $this->user_library->set_validation_rules('admin_user_insert');
+            $this->core_user_library->set_validation_rules('admin_user_insert');
 
             if ($this->form_validation->run() == FALSE)
             {
@@ -615,19 +498,7 @@ class User extends MX_Controller
             else
             {
                 // Add the user.
-                $result = $this->user_model->admin_save_user($this->input->post(), NULL);
-
-                switch ($result)
-                {
-                    case TRUE:
-                        $this->session->set_flashdata('message_success', $this->lang->line('success_admin_add_user'));
-                        redirect(base_url() . $this->user_library->user_admin_users_uri);
-                        break;
-                    case FALSE:
-                        $this->session->set_flashdata('message_error', $this->lang->line('error_admin_add_user'));
-                        redirect(base_url() . $this->user_library->user_admin_users_uri);
-                        break;
-                }
+                $this->core_user_library->admin_user_add($this->input->post());
             }
         }
         else
@@ -644,7 +515,7 @@ class User extends MX_Controller
      *
      * @param integer $id
      */
-    public function admin_delete_user($id = NULL)
+    public function admin_user_delete($id = NULL)
     {
         if ($id == NULL)
         {
@@ -652,27 +523,15 @@ class User extends MX_Controller
         }
         else
         {
-            $user   = $this->user_model->find_user($id);
+            $user = $this->core_user_library->user_find($id);
 
             // Check first if user account is protected.
-            $this->user_library->admin_check_user_protected($user);
+            $this->core_user_library->admin_check_user_protected($user);
 
             // Delete the user.
-            $result = $this->user_model->admin_delete_user($id);
-
-            switch ($result)
-            {
-                case $result == 'deleted':
-                    $this->session->set_flashdata('message_success', $this->lang->line('success_admin_delete_user'));
-                    redirect(base_url() . $this->user_library->user_admin_users_uri);
-                    break;
-                case $result == FALSE:
-                    $this->session->set_flashdata('message_error', $this->lang->line('error_admin_delete_user'));
-                    redirect(base_url() . $this->user_library->user_admin_users_uri . self::$user_page);
-                    break;
-            }
+            $this->core_user_library->admin_user_delete($user->id, self::$user_page);
         }
     }
 
 }
-/* End of file user.php */
+/* End of file core_user.php */

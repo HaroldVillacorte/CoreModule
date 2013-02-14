@@ -1,14 +1,11 @@
 <?php if (!defined('BASEPATH')) exit('No direct script access allowed.');
 
-class User_model extends CI_Model
+class Core_user_model extends CI_Model
 {
 
     function __construct()
     {
         parent::__construct();
-
-        // Load libraries.
-        $this->load->library('user_library');
 
         // Load the database class.
         $this->load->database();
@@ -44,15 +41,15 @@ class User_model extends CI_Model
      * @param integer $id
      * @return object
      */
-    public function find_user($id = NULL)
+    public function user_find($id = NULL)
     {
         $user = $this->db
-            ->select('users.id, users.protected, username, email, created, role_id, role')
+            ->select('users.id, users.protected, username, email, activation_code, created, role_id, role')
             ->join('join_users_roles', 'join_users_roles.user_id = users.id')
             ->join('roles', 'roles.id = join_users_roles.role_id')
             ->get_where('users', array('users.id' => (int) $id));
 
-        return ($user) ? $user->row() : FALSE;
+        return ($user) ? $user : FALSE;
     }
 
     /**
@@ -60,7 +57,7 @@ class User_model extends CI_Model
      *
      * @return array $roles
      */
-    public function get_user_roles()
+    public function user_get_roles()
     {
         if ($this->session->userdata('user_id'))
         {
@@ -89,7 +86,7 @@ class User_model extends CI_Model
      * @param string $password
      * @return object $user
      */
-    public function login($username, $password)
+    public function user_login($username, $password)
     {
         // Sanitize username.
         $sanitized_username = $this->db->escape_str($username);
@@ -115,7 +112,7 @@ class User_model extends CI_Model
      * @param integer $id
      * @return boolean
      */
-    public function store_remember_code($remember_code = NULL, $id = NULL)
+    public function user_remember_code_store($remember_code = NULL, $id = NULL)
     {
         $ip_address = $this->session->userdata('ip_address');
         $user_agent = $this->session->userdata('user_agent');
@@ -138,7 +135,7 @@ class User_model extends CI_Model
      * @param integer $id
      * @return boolean
      */
-    public function delete_remember_code($id = NULL)
+    public function user_remember_code_delete($id = NULL)
     {
         $this->db
             ->set('remember_code', '')
@@ -157,9 +154,12 @@ class User_model extends CI_Model
      * @param array $post
      * @return mixed
      */
-    public function add_user($post = NULL)
+    public function user_add($post = NULL)
     {
         $post = $this->prep_post($post);
+
+        // Generate unique activation code from email.
+        $post['activation_code'] = sha1($post['email']);
 
         $post['created'] = time();
         unset($post['passconf']);
@@ -167,13 +167,62 @@ class User_model extends CI_Model
 
         $result  = $this->db->insert('users', $post);
         $id      = $this->db->insert_id();
-        $result2 = $this->db
+
+        if ($result)
+        {
+            $result2 = $this->db
             ->insert('join_users_roles', array(
-            'user_id' => (int) $id,
-            'role_id' => 3,
+                'user_id' => (int) $id,
+                'role_id' => 3,
             ));
+        }
 
         return ($result2) ? $id : FALSE;
+    }
+
+    /**
+     * User activates own account through email link.
+     *
+     * @param string $activation_code
+     * @return string
+     */
+    public function user_activate($activation_code = NULL)
+    {
+        $code = $this->db->escape_str($activation_code);
+
+        // Find inactive user with activaton code.
+        $result = $this->db
+            ->get_where('users', array(
+                'activation_code' => $code,
+                'active'          => 0,
+                ), 1);
+        if ($result->num_rows() > 0)
+        {
+            $user = $result->row();
+            $time = time();
+            // Activate user if time now is less than 24 hours.
+            if (($time - $user->created) <= 86400)
+            {
+                $data = array(
+                    'activation_code' => NULL,
+                    'active'          => 1,
+                );
+                $this->db->where('id', $user->id)->update('users', $data);
+                // Return 'updated if query success.'
+                return ($this->db->affected_rows() > 0) ? 'activated' : FALSE;
+            }
+            else
+            {
+                // Or delte expired account and return 'expired'.
+                $this->admin_user_delete($user->id);
+                return 'expired';
+            }
+        }
+        else
+        {
+            // If activation code/inactive not found in the database.
+            return 'not_found';
+        }
     }
 
     /**
@@ -182,7 +231,7 @@ class User_model extends CI_Model
      * @param array $post
      * @return boolean
      */
-    public function edit_user($post)
+    public function user_edit($post)
     {
         $post = $this->prep_post($post);
 
@@ -203,10 +252,6 @@ class User_model extends CI_Model
             ->limit(1)
             ->update('users', $post);
 
-        // Reset the user session data ater update.
-        $updated_user = $this->find_user((int) $post['id']);
-        $this->user_library->set_user_session_data($updated_user);
-
         return ($result) ? TRUE : FALSE;
     }
 
@@ -215,7 +260,7 @@ class User_model extends CI_Model
      *
      * @return boolean
      */
-    public function delete_user()
+    public function user_delete()
     {
         // Get the user id from the session.
         $id = $this->session->userdata('user_id');
@@ -239,7 +284,7 @@ class User_model extends CI_Model
      * @param array $post
      * @return boolean
      */
-    public function admin_save_user($post)
+    public function admin_user_save($post)
     {
         $post = $this->prep_post($post);
 
@@ -303,19 +348,17 @@ class User_model extends CI_Model
      * @param integer $id
      * @return mixed
      */
-    public function admin_delete_user($id = NULL)
+    public function admin_user_delete($id = NULL)
     {
         // Delte the user.
         $result = $this->db->delete('users', array('id' => (int) $id), 1);
 
         if ($result)
         {
-            // Delete the role.
-            $result2 = $this->db
-                ->delete('join_users_roles', array('user_id' => (int) $id), 1);
+            // Delete the user role.
+            $this->db->delete('join_users_roles', array('user_id' => (int) $id), 1);
 
-            // For some reason I chose to return a string instead of TRUE.
-            return ($this->db->affected_rows() > 1) ? 'deleted' : FALSE;
+            return ($this->db->affected_rows() > 1) ? TRUE : FALSE;
         }
     }
 
@@ -325,11 +368,10 @@ class User_model extends CI_Model
      * @param integer $id
      * @return mixed
      */
-    public function admin_get_role($id = NULL)
+    public function admin_role_get($id = NULL)
     {
         $query = $this->db->where('id', (int) $id)->get('roles');
-        $role  = $query->row();
-        return ($query->num_rows() > 0) ? $role : FALSE;
+        return ($query->num_rows() > 0) ? $query : FALSE;
     }
 
     /**
@@ -338,21 +380,11 @@ class User_model extends CI_Model
      * @param string $data_type
      * @return mixed
      */
-    public function admin_get_all_roles($data_type = 'array')
+    public function admin_role_get_all()
     {
-        $query       = $this->db->get('roles');
-        $return_type = NULL;
+        $result = $this->db->get('roles');
 
-        switch ($data_type)
-        {
-            case 'array':
-                $return_type = $query->result_array();
-                break;
-            case 'object':
-                $return_type = $query->result();
-        }
-
-        return ($query->num_rows() > 0) ? $return_type : FALSE;
+        return ($result->num_rows() > 0) ? $result : FALSE;
     }
 
     /**
@@ -361,7 +393,7 @@ class User_model extends CI_Model
      * @param array $post
      * @return mixed
      */
-    public function admin_save_role($post)
+    public function admin_role_save($post)
     {
         $post = $this->prep_post($post);
 
@@ -400,34 +432,43 @@ class User_model extends CI_Model
      * @param integer $id
      * @return boolean
      */
-    public function admin_delete_role($id = NULL)
+    public function admin_role_delete($id = NULL)
     {
         $query = $this->db->delete('roles', array('id' => (int) $id), 1);
         $result = $this->db->affected_rows();
 
-        return ($result) ? TRUE : FALSE;
+        return ($result > 0) ? TRUE : FALSE;
     }
 
     /**
-     * Admin gets all users.  Make sure to unset passwords.
+     * Admin gets all users.
      *
-     * @return mixed
+     * @return array
      */
-    public function admin_get_all_users()
+    public function admin_user_get_all()
     {
         $query = $this->db->get('users');
 
-        return ($query->num_rows() > 0) ? $query->result_array() : FALSE;
+        if ($query->num_rows() > 0)
+        {
+            $result_array =  $query->result_array();
+            foreach ($result_array as $result)
+            {
+                unset($result['password']);
+            }
+        }
+
+        return ($query->num_rows() > 0) ? $result_array : FALSE;
     }
 
     /**
      * Paginated users.
-     * 
+     *
      * @param integer $per_page
      * @param integer $start
      * @return mixed
      */
-    public function admin_get_limit_offset_users($per_page, $start)
+    public function admin_user_limit_offset_get($per_page, $start)
     {
         $query = $this->db
             ->select('users.id, username, email, role, created, users.protected')
@@ -439,4 +480,4 @@ class User_model extends CI_Model
     }
 
 }
-/* End of file user_model.php */
+/* End of file core_user_model.php */

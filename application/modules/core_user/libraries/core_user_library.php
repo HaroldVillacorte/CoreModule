@@ -1,6 +1,6 @@
 <?php if (!defined('BASEPATH')) exit('No direct script access allowed.');
 
-class User_library
+class Core_user_library
 {
 
     /**
@@ -9,6 +9,13 @@ class User_library
      * @var object
      */
     private static $CI;
+
+    /**
+     * The data array.
+     *
+     * @var array
+     */
+    private static $data;
 
     /**
      * User profile uri.
@@ -37,6 +44,13 @@ class User_library
      * @var string
      */
     public $user_add_uri;
+
+    /**
+     * User activate account uri.
+     *
+     * @var string
+     */
+    public $user_activation_uri;
 
     /**
      * User edit account uri.
@@ -120,8 +134,8 @@ class User_library
         self::$CI = & get_instance();
 
         // Load the config and language files.
-        self::$CI->config->load('user/user_config');
-        self::$CI->lang->load('user/user', self::$CI->config->item('user_language'));
+        self::$CI->config->load('core_user/core_user_config');
+        self::$CI->lang->load('core_user/core_user', self::$CI->config->item('core_user_language'));
 
         // Load the libraries.
         self::$CI->load->library('session');
@@ -129,16 +143,23 @@ class User_library
         self::$CI->load->library('table');
         self::$CI->load->library('pagination');
 
+        // Load the models.
+        self::$CI->load->model('core_user/core_user_model');
+
         // Load the Database class.
         self::$CI->load->database();
 
+        // Intialize the data array.
+        self::$data = self::$CI->core_module_model->site_info();
+
         // Set the user uri's.
-        $this->user_index_uri   = self::$CI->config->item('user_index_uri');
-        $this->user_login_uri   = self::$CI->config->item('user_login_uri');
-        $this->user_logout_uri  = self::$CI->config->item('user_logout_uri');
-        $this->user_add_uri     = self::$CI->config->item('user_add_uri');
-        $this->user_edit_uri    = self::$CI->config->item('user_edit_uri');
-        $this->user_delete_uri  = self::$CI->config->item('user_delete_uri');
+        $this->user_index_uri      = self::$CI->config->item('user_index_uri');
+        $this->user_login_uri      = self::$CI->config->item('user_login_uri');
+        $this->user_logout_uri     = self::$CI->config->item('user_logout_uri');
+        $this->user_add_uri        = self::$CI->config->item('user_add_uri');
+        $this->user_activation_uri = self::$CI->config->item('user_activation_uri');
+        $this->user_edit_uri       = self::$CI->config->item('user_edit_uri');
+        $this->user_delete_uri     = self::$CI->config->item('user_delete_uri');
 
         // Set the admin uri's.
         $this->user_admin_index_uri         = self::$CI->config->item('user_admin_index_uri');
@@ -343,13 +364,236 @@ class User_library
     }
 
     /**
+     * Finds a user by primary key $id.
+     *
+     * @param integer $id
+     * @return mixed
+     */
+    public function user_find($id = NULL)
+    {
+        $user = self::$CI->core_user_model->user_find($id);
+        return ($user) ? $user->row() : FALSE;
+    }
+
+    /**
+     * User adds own account.
+     *
+     * @param array $post
+     */
+    public function user_add($post = array())
+    {
+        $result_id = self::$CI->core_user_model->user_add($post);
+
+        switch ($result_id)
+        {
+            case TRUE:
+                $this->user_send_welcome_email($result_id);
+                break;
+            case FALSE:
+                self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_user_account_failed'));
+                redirect(current_url());
+                break;
+        }
+    }
+
+    public function user_send_welcome_email($result_id = NULL)
+    {
+        // Load the email module.
+        self::$CI->load->library('core_email/core_email_library');
+
+        // Find new user.
+        $user = $this->user_find($result_id);
+
+        // Message.
+        self::$data['username']            = $user->username;
+        self::$data['email']               = $user->email;
+        self::$data['activation_url_text'] = base_url() . $this->user_activation_uri . $user->activation_code;
+        self::$data['activation_url_html'] = anchor($this->user_activation_uri . $user->activation_code, 'Activate');
+        self::$data['login_url_text']      = base_url() . $this->user_login_uri;
+        self::$data['login_url_html']      = anchor($this->user_login_uri, 'Login');
+        $message     = self::$CI->load->view('core_user/email_templates/welcome', self::$data, TRUE);
+        $message_alt = self::$CI->load->view('core_user/email_templates/welcome_alt', self::$data, TRUE);
+
+        // Set the message array.
+        $email = array(
+            'to'          => $user->email,
+            'to_name'     => $user->username,
+            'subject'     => 'Welcome to ' . self::$data['site_name'],
+            'message'     => $message,
+            'message_alt' => $message_alt,
+        );
+
+        // Send the email.
+        $result = self::$CI->core_email_library->system_email_send($email);
+
+        // Log email error.
+        if ($result)
+        {
+            self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_user_account_created'));
+            redirect(base_url() . $this->user_login_uri);
+
+        }
+        else
+        {
+            self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_user_account_failed'));
+            self::$CI->core_user_model->admin_user_delete($user->id);
+            redirect(current_url());
+        }
+    }
+
+    /**
+     * User activation.
+     *
+     * @param string $activation_code
+     */
+    public function user_activate($activation_code = NULL)
+    {
+        $check_code = self::$CI->core_module_library->validate_sha1($activation_code);
+
+        // Validate the activation code.
+        if (!$check_code)
+        {
+            self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_user_account_activation_invalid'));
+            redirect(base_url() . $this->user_login_uri);
+        }
+
+        // Submit to the database.
+        $result = self::$CI->core_user_model->user_activate($activation_code);
+        switch ($result)
+        {
+            case 'activated':
+                self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_user_account_activation'));
+                redirect(base_url() . $this->user_login_uri);
+                break;
+            case FALSE:
+                self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_user_account_activation'));
+                redirect(base_url() . $this->user_login_uri);
+                break;
+            case 'not_found':
+                self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_user_account_activation_not_found'));
+                redirect(base_url() . $this->user_login_uri);
+                break;
+            case 'expired':
+                self::$CI->session->set_flashdata('message_notice', self::$CI->lang->line('notice_user_account_activation_expired'));
+                redirect(base_url() . $this->user_login_uri);
+                break;
+        }
+    }
+
+    /**
+     * User edits own account.
+     *
+     * @param object $user
+     * @param array $post
+     */
+    public function user_edit($user = NULL, $post = array())
+    {
+        // Check first if account is protected.
+        $this->user_check_protected($user, 'edit');
+
+        $result = self::$CI->core_user_model->user_edit($post);
+
+        switch ($result)
+        {
+            case TRUE:
+                self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_user_account_edited'));
+                redirect(base_url() . $this->user_index_uri);
+
+                // Reset the user session data ater update.
+                $updated_user = $this->user_find((int) $post['id']);
+                $this->user_set_session_data($updated_user);
+
+                break;
+            case FALSE:
+                self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_user_account_edit_failed'));
+                redirect(current_url());
+                break;
+        }
+    }
+
+    /**
+     * User deletes own account.
+     *
+     * @param object $user
+     */
+    public function user_delete($user = NULL)
+    {
+        // Delete the user.
+        $result = self::$CI->core_user_model->user_delete($user->id);
+
+        switch ($result)
+        {
+            case TRUE:
+                redirect(base_url() . $this->user_logout_uri);
+                break;
+            case FALSE:
+                self::$CI->session
+                    ->set_flashdata('message_error', self::$CI->lang->line('error_user_account_delete_failed'));
+                redirect(base_url() . $this->user_edit_uri);
+                break;
+        }
+    }
+
+    /**
+     * User logs in.
+     *
+     * @param string $username
+     * @param string $password
+     * @param string $set_persistent_login
+     */
+    public function user_login($username = NULL, $password = NULL, $set_persistent_login = NULL)
+    {
+        $user = self::$CI->core_user_model->user_login($username, $password);
+        if ($user)
+        {
+            // Login success.
+            log_message('error', $username . ' logged in.');
+            self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_user_login') . $username . '.');
+            $this->user_set_session_data($user);
+
+            // Set the login cookie if checked.
+            if ($set_persistent_login)
+            {
+                $remember_code       = $this->user_set_persistent_login();
+                $store_remember_code = self::$CI->core_user_model->user_remember_code_store($remember_code, $user->id);
+
+                if (!$store_remember_code)
+                {
+                    self::$CI->session->set_flashdata('message_notice', self::$CI->lang->line('notice_user_persistent_fail'));
+                    $this->user_unset_persistent_login();
+                }
+            }
+            redirect(base_url() . $this->user_index_uri);
+        }
+
+        // Code to run if username and password combination is not found in the
+        // database.
+        else
+        {
+            // Unsuccessful login.
+            self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_user_login_failed'));
+            redirect(current_url());
+        }
+    }
+
+    /**
      * Set the uri to redirect user after logging out.
      *
      * @param string $redirect_uri
      * @return boolean
      */
-    public function logout($redirect_uri = '')
+    public function user_logout()
     {
+        $username = self::$CI->session->userdata('username');
+        $id       = self::$CI->session->userdata('user_id');
+        log_message('error', $username . ' logged out.');
+        $result   = self::$CI->core_user_model->user_remember_code_delete($id);
+
+        if (!$result)
+        {
+            log_message('error', $username . self::$CI->lang->line('error_user_delete_remember_failed'));
+        }
+
         $userarray = array('user_id', 'username', 'password', 'email', 'role',);
         self::$CI->session->unset_userdata($userarray);
         self::$CI->session->sess_destroy();
@@ -357,9 +601,9 @@ class User_library
         self::$CI->session->set_flashdata('message_notice', self::$CI->lang->line('notice_user_logout'));
 
         // Unset the logged in cookie if set.
-        $this->unset_persistent_login();
+        $this->user_unset_persistent_login();
 
-        redirect(base_url() . $redirect_uri);
+        redirect(base_url() . $this->user_login_uri);
         return TRUE;
     }
 
@@ -368,7 +612,7 @@ class User_library
      *
      * @param object $user
      */
-    public function set_user_session_data($user = NULL)
+    public function user_set_session_data($user = NULL)
     {
         $userarray = array(
             'user_id'  => $user->id,
@@ -387,7 +631,7 @@ class User_library
      *
      * @return string
      */
-    public function set_persistent_login()
+    public function user_set_persistent_login()
     {
         self::$CI->load->helper('string');
         self::$CI->load->library('encrypt');
@@ -395,11 +639,12 @@ class User_library
         $cookie_name           = self::$CI->config->item('user_persistent_cookie_name');
         $remember_code         = random_string('alnum', 32);
         $remember_code_encoded = self::$CI->encrypt->encode($remember_code);
+        $cookie_expire = self::$CI->config->item('user_persistent_cookie_expire');
 
         $data = array(
             'name'   => $cookie_name,
             'value'  => $remember_code_encoded,
-            'expire' => 1209600,
+            'expire' => $cookie_expire,
         );
 
         self::$CI->input->set_cookie($data);
@@ -410,7 +655,7 @@ class User_library
     /**
      * Delete the logged in cookie.
      */
-    public function unset_persistent_login()
+    public function user_unset_persistent_login()
     {
 
         $cookie_name = self::$CI->config->item('user_persistent_cookie_name');
@@ -422,7 +667,7 @@ class User_library
     /**
      * Check if a user has an unexpired logged in cookie.
      */
-    public function check_logged_in()
+    public function user_check_logged_in()
     {
         self::$CI->load->helper('string');
         self::$CI->load->library('encrypt');
@@ -456,7 +701,7 @@ class User_library
                 // If logged in cookie is validated set the userdata.
                 if ($user)
                 {
-                    $this->set_user_session_data($user);
+                    $this->user_set_session_data($user);
                 }
             }
         }
@@ -467,7 +712,7 @@ class User_library
      *
      * @param array $role.
      */
-    public function permission($role = array())
+    public function user_permission($role = array())
     {
         // Sets the $user_role variable.
         if (self::$CI->session->userdata('role'))
@@ -495,7 +740,7 @@ class User_library
      * @param object $user
      * @param string $action
      */
-    public function check_user_protected($user = NULL, $action = NULL)
+    public function user_check_protected($user = NULL, $action = NULL)
     {
         switch ($action)
         {
@@ -519,11 +764,13 @@ class User_library
     /**
      * Generates the table for the paginated roles page.
      *
-     * @param array $output
-     * @return array
+     * @return mixed
      */
-    public function admin_role_table($output = NULL)
+    public function admin_role_table()
     {
+        // Get roles.
+        $output = self::$CI->core_user_model->admin_role_get_all()->result_array();
+
         // Table headings
         $add_link = base_url() . $this->user_admin_add_role_uri;
 
@@ -565,6 +812,182 @@ class User_library
 
         $role_table = self::$CI->table->generate($output);
         return $role_table;
+    }
+
+    public function admin_role_get($id = NULL)
+    {
+        $role = self::$CI->core_user_model->admin_role_get($id);
+        return ($role) ? $role->row() : FALSE ;
+    }
+
+    public function admin_role_get_all()
+    {
+        $result = self::$CI->core_user_model->admin_role_get_all();
+        return ($result) ? $result->result() : FALSE;
+    }
+
+    /**
+     * Admin adds role.
+     *
+     * @param array $post
+     */
+    public function admin_role_add($post = array())
+    {
+        $result = self::$CI->core_user_model->admin_role_save($post);
+
+        if ($result)
+        {
+            self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_admin_add_role'));
+            redirect(base_url() . $this->user_admin_edit_role_uri . $result);
+        }
+        else
+        {
+            self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_admin_add_role'));
+            redirect(current_url());
+        }
+    }
+
+    /**
+     * Admin edits role.
+     *
+     * @param array $post
+     */
+    public function admin_role_edit($post = array())
+    {
+        $result = self::$CI->core_user_model->admin_role_save($post);
+
+        if ($result)
+        {
+            self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_admin_edit_role'));
+            redirect(base_url() . $this->user_admin_edit_role_uri . $post['id']);
+        }
+        else
+        {
+            self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_admin_edit_role'));
+            redirect(base_url() . $this->user_admin_edit_role_uri . $post['id']);
+        }
+    }
+
+    /**
+     * Admin deletes a role.
+     *
+     * @param integer $id
+     */
+    public function admin_role_delete($id = NULL)
+    {
+        $result = self::$CI->core_user_model->admin_role_delete($id);
+
+        switch ($result)
+        {
+            case TRUE:
+                self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_admin_delete_role'));
+                redirect(base_url() . $this->user_admin_roles_uri);
+                break;
+            case FALSE:
+                self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_admin_delete_role'));
+                redirect(base_url() . $this->user_admin_roles_uri);
+                break;
+        }
+    }
+
+    /**
+     * Admin edits a user.
+     *
+     * @param array $post
+     */
+    public function admin_user_add($post = array())
+    {
+        $result = self::$CI->core_user_model->admin_user_save($post);
+
+                switch ($result)
+                {
+                    case TRUE:
+                        self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_admin_add_user'));
+                        redirect(base_url() . $this->user_admin_users_uri);
+                        break;
+                    case FALSE:
+                        self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_admin_add_user'));
+                        redirect(base_url() . $this->user_admin_users_uri);
+                        break;
+                }
+    }
+
+    /**
+     * Admin edits a user.
+     *
+     * @param array $post
+     */
+    public function admin_user_edit($post = array())
+    {
+        $result = self::$CI->core_user_model->admin_user_save($post);
+
+        switch ($result)
+        {
+            case TRUE:
+                self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_admin_edit_user'));
+                redirect(base_url() . $this->user_admin_edit_user_uri . $post['id']);
+                break;
+            case FALSE:
+                self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_admin_edit_user'));
+                redirect(base_url() . $this->user_admin_edit_user_uri . $post['id']);
+                break;
+        }
+    }
+
+    /**
+     * Admindeletes a user.
+     *
+     * @param integer $id
+     * @param string $user_page
+     */
+    public function admin_user_delete($id = NULL, $user_page = 1)
+    {
+        $result = self::$CI->core_user_model->admin_user_delete($id);
+
+        switch ($result)
+        {
+            case $result == TRUE:
+                self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_admin_delete_user'));
+                redirect(base_url() . $this->user_admin_users_uri);
+                break;
+            case $result == FALSE:
+                self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_admin_delete_user'));
+                redirect(base_url() . $this->user_admin_users_uri . $user_page);
+                break;
+        }
+    }
+
+    /**
+     * Admin gets all users.
+     *
+     * @return integer
+     */
+    public function admin_get_user_count()
+    {
+        $result = self::$CI->core_user_model->admin_user_get_all();
+
+        if ($result)
+        {
+            return count($result);
+        }
+        else
+        {
+            self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_admin_get_user_count'));
+            redirect(base_url . $this->user_admin_index_uri);
+        }
+    }
+
+    /**
+     * Paginated users.
+     *
+     * @param integer $limit
+     * @param integer $offset
+     * @return mixed
+     */
+    public function admin_user_limit_offset_get($limit, $offset)
+    {
+        $result = self::$CI->core_user_model->admin_user_limit_offset_get($limit, $offset);
+        return ($result) ? $result : FALSE;
     }
 
     /**
@@ -708,4 +1131,4 @@ class User_library
     }
 
 }
-/* End of file user_library.php */
+/* End of file core_user_library.php */
