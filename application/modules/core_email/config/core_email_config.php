@@ -26,12 +26,12 @@ $config['core_email_Mailer'] = 'smtp';
 |--------------------------------------------------------------------------
 */
 
-$config['core_email_Host']       = 'smtp.laughinghost.com';
+$config['core_email_Host']       = '###########';
 $config['core_email_Port']       = 587;
 $config['core_email_SMTPAuth']   = TRUE;
 $config['core_email_SMTPSecure'] = 'tls';
-$config['core_email_Username']   = 'admin@laughinghost.com';
-$config['core_email_Password']   = 'hano2laramie';
+$config['core_email_Username']   = '###########';
+$config['core_email_Password']   = '###########';
 
 /*
 |--------------------------------------------------------------------------
