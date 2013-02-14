@@ -11,7 +11,7 @@
  * @author Harold Villacorte
  * @link http://laughinghost.com/CI_Starter/
  */
-class Demo_Default_Controller extends MX_Controller
+class _Default_controller extends MX_Controller
 {
 
     // Sets the $data property.
@@ -33,9 +33,9 @@ class Demo_Default_Controller extends MX_Controller
     {
         parent::__construct();
         // Sets the the data array.
-        self::$data = $this->core_model->site_info();
+        self::$data = $this->core_module_model->site_info();
         // Sets the module to be sent to the Template module.
-        self::$data['module'] = 'demo_default_controller';
+        self::$data['module'] = '_default_controller';
     }
 
     /**
@@ -75,4 +75,4 @@ class Demo_Default_Controller extends MX_Controller
     }
 
 }
-/* End of file demo_default_controller.php */
+/* End of file _default_controller.php */

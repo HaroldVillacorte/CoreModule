@@ -5,6 +5,7 @@
 <input type="hidden" name="id" value="<?php echo (isset($user)) ? $user->id : set_value('id') ;?>">
 
 <label for="username">Username:</label>
+<<<<<<< HEAD
 <input class="<?php echo $this->core_library->form_error_class('username') ;?>"
        type="text" name="username" value="<?php echo (isset($user)) ? $user->username : set_value('username') ;?>" />
 
@@ -18,6 +19,21 @@
 
 <label for="email">Email:</label>
 <input class="<?php echo $this->core_library->form_error_class('email') ;?>"
+=======
+<input class="<?php echo $this->core_module_library->form_error_class('username') ;?>"
+       type="text" name="username" value="<?php echo (isset($user)) ? $user->username : set_value('username') ;?>" />
+
+<label for="password">Password:</label>
+<input class="<?php echo $this->core_module_library->form_error_class('password') ;?>"
+       type="password" name="password" value="" autocomplete="off" />
+
+<label for="passconf">Confirm password:</label>
+<input class="<?php echo $this->core_module_library->form_error_class('passconf') ;?>"
+       type="password" name="passconf" value="" />
+
+<label for="email">Email:</label>
+<input class="<?php echo $this->core_module_library->form_error_class('email') ;?>"
+>>>>>>> 66a0b12
        type="text" name="email" value="<?php echo (isset($user)) ? $user->email : set_value('email') ;?>" />
 
 <?php

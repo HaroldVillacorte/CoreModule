@@ -22,12 +22,12 @@ class Demo_Grocery_Crud extends MX_Controller
     public function __construct()
     {
         parent::__construct();
-        self::$data = $this->core_model->site_info();
+        self::$data = $this->core_module_model->site_info();
         self::$data['module'] = 'demo_grocery_crud';
 
         // Load User library for permissions.
-        $this->load->library('user/user_library');
-        $this->user_library->permission(array('admin', 'super_user'));
+        $this->load->library('core_user/core_user_library');
+        $this->core_user_library->permission(array('admin', 'super_user'));
     }
 
     public function index()

@@ -1,6 +1,6 @@
 <?php if (!defined('BASEPATH')) exit('No direct script access allowed.');
 
-class Core_library
+class Core_module_library
 {
 
     private static $CI;
@@ -28,5 +28,9 @@ class Core_library
         self::$CI->session->keep_flashdata('message_notice');
     }
 
+    public function validate_sha1($str) {
+        return (bool) preg_match('/^[0-9a-f]{40}$/i', $str);
+    }
+
 }
-/* End of file core_library.php */
+/* End of file core_module_library.php */

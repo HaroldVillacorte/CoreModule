@@ -4,41 +4,62 @@
  * User Module
  *
  * The User module provides full user CRUD, authentication, and a very simple yet
- * highly effective permissions system.  This module uses Doctrine.
+ * highly effective permissions system.
  *
  * @package CI Starter
  * @subpackage Modules
  * @category Core
  * @author Harold Villacorte
- * @link http://laughinghost.com/CI_Starter/ */
+ * @link http://laughinghost.com/CI_Starter/
+ */
 class User extends MX_Controller
 {
 
-    // Sets the $data property.
+    /**
+     * The data array.
+     *
+     * @var array
+     */
     private static $data;
-    // Set the default template.
+
+    /**
+     * The template module to run.
+     *
+     * @var string
+     */
     private static $template = 'core_template/default_template';
 
     /**
-     * The data property is set to the site_info() array which passes an array
-     * containing the site wide information such as the site name and asset path
-     * information.  self::$data['module'] is the name of this module which is
-     * passed to the Template module.
+     * Store in the session to remember visited page.
      *
-     * @see core_model.php
+     * @var string
      */
+    private static $user_page;
+
     public function __construct()
     {
         parent::__construct();
+<<<<<<< HEAD
         // Load libraries.
         $this->load->library('user_library');
         $this->load->library('core_library/core_library');
+=======
+
+        // Load the config and language files.
+        $this->config->load('core_user/core_user_config');
+        $this->lang->load('core_user/core_user', $this->config->item('core_user_language'));
+
+        // Load libraries.
+        $this->load->library('core_user/core_user_library');
+        $this->load->library('core_module/core_module_library');
+>>>>>>> 66a0b12
 
         // Load helpers.
         $this->load->helper('date');
         $this->load->helper('form');
 
         // Load models.
+<<<<<<< HEAD
         $this->load->model('user_model');
 
         // Check if a user is logged in.
@@ -52,11 +73,28 @@ class User extends MX_Controller
 
 
     }
+=======
+        $this->load->model('core_user/core_user_model');
 
-    /**
-     * Redirects user to the profile page.  Currently the index method does not
-     * work with this module and HMVC.
-     */
+        // Check if a user is logged in.
+        $this->core_user_library->user_check_logged_in();
+
+        // Initialize the data array.
+        self::$data = $this->core_module_model->site_info();
+
+        // Sets the module to be sent to the Template module.
+        self::$data['module'] = 'user';
+>>>>>>> 66a0b12
+
+        // User admin remember paginated page.
+        self::$user_page = NULL;
+        if ($this->session->userdata('user_admin_page'))
+        {
+            self::$user_page = $this->session->userdata('user_admin_page');
+        }
+        self::$data['user_page'] = self::$user_page;
+
+    }
 
     /**
      * The user profile page.
@@ -71,9 +109,9 @@ class User extends MX_Controller
         $id = $this->session->userdata('user_id');
         if (!$id)
         {
-            redirect(base_url() . 'user/login/');
+            redirect(base_url() . $this->core_user_library->user_login_uri);
         }
-        $user = $this->user_model->find_user($id);
+        $user = $this->core_user_library->user_find($id);
         self::$data['user'] = $user;
 
         echo Modules::run(self::$template, self::$data);
@@ -90,7 +128,7 @@ class User extends MX_Controller
         if ($this->input->post('submit'))
         {
             // Sets the CI validation rules.
-            $this->user_library->set_validation_rules('login');
+            $this->core_user_library->set_validation_rules('user_login');
             // Code to run form does not validate.
             if ($this->form_validation->run() == FALSE)
             {
@@ -101,78 +139,40 @@ class User extends MX_Controller
             {
                 $username = $this->input->post('username');
                 $password = $this->input->post('password');
-                $user     = $this->user_model->login($username, $password);
-                if ($user)
-                {
-                    // Login success.
-                    log_message('error', $username . ' logged in.');
-                    $this->session->set_flashdata('message_success', 'You are now logged in as ' . $username . '.');
-                    $this->user_library->set_user_session_data($user);
-
-                    $set_persistent_login = (bool) $this->input->post('set_persistent_login');
-                    if ($set_persistent_login)
-                    {
-                        $remember_code       = $this->user_library->set_persistent_login();
-                        $store_remember_code = $this->user_model->store_remember_code($remember_code, $user->id);
-
-                        if (!$store_remember_code)
-                        {
-                            $this->session->set_flashdata('message_notice', 'Persistent login failed.');
-                            $this->user_library->unset_persistent_login();
-                        }
-                    }
-                    redirect(base_url() . 'user/');
-                }
-
-                // Code to run if username and password combination is not found in the
-                // database.
-                else
-                {
-                    // Unseccessful login.
-                    $this->session->set_flashdata('message_error', 'Username and password combination not found.');
-                    redirect(current_url());
-                }
+                $set_persistent_login = (bool) $this->input->post('set_persistent_login');
+                $this->core_user_library->user_login($username, $password, $set_persistent_login);
             }
         }
 
         // Code to run when the user visits the page without hitting the Login
         // button.
-
         if ($this->session->userdata('user_id'))
         {
             $this->core_library->keep_flashdata_messages();
-            redirect(base_url() . 'user/');
+            redirect(base_url() . $this->core_user_library->user_index_uri);
         }
 
         echo Modules::run(self::$template, self::$data);
     }
 
     /**
-     * Basic logout method using Codeigniter.  All this does is unset all
-     * userdata set by the login method then destroys the session.
+     * Basic logout method using Codeigniter.
      */
     public function logout()
     {
-        $username = $this->session->userdata('username');
-        $id       = $this->session->userdata('user_id');
-        log_message('error', $username . ' logged out.');
-        $result   = $this->user_model->delete_remember_code($id);
-
-        if (!$result)
-        {
-            log_message('error', $username . ' delete remember code failed.');
-        }
-
-        $this->user_library->logout('user/login/');
+        $this->core_user_library->user_logout();
     }
 
+    /**
+     * New user create account.
+     */
     public function add()
     {
         self::$data['view_file'] = 'user_add';
 
         if ($this->input->post('add'))
         {
-            $this->user_library->set_validation_rules('user_insert');
+            $this->core_user_library->set_validation_rules('user_insert');
 
             // Code to run when the the form does not validate.
             if ($this->form_validation->run() == FALSE)
@@ -182,55 +182,61 @@ class User extends MX_Controller
             }
             else
             {
-                $result_id = $this->user_model->add_user($this->input->post());
-
-                switch ($result_id)
-                {
-                    case TRUE:
-                        $this->session->set_flashdata('message_success', 'Acount was successfully created.');
-                        redirect(base_url() . 'user/login/');
-                        break;
-                    case FALSE:
-                        $this->session->set_flashdata('message_error', 'There was a problem adding your account.');
-                        redirect(current_url());
-                        break;
-                }
+                // Form validation passed.
+                $this->core_user_library->user_add($this->input->post());
             }
         }
         else
         {
+<<<<<<< HEAD
+=======
+            // Code to run when user first visits.
+>>>>>>> 66a0b12
             echo Modules::run(self::$template, self::$data);
         }
     }
 
+    public function activate($activation_code = NULL)
+    {
+        if ($activation_code == NULL)
+        {
+            redirect(base_url() . $this->core_user_library->user_login_uri);
+        }
+        else
+        {
+            $this->core_user_library->user_activate($activation_code);
+        }
+    }
+
     /**
-     * Add user and edit user are combined into one method called "edit" using a
-     * single view.  There are two fields which are not editable by this method:
-     * 1. "role" is always set to authenticated with no other option.
-     * 2. "protected" id not set and defaults to 0 or FALSE in the database.
-     * How to edit these fields is left up to the developer using the CI Starter
-     * package.  Additionally there is a delete button on the user edit view.
-     * When this button is clicked this method will simply redirect the user to
-     * the delete() method.
+     * User edits own account.
      */
     public function edit()
     {
         self::$data['view_file'] = 'user_edit';
 
+<<<<<<< HEAD
         if ($this->session->userdata('user_id'))
+=======
+        // Check if a user is logged in then set the user id from the session.
+        if (!$this->session->userdata('user_id'))
+        {
+            redirect(base_url() . $this->core_user_library->user_index_uri);
+        }
+        else
+>>>>>>> 66a0b12
         {
             $id   = $this->session->userdata('user_id');
-            $user = $this->user_model->find_user($id);
+            $user = $this->core_user_library->user_find($id);
             self::$data['user'] = $user;
         }
 
-        // When the user hits the delete button rediect them to the delete method.
+        // When the user hits the delete button redirect them to the delete method.
         if ($this->input->post('delete'))
         {
-
             if ($this->session->userdata('user_id'))
             {
-                redirect(base_url() . 'user/delete/');
+                redirect(base_url() . $this->core_user_library->user_delete_uri);
             }
         }
 
@@ -238,7 +244,7 @@ class User extends MX_Controller
         if ($this->input->post('save'))
         {
             // Set the validation rules for updating a user.
-            $this->user_library->set_validation_rules('user_update');
+            $this->core_user_library->set_validation_rules('user_update');
 
             // Code to run when the the form does not validate.
             if ($this->form_validation->run() == FALSE)
@@ -246,25 +252,10 @@ class User extends MX_Controller
                 // Form does not validate.
                 echo Modules::run(self::$template, self::$data);
             }
-
             // Code to run when the form passes validation.
             else
             {
-                $this->user_library->check_user_protected($user, 'edit');
-
-                $result = $this->user_model->edit_user($this->input->post());
-
-                switch ($result)
-                {
-                    case TRUE:
-                        $this->session->set_flashdata('message_success', 'Account was successfully saved.');
-                        redirect(base_url() . 'user/');
-                        break;
-                    case FALSE:
-                        $this->session->set_flashdata('message_error', 'There was a problem adding your account.');
-                        redirect(current_url());
-                        break;
-                }
+                $this->core_user_library->user_edit($user, $this->input->post());
             }
         }
 
@@ -276,9 +267,7 @@ class User extends MX_Controller
     }
 
     /**
-     * Basic delete method.  For security reasons it does not take a $_GET
-     * parameter.  It instead will only allow users to delete their own accounts
-     * if they are logged in.
+     * User deletes own account.
      */
     public function delete()
     {
@@ -287,7 +276,7 @@ class User extends MX_Controller
         // Instanitate User based on session userdata('user_id').
         if ($id = $this->session->userdata('user_id'))
         {
-            $user = $this->user_model->find_user($id);
+            $user = $this->core_user_library->user_find($id);
         }
         else
         {
@@ -298,24 +287,10 @@ class User extends MX_Controller
         if ($this->input->post('delete'))
         {
             // Check first if account is protected.
-            $this->user_library->check_user_protected($user, 'delete');
+            $this->core_user_library->user_check_protected($user, 'delete');
 
-            $result = $this->user_model->delete_user($id);
-
-            switch ($result)
-            {
-                case TRUE:
-                    redirect(base_url() . 'user/logout');
-                    break;
-                case FALSE:
-                    $this->session
-                        ->set_flashdata(
-                            'message_error', 'Unable to delete your account.'
-                            . '  Please contact administrator.'
-                    );
-                    redirect(base_url() . 'user/edit/');
-                    break;
-            }
+            // Delete.
+            $this->core_user_library->user_delete($user);
         }
 
         // Redirect user if they come to this page without being logged in.
@@ -332,5 +307,260 @@ class User extends MX_Controller
         }
     }
 
+    /**
+     * Admin view all roles.
+     */
+    public function admin_roles()
+    {
+        self::$data['view_file'] = 'admin_roles';
+
+        // Generate table
+        $role_table = $this->core_user_library->admin_role_table();
+
+        // Render the page.
+        self::$data['output'] = $role_table;
+        echo Modules::run(self::$template, self::$data);
+    }
+
+    /**
+     * Admin add a role.
+     */
+    public function admin_role_add()
+    {
+        self::$data['view_file'] = 'admin_role_add';
+
+        if ($this->input->post('save'))
+        {
+            $this->core_user_library->set_validation_rules('admin_role_insert');
+
+            if ($this->form_validation->run() == FALSE)
+            {
+                echo Modules::run(self::$template, self::$data);
+            }
+            else
+            {
+                $this->core_user_library->admin_role_add($this->input->post());
+            }
+        }
+        else
+        {
+            echo Modules::run(self::$template, self::$data);
+        }
+    }
+
+    /**
+     * Admin edits a role.
+     *
+     * @param integer $id
+     */
+    public function admin_role_edit($id = NULL)
+    {
+        self::$data['view_file'] = 'admin_role_edit';
+
+        // Instantiate the role to populate the form.
+        $role = $this->core_user_library->admin_role_get($id);
+        self::$data['role'] = ($role) ? $role : NULL;
+
+        if ($this->input->post('save'))
+        {
+            $role = $this->core_user_library->admin_role_get($this->input->post('id'));
+
+            // Check first if role is protected.
+            $this->core_user_library->admin_check_role_protected($role);
+
+            $this->core_user_library->set_validation_rules('admin_role_update');
+
+            if ($this->form_validation->run() == FALSE)
+            {
+                echo Modules::run(self::$template, self::$data);
+            }
+            else
+            {
+                $this->core_user_library->admin_role_edit($this->input->post());
+            }
+        }
+        else
+        {
+            echo Modules::run(self::$template, self::$data);
+        }
+    }
+
+    /**
+     * Admin deletes a role.
+     *
+     * @param integer $id
+     */
+    public function admin_role_delete($id = NULL)
+    {
+        // Redirect if role id is not set.
+        if (!$id) redirect(base_url() . $this->core_user_library->user_admin_roles_uri);
+
+        $role = $this->core_user_library->admin_role_get($id);
+
+        // Check if role is protected.
+        $this->core_user_library->admin_check_role_protected($role);
+
+        // Delete the role.
+        $this->core_user_library->admin_role_delete($role->id);
+    }
+
+    /**
+     * Paginated users page.
+     *
+     * @param integer $page
+     */
+    public function admin_users($page = NULL)
+    {
+        self::$data['view_file'] = 'admin_users';
+
+        // Per_page for pagination and model query.
+        $per_page = 1;
+
+        // Set start record for query.
+        $start = 0;
+
+        if ($page)
+        {
+            $start = $page;
+        }
+
+        // Database queries.
+        $count = $this->core_user_library->admin_get_user_count();
+        $output = $this->core_user_library->admin_user_limit_offset_get($per_page, $start);
+
+        // Get first and last id's.
+        self::$data['first'] = $page + 1;
+        self::$data['last'] = $page + count($output);
+
+        // Pagination setup
+        $pagination_links = $this->core_user_library
+            ->admin_user_page_pagination_setup($count, $per_page);
+
+        // Table render
+        $table_output = $this->core_user_library->admin_user_page_table_setup($output);
+
+        // Page setup
+        self::$data['pagination_links'] = $pagination_links;
+        self::$data['output'] = $table_output;
+        self::$data['count'] = $count;
+
+        // Add the javascript.
+        array_unshift(self::$data['scripts'], 'user_admin_ajax.js');
+
+        // Check for ajax request then pick view_file.
+        if ($this->input->is_ajax_request())
+        {
+            // Set current page to session.
+            $this->session->set_userdata(array('user_admin_page' => $page));
+            $this->load->view('admin_users_ajax', self::$data);
+        }
+        else
+        {
+            // Set current page to session.
+            $this->session->set_userdata(array('user_admin_page' => $page));
+            echo Modules::run(self::$template, self::$data);
+        }
+    }
+
+    /**
+     * Admin edits a user.
+     *
+     * @param integer $id
+     */
+    public function admin_user_edit($id = NULL)
+    {
+        self::$data['view_file'] = 'admin_user_edit';
+        self::$data['all_roles'] = $this->core_user_library->admin_role_get_all();
+        $user = $this->core_user_library->user_find((int) $id);
+
+        // Redirect admin user if id is not set.
+        if ($id == NULL && !$this->input->post('save'))
+        {
+            redirect(base_url() . $this->core_user_library->user_admin_users_uri);
+        }
+        elseif ($this->input->post('save'))
+        {
+            $this->core_user_library->set_validation_rules('admin_user_update');
+
+            if ($this->form_validation->run() == FALSE)
+            {
+                echo Modules::run(self::$template, self::$data);
+            }
+            else
+            {
+                $id   = $this->input->post('id');
+                $user = $this->core_user_library->user_find($id);
+
+                // Check first if user account is protected.
+                $this->core_user_library->admin_check_user_protected($user);
+
+                // Edit the user account.
+                $this->core_user_library->admin_user_edit($this->input->post());
+            }
+        }
+        else
+        {
+            // Add the js file.
+            array_unshift(self::$data['scripts'], 'user_admin_ajax.js');
+
+            self::$data['user'] = $user;
+            echo Modules::run(self::$template, self::$data);
+        }
+    }
+
+    /**
+     * Admin adds a user.
+     */
+    public function admin_user_add()
+    {
+        self::$data['view_file'] = 'admin_user_add';
+        self::$data['all_roles'] = $this->core_user_library->admin_role_get_all();
+
+        if ($this->input->post('save'))
+        {
+            $this->core_user_library->set_validation_rules('admin_user_insert');
+
+            if ($this->form_validation->run() == FALSE)
+            {
+                echo Modules::run(self::$template, self::$data);
+            }
+            else
+            {
+                // Add the user.
+                $this->core_user_library->admin_user_add($this->input->post());
+            }
+        }
+        else
+        {
+            // Add the js file.
+            array_unshift(self::$data['scripts'], 'user_admin_ajax.js');
+
+            echo Modules::run(self::$template, self::$data);
+        }
+    }
+
+    /**
+     * Admin deletes a user.
+     *
+     * @param integer $id
+     */
+    public function admin_user_delete($id = NULL)
+    {
+        if ($id == NULL)
+        {
+            redirect(base_url());
+        }
+        else
+        {
+            $user = $this->core_user_library->user_find($id);
+
+            // Check first if user account is protected.
+            $this->core_user_library->admin_check_user_protected($user);
+
+            // Delete the user.
+            $this->core_user_library->admin_user_delete($user->id, self::$user_page);
+        }
+    }
+
 }
-/* End of file user.php */
+/* End of file core_user.php */

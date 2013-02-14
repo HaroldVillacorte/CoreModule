@@ -13,15 +13,15 @@
                 <a href="#">Template demos</a>
                 <a href="#" class="flyout-toggle"><span> </span></a>
                 <ul class="flyout">
-                    <li><a href="<?php echo base_url() ;?>demo_default_controller/columns/one_column/">One column</a></li>
-                    <li><a href="<?php echo base_url() ;?>demo_default_controller/columns/two_column/">Two column</a></li>
-                    <li><a href="<?php echo base_url() ;?>demo_default_controller/columns/three_column/">Three column</a></li>
-                    <li><a href="<?php echo base_url() ;?>demo_default_controller/columns/branded/">Branded</a></li>
-                    <li><a href="<?php echo base_url() ;?>demo_default_controller/columns/blog/">Blog</a></li>
-                    <li><a href="<?php echo base_url() ;?>demo_default_controller/columns/feed/">Feed</a></li>
-                    <li><a href="<?php echo base_url() ;?>demo_default_controller/columns/grid/">Grid</a></li>
-                    <li><a href="<?php echo base_url() ;?>demo_default_controller/columns/workspace/">Workspace</a></li>
-                    <li><a href="<?php echo base_url() ;?>demo_default_controller/columns/so_boxy/">So Boxy</a></li>
+                    <li><a href="<?php echo base_url() ;?>_default_controller/columns/one_column/">One column</a></li>
+                    <li><a href="<?php echo base_url() ;?>_default_controller/columns/two_column/">Two column</a></li>
+                    <li><a href="<?php echo base_url() ;?>_default_controller/columns/three_column/">Three column</a></li>
+                    <li><a href="<?php echo base_url() ;?>_default_controller/columns/branded/">Branded</a></li>
+                    <li><a href="<?php echo base_url() ;?>_default_controller/columns/blog/">Blog</a></li>
+                    <li><a href="<?php echo base_url() ;?>_default_controller/columns/feed/">Feed</a></li>
+                    <li><a href="<?php echo base_url() ;?>_default_controller/columns/grid/">Grid</a></li>
+                    <li><a href="<?php echo base_url() ;?>_default_controller/columns/workspace/">Workspace</a></li>
+                    <li><a href="<?php echo base_url() ;?>_default_controller/columns/so_boxy/">So Boxy</a></li>
                 </ul>
 
             </li>
@@ -41,8 +41,8 @@
                 <a href="#">Admin menu</a>
                 <a href="#" class="flyout-toggle"><span> </span></a>
                 <ul class="flyout">
-                    <li><a href="<?php echo base_url() ;?>user_admin/">Admin</a></li>
-                    <li><a href="<?php echo base_url() ;?>user_admin/roles/">User roles</a></li>
+                    <li><a href="<?php echo base_url() ;?>user/admin_users/">Admin</a></li>
+                    <li><a href="<?php echo base_url() ;?>user/admin_roles/">User roles</a></li>
                 </ul>
             </li>
 
