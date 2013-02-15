@@ -32,6 +32,16 @@ $config['user_admin_user_delete_uri']  = 'user/admin_user_delete/';
 
 /*
 |--------------------------------------------------------------------------
+| User activation expire limit.
+|--------------------------------------------------------------------------
+*/
+
+// Also edit the core_user_lang.php file item $lang['success_user_account_created']
+// to reflect any changes here.
+$config['user_activation_expire_limit'] = 86400;
+
+/*
+|--------------------------------------------------------------------------
 | Perisitent login cookie.
 |--------------------------------------------------------------------------
 */

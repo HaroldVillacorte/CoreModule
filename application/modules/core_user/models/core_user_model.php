@@ -318,7 +318,7 @@ class Core_user_model extends CI_Model
             $user = $result->row();
             $time = time();
             // Activate user if time now is less than 24 hours.
-            if (($time - $user->created) <= 86400)
+            if (($time - $user->created) <= $this->config->item('user_activation_expire_limit'))
             {
                 $data = array(
                     'activation_code' => NULL,
@@ -330,7 +330,7 @@ class Core_user_model extends CI_Model
             }
             else
             {
-                // Or delte expired account and return 'expired'.
+                // Or delete expired account and return 'expired'.
                 $this->admin_user_delete($user->id);
                 return 'expired';
             }
