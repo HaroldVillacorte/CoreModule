@@ -155,7 +155,7 @@ class Core_user_library
         $this->user_admin_roles_uri         = self::$CI->config->item('user_admin_roles_uri');
         $this->user_admin_role_add_uri      = self::$CI->config->item('user_admin_role_add_uri');
         $this->user_admin_role_edit_uri     = self::$CI->config->item('user_admin_role_edit_uri');
-        $this->user_admin_role_delete_uri         = self::$CI->config->item('user_admin_role_delete_uri');
+        $this->user_admin_role_delete_uri   = self::$CI->config->item('user_admin_role_delete_uri');
         $this->user_admin_users_uri         = self::$CI->config->item('user_admin_users_uri');
         $this->user_admin_user_edit_uri     = self::$CI->config->item('user_admin_user_edit_uri');
         $this->user_admin_user_add_uri      = self::$CI->config->item('user_admin_user_add_uri');
@@ -355,11 +355,23 @@ class Core_user_library
      * Finds a user by primary key $id.
      *
      * @param integer $id
-     * @return mixed
+     * @return object
      */
     public function user_find($id = NULL)
     {
         $user = self::$CI->core_user_model->user_find($id);
+        return ($user) ? $user : FALSE;
+    }
+
+    /**
+     * Finds a user by identity.
+     *
+     * @param string $id
+     * @return object
+     */
+    public function user_find_by_identity($column = NULL, $identity = NULL)
+    {
+        $user = self::$CI->core_user_model->user_find_by_identity($column, $identity);
         return ($user) ? $user : FALSE;
     }
 
@@ -613,7 +625,7 @@ class Core_user_library
         self::$CI->load->helper('date');
 
         // Instantiate the user.
-        $user = self::$CI->core_user_model->user_find_by_identity('username', $locked_out_username);
+        $user = $this->user_find_by_identity('username', $locked_out_username);
 
         $time = time();
 
