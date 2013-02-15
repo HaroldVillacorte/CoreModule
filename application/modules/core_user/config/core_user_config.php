@@ -2,13 +2,6 @@
 
 /*
 |--------------------------------------------------------------------------
-| Set the language.
-|--------------------------------------------------------------------------
-*/
-$config['core_user_language']    = 'english';
-
-/*
-|--------------------------------------------------------------------------
 | Uri's.
 |--------------------------------------------------------------------------
 */
@@ -27,15 +20,15 @@ $config['user_admin_index_uri'] = base_url();
 
 // User admin roles.
 $config['user_admin_roles_uri']   = 'user/admin_roles/';
-$config['user_admin_add_role_uri']  = 'user/admin_role_add/';
-$config['user_admin_edit_role_uri']     = 'user/admin_role_edit/';
-$config['user_delete_role_uri']    = 'user/admin_role_delete/';
+$config['user_admin_role_add_uri']  = 'user/admin_role_add/';
+$config['user_admin_role_edit_uri']     = 'user/admin_role_edit/';
+$config['user_admin_role_delete_uri']    = 'user/admin_role_delete/';
 
 // User admin users.
 $config['user_admin_users_uri']  = 'user/admin_users/';
-$config['user_admin_edit_user_uri']  = 'user/admin_user_edit/';
-$config['user_admin_add_user_uri']  = 'user/admin_user_add/';
-$config['user_admin_delete_user_uri']  = 'user/admin_user_delete/';
+$config['user_admin_user_edit_uri']  = 'user/admin_user_edit/';
+$config['user_admin_user_add_uri']  = 'user/admin_user_add/';
+$config['user_admin_user_delete_uri']  = 'user/admin_user_delete/';
 
 /*
 |--------------------------------------------------------------------------
@@ -46,5 +39,15 @@ $config['user_admin_delete_user_uri']  = 'user/admin_user_delete/';
 // Persistent login cookie name.
 $config['user_persistent_cookie_name'] = 'CI_Starter_login';
 $config['user_persistent_cookie_expire'] = 1209600;
+
+/*
+|--------------------------------------------------------------------------
+| Login attempts.
+|--------------------------------------------------------------------------
+*/
+
+$config['user_login_attempts_max'] = 5;
+$config['user_login_attempts_time'] = 120;
+$config['user_login_attempts_lockout_time'] = 900;
 
 /* End of file core_user_config.php */

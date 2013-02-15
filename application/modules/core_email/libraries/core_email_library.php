@@ -28,12 +28,19 @@ class Core_email_library
     {
         self::$CI =& get_instance();
 
-        // Load the config.
+        // Load the config and language files.
         self::$CI->load->config('core_email/core_email_config');
+        self::$CI->lang->load('core_email/core_email');
 
         // Load the libraries.
         require_once 'class.phpmailer.php';
         require_once 'class.smtp.php';
+        self::$CI->load->library('core_module/core_module_library');
+        self::$CI->load->library('form_validation');
+        self::$CI->load->library('encrypt');
+
+        // Load the models.
+        self::$CI->load->model('core_email/core_email_model');
 
         // Initialize the data array.
         self::$data = self::$CI->core_module_model->site_info();
@@ -51,14 +58,165 @@ class Core_email_library
         // Set the protocol.
         $this->mail->Mailer = self::$CI->config->item('core_email_Mailer');
 
-        // Set the smtp config variables.
-        $this->mail->Host       = self::$CI->config->item('core_email_Host');
-        $this->mail->Port       = self::$CI->config->item('core_email_Port');
-        $this->mail->SMTPAuth   = self::$CI->config->item('core_email_SMTPAuth');
-        $this->mail->SMTPSecure = self::$CI->config->item('core_email_SMTPSecure');
-        $this->mail->Username   = self::$CI->config->item('core_email_Username');
-        $this->mail->Password   = self::$CI->config->item('core_email_Password');
+        // Set the smtp config database.
+        $system_smtp_settings   = $this->system_settings_get(TRUE);
+        $this->mail->Host       = $system_smtp_settings->core_email_Host;
+        $this->mail->Port       = $system_smtp_settings->core_email_Port;
+        $this->mail->SMTPAuth   = $system_smtp_settings->core_email_SMTPAuth;
+        $this->mail->SMTPSecure = $system_smtp_settings->core_email_SMTPSecure;
+        $this->mail->Username   = $system_smtp_settings->core_email_Username;
+        $this->mail->Password   = $system_smtp_settings->core_email_Password;
+        //$this->mail->From       = $system_smtp_settings->core_email_From;
+        //$this->mail->FromName   = $system_smtp_settings->core_email_FromName;
 
+        // Set from.
+        $this->mail->SetFrom(
+            $system_smtp_settings->core_email_From,
+            $system_smtp_settings->core_email_FromName
+        );
+
+        // Set reply-to.
+        $this->mail->AddReplyTo(
+            $system_smtp_settings->core_email_reply_to,
+            $system_smtp_settings->core_email_reply_to_name
+        );
+
+    }
+
+    /**
+     * Set the validation rules.
+     */
+    public function system_settings_set_validation_rules()
+    {
+        $validation_rules = array(
+            array(
+                'field' => 'core_email_Host',
+                'label' => 'Host',
+                'rules' => 'required',
+            ),
+            array(
+                'field' => 'core_email_Port',
+                'label' => 'Port',
+                'rules' => 'required|integer',
+            ),
+            array(
+                'field' => 'core_email_SMTPAuth',
+                'label' => 'Authorization Required',
+                'rules' => 'integer|exact_length[1]',
+            ),
+            array(
+                'field' => 'core_email_SMTPSecure',
+                'label' => 'Security protocol',
+                'rules' => '',
+            ),
+            array(
+                'field' => 'core_email_Username',
+                'label' => 'Username',
+                'rules' => '',
+            ),
+            array(
+                'field' => 'core_email_Password',
+                'label' => 'Password',
+                'rules' => '',
+            ),
+            array(
+                'field' => 'core_email_From',
+                'label' => 'From email',
+                'rules' => 'valid_email',
+            ),
+            array(
+                'field' => 'core_email_FromName',
+                'label' => 'From name',
+                'rules' => '',
+            ),
+            array(
+                'field' => 'core_email_reply_to',
+                'label' => 'Reply-to email',
+                'rules' => 'valid_email',
+            ),
+            array(
+                'field' => 'core_email_reply_to_name',
+                'label' => 'Reply-to name',
+                'rules' => '',
+            ),
+        );
+
+        self::$CI->form_validation->set_rules($validation_rules);
+    }
+
+    /**
+     * Process post array.
+     *
+     * @param array $post
+     * @return array
+     */
+    public function system_settings_process_post($post = array())
+    {
+        // Process password.
+        if ($post['core_email_Password'] != '')
+        {
+            $post['core_email_Password'] = self::$CI->encrypt->encode($post['core_email_Password']);
+        }
+        else
+        {
+            unset($post['core_email_Password']);
+        }
+
+        // Process core_email_SMTPAuth.
+        if (!isset($post['core_email_SMTPAuth']))
+        {
+            $post['core_email_SMTPAuth'] = 0;
+        }
+
+        return $post;
+    }
+
+    /**
+     * Set the system email settings.
+     *
+     * @param array $post
+     */
+    public function system_settings_set($post = array())
+    {
+        $post = $this->system_settings_process_post($post);
+
+        $result = self::$CI->core_email_model->system_settings_set($post);
+
+        if ($result)
+        {
+            self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_system_settings_set'));
+            redirect(current_url());
+        }
+        else
+        {
+            self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_system_settings_set'));
+            redirect(current_url());
+        }
+    }
+
+    /**
+     * Get the system email settings.
+     *
+     * @param boolean $return_password
+     * @return object
+     */
+    public function  system_settings_get($return_password = FALSE)
+    {
+        $settings = self::$CI->core_email_model->system_settings_get($return_password);
+
+        if ($settings)
+        {
+            if ($return_password)
+            {
+                $settings->core_email_Password = self::$CI->encrypt->decode($settings->core_email_Password);
+            }
+            return $settings;
+        }
+        else
+        {
+            self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_system_settings_get'));
+            redirect(current_url());
+        }
     }
 
     /**
@@ -71,7 +229,6 @@ class Core_email_library
      *     'message'
      *
      * @param array $email
-     * @param array $dynamic_config
      * @return boolean
      */
     public function system_email_send($email = array())
@@ -85,17 +242,7 @@ class Core_email_library
         $message     = $email['message'];
         $message_alt = $email['message_alt'];
 
-        //  Reply to
-        $reply_to      = $this->mail->Username;
-        $reply_to_name = self::$data['site_name'];
-
-        // From.
-        $from      = $this->mail->Username;
-        $from_name = self::$data['site_name'];
-
-        // Set the methods.
-        $this->mail->AddReplyTo($reply_to, $reply_to_name);
-        $this->mail->SetFrom($from, $from_name);
+        // Set the email.
         $this->mail->AddAddress($to, $to_name);
         $this->mail->Subject = $subject;
         $this->mail->Body    = $message;
@@ -106,7 +253,6 @@ class Core_email_library
 
         return ($result) ? TRUE : FALSE;
     }
-
 }
 
 /* End of file core_email_library */

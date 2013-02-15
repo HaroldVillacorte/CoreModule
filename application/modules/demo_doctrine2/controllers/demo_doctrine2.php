@@ -29,7 +29,7 @@ class Demo_Doctrine2 extends MX_Controller
 
         // Load User library for permissions.
         $this->load->library('core_user/core_user_library');
-        $this->core_user_library->permission(array('admin', 'super_user'));
+        $this->core_user_library->user_permission(array('admin', 'super_user'));
 
         self::$user_page = NULL;
         if ($this->session->userdata('demo_doctrine2_page'))
@@ -63,7 +63,7 @@ class Demo_Doctrine2 extends MX_Controller
         // Doctrine
         $this->benchmark->mark('start'); // Benchmark start
 
-        $dql    = 'SELECT u FROM Entities\CrudDemo u';
+        $dql    = 'SELECT u FROM Entities\DemoCrud u';
         $query1 = $this->doctrine->em->createQuery($dql);
         $query2 = $this->doctrine->em
             ->createQuery($dql)
@@ -169,7 +169,7 @@ class Demo_Doctrine2 extends MX_Controller
         elseif ($this->input->post('save'))
         {
             //Doctrine
-            $record = $this->doctrine->em->find('Entities\CrudDemo', $this->input->post('id'));
+            $record = $this->doctrine->em->find('Entities\DemoCrud', $this->input->post('id'));
             $record->setOrdernumber($this->input->post('order_number'));
             $record->setProductcode($this->input->post('product_code'));
             $record->setQuantityordered($this->input->post('quantitiy_ordered'));
@@ -193,7 +193,7 @@ class Demo_Doctrine2 extends MX_Controller
         }
         else
         {
-            $record = $this->doctrine->em->find('Entities\CrudDemo', $id);
+            $record = $this->doctrine->em->find('Entities\DemoCrud', $id);
             $this->benchmark->mark('stop'); // Benchmark stop.
             array_unshift(self::$data['scripts'], 'demo_doctrine2_ajax.js');
             self::$data['elapsed_time'] = $this->benchmark->elapsed_time('start', 'stop');
@@ -208,7 +208,7 @@ class Demo_Doctrine2 extends MX_Controller
         if ($this->input->post('save'))
         {
             // Doctrine
-            $record = new Entities\CrudDemo;
+            $record = new Entities\DemoCrud;
             $record->setOrdernumber($this->input->post('order_number'));
             $record->setProductcode($this->input->post('product_code'));
             $record->setQuantityordered($this->input->post('quantitiy_ordered'));
@@ -244,7 +244,7 @@ class Demo_Doctrine2 extends MX_Controller
         }
         else
         {
-            $record = $this->doctrine->em->find('Entities\CrudDemo', $id);
+            $record = $this->doctrine->em->find('Entities\DemoCrud', $id);
             $this->doctrine->em->remove($record);
             try
             {

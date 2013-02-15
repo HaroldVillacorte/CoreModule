@@ -1,6 +1,6 @@
-Entities\CrudDemo:
+Entities\DemoCrud:
     type: entity
-    table: crud_demo
+    table: demo_crud
     fields:
         id:
             id: true

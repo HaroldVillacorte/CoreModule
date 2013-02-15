@@ -7,6 +7,9 @@ class Core_user_model extends CI_Model
     {
         parent::__construct();
 
+        // Load the config file.
+        $this->config->load('core_user/core_user_config');
+
         // Load the database class.
         $this->load->database();
     }
@@ -44,12 +47,35 @@ class Core_user_model extends CI_Model
     public function user_find($id = NULL)
     {
         $user = $this->db
-            ->select('users.id, users.protected, username, email, activation_code, created, role_id, role')
-            ->join('join_users_roles', 'join_users_roles.user_id = users.id')
-            ->join('roles', 'roles.id = join_users_roles.role_id')
-            ->get_where('users', array('users.id' => (int) $id));
+            ->select('core_users.id, core_users.protected, username, email,activation_code,
+                      created, role_id, role, locked_out_time')
+            ->join('core_join_users_roles', 'core_join_users_roles.user_id = core_users.id')
+            ->join('core_roles', 'core_roles.id = core_join_users_roles.role_id')
+            ->get_where('core_users', array('core_users.id' => (int) $id));
 
-        return ($user) ? $user : FALSE;
+        return ($user) ? $user->row() : FALSE;
+    }
+
+    /**
+     * Find user by identity and join roles.
+     *
+     * @param string $column
+     * @param string $identity
+     * @return object
+     */
+    public function user_find_by_identity($column = NULL, $identity = NULL)
+    {
+        $column   = $this->db->escape_str($column);
+        $identity = $this->db->escape_str($identity);
+
+        $user = $this->db
+            ->select('core_users.id, core_users.protected, username, email, activation_code,
+                      created, role_id, role, locked_out_time')
+            ->join('core_join_users_roles', 'core_join_users_roles.user_id = core_users.id')
+            ->join('core_roles', 'core_roles.id = core_join_users_roles.role_id')
+            ->get_where('core_users', array('core_users.' . $column => $identity));
+
+        return ($user) ? $user->row() : FALSE;
     }
 
     /**
@@ -63,15 +89,15 @@ class Core_user_model extends CI_Model
         {
             $id       = $this->session->userdata('user_id');
             $role_ids = $this->db
-                ->get_where('join_users_roles', array('user_id' => (int) $id))
+                ->get_where('core_join_users_roles', array('user_id' => (int) $id))
                 ->result_array();
-            $roles    = array();
+            $roles = array();
 
             foreach ($role_ids as $role_id)
             {
                 $found_role = $this->db
                     ->select('role')
-                    ->get_where('roles', array('id' => (int) $role_id));
+                    ->get_where('core_roles', array('id' => (int) $role_id));
                 $roles[] = $found_role;
             }
 
@@ -94,14 +120,105 @@ class Core_user_model extends CI_Model
         $sanitized_password = $this->db->escape_str($password);
         // Run the query.
         $result = $this->db
-            ->select('users.id, username, email, created, role')
-            ->join('join_users_roles', 'join_users_roles.user_id = users.id')
-            ->join('roles', 'roles.id = join_users_roles.role_id')
-            ->get_where('users', array(
+            ->select('core_users.id, username, email, created, role, active')
+            ->join('core_join_users_roles', 'core_join_users_roles.user_id = core_users.id')
+            ->join('core_roles', 'core_roles.id = core_join_users_roles.role_id')
+            ->get_where('core_users', array(
             'username' => $sanitized_username,
             'password' => $sanitized_password,), 1);
 
         return ($result->num_rows() == 1) ? $result->row() : FALSE;
+    }
+
+    /**
+     * Store failed login attempts and check number of attempts.
+     *
+     * @param array $post
+     * @return string
+     */
+    public function user_login_log_failed_attempt($post = array())
+    {
+        $post = $this->prep_post($post);
+        $expire_time = time() - $this->config->item('user_login_attempts_time');
+
+        // Delete expired attempts.
+        $this->db->where('time <', $expire_time)->delete('core_user_login_attempts');
+
+        // Get all unexpired attempts.
+        $all_login_attempts = $this->db
+                                   ->select('id')
+                                   ->where(array(
+                                        'login' => $post['login'],
+                                        'ip_address' => $post['ip_address'],
+                                   ))
+                                   ->get('core_user_login_attempts');
+
+        // Count number of attempts.
+        if ($all_login_attempts->num_rows() < $this->config->item('user_login_attempts_max'))
+        {
+            // Insert if less than the max.
+            $this->db->set($post)->insert('core_user_login_attempts');
+
+            return FALSE;
+        }
+        else
+        {
+            // Delete all atempts.
+            $this->db
+                ->where(array(
+                    'login' => $post['login'],
+                    'ip_address' => $post['ip_address'],
+                ))
+                ->delete('core_user_login_attempts');
+
+            // Insert locked out time.
+            $time = time();
+            $this->db->where('username', $post['login'])
+                ->update('core_users', array('locked_out_time' => $time));
+
+            return $post['login'];
+        }
+    }
+
+    /**
+     * Delete locked out time from user.
+     *
+     * @param object $user
+     */
+    public function user_login_unlock($user)
+    {
+        $this->db
+            ->where('id', $user->id)
+            ->update('core_users', array('locked_out_time' => NULL));
+    }
+
+    /**
+     * Check if a user has an unexpired logged in cookie.
+     *
+     * @param string $remember_code
+     * @param string $ip_address
+     * @param string $user_agent
+     * @return object
+     */
+    public function user_check_logged_in($remember_code = NULL, $ip_address = NULL, $user_agent = NULL)
+    {
+        // Sanitize.
+        $remember_code_clean = $this->db->escape_str($remember_code);
+        $ip_address_clean    = $this->db->escape_str($ip_address);
+        $user_agent_clean    = $this->db->escape_str($user_agent);
+
+        // Run the query.
+        $result = $this->db
+                    ->select('core_users.id, core_users.protected, username, email, created, role')
+                    ->join('core_join_users_roles', 'core_join_users_roles.user_id = core_users.id')
+                    ->join('core_roles', 'core_roles.id = core_join_users_roles.role_id')
+                    ->get_where('core_users', array(
+                        'core_users.remember_code' => $remember_code_clean,
+                        'ip_address'          => $ip_address_clean,
+                        'user_agent'          => $user_agent_clean,
+                        ));
+
+        return ($result->num_rows() > 0) ? $result->row() : FALSE;
     }
 
     /**
@@ -122,14 +239,14 @@ class Core_user_model extends CI_Model
             ->set('ip_address', $ip_address)
             ->set('user_agent', $user_agent)
             ->where('id', (int) $id)
-            ->update('users');
+            ->update('core_users');
         $num_rows = $this->db->affected_rows();
 
         return ($num_rows > 0) ? TRUE : FALSE;
     }
 
     /**
-     * Deletes the persistent login cookie code, the users ip, and the user's user
+     * Deletes the persistent login cookie code, the core_users ip, and the user's user
      * agent from the database.
      *
      * @param integer $id
@@ -142,7 +259,7 @@ class Core_user_model extends CI_Model
             ->set('ip_address', '')
             ->set('user_agent', '')
             ->where('id', (int) $id)
-            ->update('users');
+            ->update('core_users');
         $num_rows = $this->db->affected_rows();
 
         return ($num_rows > 0) ? TRUE : FALSE;
@@ -165,13 +282,13 @@ class Core_user_model extends CI_Model
         unset($post['passconf']);
         unset($post['add']);
 
-        $result  = $this->db->insert('users', $post);
+        $result  = $this->db->insert('core_users', $post);
         $id      = $this->db->insert_id();
 
         if ($result)
         {
             $result2 = $this->db
-            ->insert('join_users_roles', array(
+            ->insert('core_join_users_roles', array(
                 'user_id' => (int) $id,
                 'role_id' => 3,
             ));
@@ -192,7 +309,7 @@ class Core_user_model extends CI_Model
 
         // Find inactive user with activaton code.
         $result = $this->db
-            ->get_where('users', array(
+            ->get_where('core_users', array(
                 'activation_code' => $code,
                 'active'          => 0,
                 ), 1);
@@ -207,7 +324,7 @@ class Core_user_model extends CI_Model
                     'activation_code' => NULL,
                     'active'          => 1,
                 );
-                $this->db->where('id', $user->id)->update('users', $data);
+                $this->db->where('id', $user->id)->update('core_users', $data);
                 // Return 'updated if query success.'
                 return ($this->db->affected_rows() > 0) ? 'activated' : FALSE;
             }
@@ -248,9 +365,9 @@ class Core_user_model extends CI_Model
         unset($post['save']);
 
         $result = $this->db
-            ->where('id', (int) $post['id'])
+            ->where('id', (int) $user_id)
             ->limit(1)
-            ->update('users', $post);
+            ->update('core_users', $post);
 
         return ($result) ? TRUE : FALSE;
     }
@@ -266,13 +383,13 @@ class Core_user_model extends CI_Model
         $id = $this->session->userdata('user_id');
 
         // Delete the user.
-        $result = $this->db->delete('users', array('id' => (int) $id), 1);
+        $result = $this->db->delete('core_users', array('id' => (int) $id), 1);
 
         if ($result)
         {
             // Delete the user role from the join table.
             $result2 = $this->db
-                ->delete('join_users_roles', array('user_id' => (int) $id), 1);
+                ->delete('core_join_users_roles', array('user_id' => (int) $id), 1);
         }
 
         return ($this->db->affected_rows() > 0) ? TRUE : FALSE;
@@ -307,14 +424,14 @@ class Core_user_model extends CI_Model
             // Add a user.
             case !isset($post['id']):
                 $post['created'] = time();
-                $result          = $this->db->insert('users', $post);
+                $result          = $this->db->insert('core_users', $post);
                 $id              = $this->db->insert_id();
 
                 if ($id)
                 {
                     // Set the users role.
                     $result2 = $this->db->insert(
-                        'join_users_roles', array(
+                        'core_join_users_roles', array(
                         'user_id' => $id,
                         'role_id' => $role,
                         ));
@@ -326,7 +443,7 @@ class Core_user_model extends CI_Model
                 $result = $this->db
                     ->where('id', $post['id'])
                     ->limit(1)
-                    ->update('users', $post);
+                    ->update('core_users', $post);
 
                 if ($result)
                 {
@@ -334,7 +451,7 @@ class Core_user_model extends CI_Model
                     $result2 = $this->db
                         ->where('user_id', $post['id'])
                         ->limit(1)
-                        ->update('join_users_roles', array('role_id' => $role));
+                        ->update('core_join_users_roles', array('role_id' => $role));
                 }
                 break;
         }
@@ -351,12 +468,12 @@ class Core_user_model extends CI_Model
     public function admin_user_delete($id = NULL)
     {
         // Delte the user.
-        $result = $this->db->delete('users', array('id' => (int) $id), 1);
+        $result = $this->db->delete('core_users', array('id' => (int) $id), 1);
 
         if ($result)
         {
             // Delete the user role.
-            $this->db->delete('join_users_roles', array('user_id' => (int) $id), 1);
+            $this->db->delete('core_join_users_roles', array('user_id' => (int) $id), 1);
 
             return ($this->db->affected_rows() > 1) ? TRUE : FALSE;
         }
@@ -370,8 +487,8 @@ class Core_user_model extends CI_Model
      */
     public function admin_role_get($id = NULL)
     {
-        $query = $this->db->where('id', (int) $id)->get('roles');
-        return ($query->num_rows() > 0) ? $query : FALSE;
+        $query = $this->db->where('id', (int) $id)->get('core_roles');
+        return ($query->num_rows() > 0) ? $query->row() : FALSE;
     }
 
     /**
@@ -380,11 +497,21 @@ class Core_user_model extends CI_Model
      * @param string $data_type
      * @return mixed
      */
-    public function admin_role_get_all()
+    public function admin_role_get_all($data_type = 'object')
     {
-        $result = $this->db->get('roles');
+        $result = $this->db->get('core_roles');
 
-        return ($result->num_rows() > 0) ? $result : FALSE;
+        switch ($data_type)
+        {
+            case 'array':
+                $result_type = $result->result_array();
+                break;
+            case 'object':
+                $result_type = $result->result();
+                break;
+        }
+
+        return ($result->num_rows() > 0) ? $result_type : FALSE;
     }
 
     /**
@@ -411,7 +538,7 @@ class Core_user_model extends CI_Model
         {
             // Add a role.
             case !isset($post['id']):
-                $query = $this->db->insert('roles', $post);
+                $query = $this->db->insert('core_roles', $post);
                 $id    = $this->db->insert_id();
                 return ($id) ? $id : FALSE;
                 break;
@@ -420,7 +547,7 @@ class Core_user_model extends CI_Model
             case isset($post['id']):
                 $query = $this->db
                     ->where('id', (int) $post['id'])
-                    ->update('roles', $post);
+                    ->update('core_roles', $post);
                 return ($this->db->affected_rows() > 0) ? TRUE : FALSE;
                 break;
         }
@@ -434,7 +561,7 @@ class Core_user_model extends CI_Model
      */
     public function admin_role_delete($id = NULL)
     {
-        $query = $this->db->delete('roles', array('id' => (int) $id), 1);
+        $query = $this->db->delete('core_roles', array('id' => (int) $id), 1);
         $result = $this->db->affected_rows();
 
         return ($result > 0) ? TRUE : FALSE;
@@ -447,7 +574,7 @@ class Core_user_model extends CI_Model
      */
     public function admin_user_get_all()
     {
-        $query = $this->db->get('users');
+        $query = $this->db->get('core_users');
 
         if ($query->num_rows() > 0)
         {
@@ -471,10 +598,10 @@ class Core_user_model extends CI_Model
     public function admin_user_limit_offset_get($per_page, $start)
     {
         $query = $this->db
-            ->select('users.id, username, email, role, created, users.protected')
-            ->join('join_users_roles', 'join_users_roles.user_id = users.id')
-            ->join('roles', 'roles.id = join_users_roles.role_id')
-            ->get('users', (int) $per_page, (int) $start);
+            ->select('core_users.id, username, email, role, created, core_users.protected')
+            ->join('core_join_users_roles', 'core_join_users_roles.user_id = core_users.id')
+            ->join('core_roles', 'core_roles.id = core_join_users_roles.role_id')
+            ->get('core_users', (int) $per_page, (int) $start);
 
         return ($query->num_rows() > 0) ? $query->result_array() : FALSE;
     }

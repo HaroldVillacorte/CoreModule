@@ -1,6 +1,6 @@
 <h5>Edit user</h5>
 
-<?php echo form_open('user/admin_edit_user') ;?>
+<?php echo form_open($this->config->item('user_admin_user_edit_uri')) ;?>
 
 <input type="hidden" name="id" value="<?php echo isset($user) ? $user->id : set_value('id') ;?>" />
 

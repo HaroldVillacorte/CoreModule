@@ -67,13 +67,6 @@ class Core_user_library
     public $user_delete_uri;
 
     /**
-     * Admin index page uri.  Currently not in use.
-     *
-     * @var string
-     */
-    public $user_admin_index_uri;
-
-    /**
      * Admin user roles uri.
      *
      * @var string
@@ -85,21 +78,21 @@ class Core_user_library
      *
      * @var string
      */
-    public $user_admin_add_role_uri;
+    public $user_admin_role_add_uri;
 
     /**
      * Admin edit user roles uri.
      *
      * @var string
      */
-    public $user_admin_edit_role_uri;
+    public $user_admin_role_edit_uri;
 
     /**
      * Admin delete user roles uri.
      *
      * @var string
      */
-    public $user_delete_role_uri;
+    public $user_admin_role_delete_uri;
 
     /**
      * Admin paginted users page uri.
@@ -113,21 +106,21 @@ class Core_user_library
      *
      * @var string
      */
-    public $user_admin_edit_user_uri;
+    public $user_admin_user_edit_uri;
 
     /**
      * Admin add user page uri.
      *
      * @var string
      */
-    public $user_admin_add_user_uri;
+    public $user_admin_user_add_uri;
 
     /**
      * Admin delete user uri.
      *
      * @var string
      */
-    public $user_admin_delete_user_uri;
+    public $user_admin_user_delete_uri;
 
     function __construct()
     {
@@ -135,7 +128,7 @@ class Core_user_library
 
         // Load the config and language files.
         self::$CI->config->load('core_user/core_user_config');
-        self::$CI->lang->load('core_user/core_user', self::$CI->config->item('core_user_language'));
+        self::$CI->lang->load('core_user/core_user');
 
         // Load the libraries.
         self::$CI->load->library('session');
@@ -145,9 +138,6 @@ class Core_user_library
 
         // Load the models.
         self::$CI->load->model('core_user/core_user_model');
-
-        // Load the Database class.
-        self::$CI->load->database();
 
         // Intialize the data array.
         self::$data = self::$CI->core_module_model->site_info();
@@ -162,15 +152,14 @@ class Core_user_library
         $this->user_delete_uri     = self::$CI->config->item('user_delete_uri');
 
         // Set the admin uri's.
-        $this->user_admin_index_uri         = self::$CI->config->item('user_admin_index_uri');
         $this->user_admin_roles_uri         = self::$CI->config->item('user_admin_roles_uri');
-        $this->user_admin_add_role_uri      = self::$CI->config->item('user_admin_add_role_uri');
-        $this->user_admin_edit_role_uri     = self::$CI->config->item('user_admin_edit_role_uri');
-        $this->user_delete_role_uri         = self::$CI->config->item('user_delete_role_uri');
+        $this->user_admin_role_add_uri      = self::$CI->config->item('user_admin_role_add_uri');
+        $this->user_admin_role_edit_uri     = self::$CI->config->item('user_admin_role_edit_uri');
+        $this->user_admin_role_delete_uri         = self::$CI->config->item('user_admin_role_delete_uri');
         $this->user_admin_users_uri         = self::$CI->config->item('user_admin_users_uri');
-        $this->user_admin_edit_user_uri     = self::$CI->config->item('user_admin_edit_user_uri');
-        $this->user_admin_add_user_uri      = self::$CI->config->item('user_admin_add_user_uri');
-        $this->user_admin_delete_user_uri   = self::$CI->config->item('user_admin_delete_user_uri');
+        $this->user_admin_user_edit_uri     = self::$CI->config->item('user_admin_user_edit_uri');
+        $this->user_admin_user_add_uri      = self::$CI->config->item('user_admin_user_add_uri');
+        $this->user_admin_user_delete_uri   = self::$CI->config->item('user_admin_user_delete_uri');
     }
 
     /**
@@ -198,7 +187,7 @@ class Core_user_library
             array(
                 'field' => 'username',
                 'label' => 'Username',
-                'rules' => 'required|trim|is_unique[users.username]',
+                'rules' => 'required|trim|is_unique[core_users.username]',
             ),
             array(
                 'field' => 'password',
@@ -213,7 +202,7 @@ class Core_user_library
             array(
                 'field' => 'email',
                 'label' => 'Email',
-                'rules' => 'required|trim|valid_email|is_unique[users.email]'
+                'rules' => 'required|trim|valid_email|is_unique[core_users.email]'
             ),
         );
 
@@ -249,7 +238,7 @@ class Core_user_library
             array(
                 'field' => 'role',
                 'label' => 'Role',
-                'rules' => 'required|is_unique[roles.role]',
+                'rules' => 'required|is_unique[core_roles.role]',
             ),
             array(
                 'field' => 'description',
@@ -280,7 +269,7 @@ class Core_user_library
             array(
                 'field' => 'username',
                 'label' => 'Username',
-                'rules' => 'required|is_unique[users.username]',
+                'rules' => 'required|is_unique[core_users.username]',
             ),
             array(
                 'field' => 'password',
@@ -295,7 +284,7 @@ class Core_user_library
             array(
                 'field' => 'email',
                 'label' => 'Email',
-                'rules' => 'required|valid_email|is_unique[users.email]'
+                'rules' => 'required|valid_email|is_unique[core_users.email]'
             ),
             array(
                 'field' => 'role',
@@ -359,8 +348,7 @@ class Core_user_library
 
         // Set the valid_base64 error since it is currently missing from the CI core
         // language files.
-        $valid_base64_error = self::$CI->lang->line('validation_valid_base64');;
-        self::$CI->form_validation->set_message('valid_base64', $valid_base64_error);
+        self::$CI->core_module_library->set_valid_base_64_error('Password');
     }
 
     /**
@@ -372,7 +360,7 @@ class Core_user_library
     public function user_find($id = NULL)
     {
         $user = self::$CI->core_user_model->user_find($id);
-        return ($user) ? $user->row() : FALSE;
+        return ($user) ? $user : FALSE;
     }
 
     /**
@@ -426,7 +414,6 @@ class Core_user_library
         // Send the email.
         $result = self::$CI->core_email_library->system_email_send($email);
 
-        // Log email error.
         if ($result)
         {
             self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_user_account_created'));
@@ -543,13 +530,25 @@ class Core_user_library
      */
     public function user_login($username = NULL, $password = NULL, $set_persistent_login = NULL)
     {
+        // Check if user is locked out.
+        $this->user_locked_out_check($username);
+
         $user = self::$CI->core_user_model->user_login($username, $password);
         if ($user)
         {
-            // Login success.
-            log_message('error', $username . ' logged in.');
-            self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_user_login') . $username . '.');
-            $this->user_set_session_data($user);
+            // Check active.
+            if (!$user->active)
+            {
+                self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_user_login_inactive'));
+                redirect(current_url());
+            }
+            else
+            {
+                // Login success.
+                log_message('error', $username . ' logged in.');
+                self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_user_login') . $username . '.');
+                $this->user_set_session_data($user);
+            }
 
             // Set the login cookie if checked.
             if ($set_persistent_login)
@@ -572,7 +571,73 @@ class Core_user_library
         {
             // Unsuccessful login.
             self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_user_login_failed'));
+            $this->user_login_log_failed_attempt($username);
             redirect(current_url());
+        }
+    }
+
+    /**
+     * Store failed login attempts and check number of attempts.
+     *
+     * @param string $login
+     */
+    public function user_login_log_failed_attempt($login = '')
+    {
+        $ip_address = self::$CI->session->userdata('ip_address');
+        $time = time();
+
+        $data = array(
+            'ip_address' => $ip_address,
+            'login'      => $login,
+            'time'       => $time,
+        );
+
+        // Store the failed attempt and get total attempts information.
+        $locked_out_username = self::$CI->core_user_model->user_login_log_failed_attempt($data);
+
+        // If user has exceeded max login attempts.
+        if ($locked_out_username)
+        {
+            // This function checks lockout and locks them out.
+            $this->user_locked_out_check($locked_out_username);
+        }
+    }
+
+    /**
+     * Check if user is locked out.
+     *
+     * @param string $locked_out_username
+     */
+    public function user_locked_out_check($locked_out_username = NULL)
+    {
+        self::$CI->load->helper('date');
+
+        // Instantiate the user.
+        $user = self::$CI->core_user_model->user_find_by_identity('username', $locked_out_username);
+
+        $time = time();
+
+        // The time when a user can try to login again.
+        $time_to_unlock = $user->locked_out_time + self::$CI->config->item('user_login_attempts_lockout_time');
+
+        // If user has a lockout time.
+        if ($user->locked_out_time)
+        {
+            // User is still locked out.
+            if ($time < $time_to_unlock)
+            {
+                // Set the flashdata message.
+                self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_user_login_locked_out_1')
+                . ucfirst($user->username) . self::$CI->lang->line('error_user_login_locked_out_2') . unix_to_human($time_to_unlock));
+                // Redirect the user.
+                redirect(current_url());
+            }
+            // Lockout time is expired
+            else
+            {
+                // Delete the lockout time.
+                self::$CI->core_user_model->user_login_unlock($user);
+            }
         }
     }
 
@@ -673,30 +738,19 @@ class Core_user_library
         self::$CI->load->library('encrypt');
 
         $cookie_name = self::$CI->config->item('user_persistent_cookie_name');
+        $cookie = self::$CI->input->cookie($cookie_name);
 
         // If user is already logged in skip the checking.
         if (!self::$CI->session->userdata('user_id'))
         {
-            // It is neccessary to do a query here because I cannot load the model while
-            // the model loads the library.
-            if (self::$CI->input->cookie($cookie_name))
+            // Check the cookie against the database.
+            if ($cookie)
             {
-                $remember_code_encoded = self::$CI->db->escape_str(self::$CI->input->cookie($cookie_name));
-                $remember_code         = self::$CI->encrypt->decode($remember_code_encoded);
-                $ip_address            = self::$CI->db->escape_str(self::$CI->session->userdata('ip_address'));
-                $user_agent            = self::$CI->db->escape_str(self::$CI->session->userdata('user_agent'));
+                $remember_code = self::$CI->encrypt->decode($cookie);
+                $ip_address    = self::$CI->session->userdata('ip_address');
+                $user_agent    = self::$CI->session->userdata('user_agent');
 
-                $result = self::$CI->db
-                    ->select('users.id, users.protected, username, email, created, role')
-                    ->join('join_users_roles', 'join_users_roles.user_id = users.id')
-                    ->join('roles', 'roles.id = join_users_roles.role_id')
-                    ->get_where('users', array(
-                        'users.remember_code' => $remember_code,
-                        'ip_address'          => $ip_address,
-                        'user_agent'          => $user_agent,
-                        ));
-
-                $user = $result->row();
+                $user = self::$CI->core_user_model->user_check_logged_in($remember_code, $ip_address, $user_agent);
 
                 // If logged in cookie is validated set the userdata.
                 if ($user)
@@ -769,10 +823,10 @@ class Core_user_library
     public function admin_role_table()
     {
         // Get roles.
-        $output = self::$CI->core_user_model->admin_role_get_all()->result_array();
+        $output = self::$CI->core_user_model->admin_role_get_all('array');
 
         // Table headings
-        $add_link = base_url() . $this->user_admin_add_role_uri;
+        $add_link = base_url() . $this->user_admin_role_add_uri;
 
         $heading = array(
             'ID', 'Role', 'Description', 'Protected',
@@ -792,12 +846,12 @@ class Core_user_library
         foreach ($output as $key => $value)
         {   // add edit link.
             $output[$key]['edit'] =
-                '<a href="' . base_url() . $this->user_delete_role_uri
+                '<a href="' . base_url() . $this->user_admin_role_delete_uri
                 . $output[$key]['id']
                 . '" class="label alert round right" style="margin-left:10px;"'
                 . 'onClick="return confirm(' . self::$CI->lang->line('confirm_admin_role_delete') . ')">Del</a>'
                 . '<a href="' . base_url()
-                . $this->user_admin_edit_role_uri . $output[$key]['id']
+                . $this->user_admin_role_edit_uri . $output[$key]['id']
                 . '" class="label secondary round right">Edit</a>';
 
             if ($output[$key]['protected'])
@@ -817,13 +871,13 @@ class Core_user_library
     public function admin_role_get($id = NULL)
     {
         $role = self::$CI->core_user_model->admin_role_get($id);
-        return ($role) ? $role->row() : FALSE ;
+        return ($role) ? $role : FALSE ;
     }
 
     public function admin_role_get_all()
     {
-        $result = self::$CI->core_user_model->admin_role_get_all();
-        return ($result) ? $result->result() : FALSE;
+        $result = self::$CI->core_user_model->admin_role_get_all('object');
+        return ($result) ? $result : FALSE;
     }
 
     /**
@@ -838,7 +892,7 @@ class Core_user_library
         if ($result)
         {
             self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_admin_add_role'));
-            redirect(base_url() . $this->user_admin_edit_role_uri . $result);
+            redirect(base_url() . $this->user_admin_role_edit_uri . $result);
         }
         else
         {
@@ -859,12 +913,12 @@ class Core_user_library
         if ($result)
         {
             self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_admin_edit_role'));
-            redirect(base_url() . $this->user_admin_edit_role_uri . $post['id']);
+            redirect(base_url() . $this->user_admin_role_edit_uri . $post['id']);
         }
         else
         {
             self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_admin_edit_role'));
-            redirect(base_url() . $this->user_admin_edit_role_uri . $post['id']);
+            redirect(base_url() . $this->user_admin_role_edit_uri . $post['id']);
         }
     }
 
@@ -925,11 +979,11 @@ class Core_user_library
         {
             case TRUE:
                 self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_admin_edit_user'));
-                redirect(base_url() . $this->user_admin_edit_user_uri . $post['id']);
+                redirect(base_url() . $this->user_admin_user_edit_uri . $post['id']);
                 break;
             case FALSE:
                 self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_admin_edit_user'));
-                redirect(base_url() . $this->user_admin_edit_user_uri . $post['id']);
+                redirect(base_url() . $this->user_admin_user_edit_uri . $post['id']);
                 break;
         }
     }
@@ -962,7 +1016,7 @@ class Core_user_library
      *
      * @return integer
      */
-    public function admin_get_user_count()
+    public function admin_user_get_count()
     {
         $result = self::$CI->core_user_model->admin_user_get_all();
 
@@ -973,7 +1027,7 @@ class Core_user_library
         else
         {
             self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_admin_get_user_count'));
-            redirect(base_url . $this->user_admin_index_uri);
+            redirect(base_url() . $this->user_admin_index_uri);
         }
     }
 
@@ -1054,7 +1108,7 @@ class Core_user_library
         self::$CI->load->helper('date');
 
         // Table headings
-        $add_link = base_url() . $this->user_admin_add_user_uri;
+        $add_link = base_url() . $this->user_admin_user_add_uri;
         $heading  = array(
             'ID', 'Username', 'Email', 'Role', 'Member since', 'Protected',
             '<a href="' . $add_link . '" class="right">Add user +</a>',
@@ -1075,12 +1129,12 @@ class Core_user_library
             unset($output[$key]['password']);
 
             $output[$key]['edit'] =
-                '<a href="' . base_url() . $this->user_admin_delete_user_uri
+                '<a href="' . base_url() . $this->user_admin_user_delete_uri
                 . $output[$key]['id']
                 . '" class="label alert round right" style="margin-left:10px;"'
                 . 'onClick="return confirm(' . self::$CI->lang->line('confirm_admin_user_delete') . ')">Del</a>'
                 . '<a href="' . base_url()
-                . $this->user_admin_edit_user_uri . $output[$key]['id']
+                . $this->user_admin_user_edit_uri . $output[$key]['id']
                 . '" class="label secondary round right">Edit</a>';
 
             $output[$key]['created'] = unix_to_human($output[$key]['created']);
@@ -1105,7 +1159,7 @@ class Core_user_library
      *
      * @param object $user
      */
-    public function admin_check_user_protected($user = NULL)
+    public function admin_user_check_protected($user = NULL)
     {
         // Superuser can delete any account except User 1.
         if (($user->protected && self::$CI->session->userdata('role') != 'super_user') || $user->id == 1)
@@ -1120,7 +1174,7 @@ class Core_user_library
      *
      * @param object $role
      */
-    public function admin_check_role_protected($role = NULL)
+    public function admin_role_check_protected($role = NULL)
     {
         // Superuser can delete any role except Role 1.
         if (($role->protected && self::$CI->session->userdata('role') != 'super_user') || $role->id == 1)

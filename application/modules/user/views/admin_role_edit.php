@@ -1,19 +1,11 @@
 <h4>Add Role</h4>
 
-<<<<<<< HEAD:application/modules/user_admin/views/user_admin_edit_role.php
-<?php echo form_open('user_admin/edit_role') ;?>
-=======
-<?php echo form_open('user/admin_edit_role') ;?>
->>>>>>> 66a0b12:application/modules/user/views/admin_role_edit.php
+<?php echo form_open($this->config->item('user_admin_role_edit_uri')) ;?>
 
 <input type="hidden" name="id" value="<?php echo isset($role) ? $role->id : set_value('id') ;?>" />
 
 <label for="role">Role:</label>
-<<<<<<< HEAD:application/modules/user_admin/views/user_admin_edit_role.php
-<input class="<?php echo $this->core_library->form_error_class('role') ;?>"
-=======
 <input class="<?php echo $this->core_module_library->form_error_class('role') ;?>"
->>>>>>> 66a0b12:application/modules/user/views/admin_role_edit.php
        type="text" name="role" value="<?php echo isset($role) ? $role->role : set_value('role') ;?>" />
 
 <label for="description">Description:</label>

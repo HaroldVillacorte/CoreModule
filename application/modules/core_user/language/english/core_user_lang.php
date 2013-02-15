@@ -7,13 +7,16 @@
 */
 
 // login()
-$lang['success_user_login']                     = 'You are now logged in as ';
-$lang['notice_user_persistent_fail']            = 'Persistent login failed.';
-$lang['error_user_login_failed']                = 'Username and password combination not found.';
+$lang['success_user_login']          = 'You are now logged in as ';
+$lang['notice_user_persistent_fail'] = 'Persistent login failed.';
+$lang['error_user_login_failed']     = 'Username and password combination not found.';
+$lang['error_user_login_inactive']   = 'You have not activated your account.';
+$lang['error_user_login_locked_out_1'] = 'You have exceeded the maximum number of login attempts. The account belonging to ';
+$lang['error_user_login_locked_out_2'] = ' is locked out. You may try again at ';
 
 // add()
-$lang['success_user_account_created']           = 'Acount was successfully created and an activation email was sent.  Please activate within 24 hours.';
-$lang['error_user_account_failed']              = 'There was a problem adding your account.';
+$lang['success_user_account_created'] = 'Acount was successfully created and an activation email was sent.  Please activate within 24 hours.';
+$lang['error_user_account_failed']    = 'There was a problem adding your account.';
 
 // activate()
 $lang['success_user_account_activation']         = 'Your account has been activated.  You may now log in with your username and password.';
@@ -23,12 +26,12 @@ $lang['notice_user_account_activation_expired']  = 'You activation email was exp
 $lang['error_user_account_activation_invalid']   = 'There was a problem.  The code you submitted was not valid';
 
 // edit()
-$lang['success_user_account_edited']            = 'Account was successfully saved.';
-$lang['error_user_account_edit_unauthorized']   = 'You are not authorized to edit this user.';
-$lang['error_user_account_edit_failed']         = 'There was a problem saving your account.';
+$lang['success_user_account_edited']          = 'Account was successfully saved.';
+$lang['error_user_account_edit_unauthorized'] = 'You are not authorized to edit this user.';
+$lang['error_user_account_edit_failed']       = 'There was a problem saving your account.';
 
 // delete()
-$lang['error_user_account_delete_failed']       = 'Unable to delete your account.  Please contact administrator.';
+$lang['error_user_account_delete_failed'] = 'Unable to delete your account.  Please contact administrator.';
 
 /*
 |--------------------------------------------------------------------------
@@ -37,13 +40,13 @@ $lang['error_user_account_delete_failed']       = 'Unable to delete your account
 */
 
 // logout()
-$lang['notice_user_logout']     = 'You are now logged out.';
+$lang['notice_user_logout'] = 'You are now logged out.';
 
 // permission()
-$lang['error_user_permission']  = 'You are not authorized to access that page.';
+$lang['error_user_permission'] = 'You are not authorized to access that page.';
 
 // check_user_protected()
-$lang['error_user_protected']   = 'Unable to process.  User account is protected.';
+$lang['error_user_protected'] = 'Unable to process.  User account is protected.';
 
 /*
 |--------------------------------------------------------------------------
@@ -95,14 +98,5 @@ $lang['confirm_admin_user_delete']  = '\'Are you sure you want to delete this us
 
 // admin_get_user_count()
 $lang['error_admin_get_user_count']  = 'No users were found.';
-
-/*
-|--------------------------------------------------------------------------
-| Validation.
-|--------------------------------------------------------------------------
-*/
-
-// set_validation_rules()
-$lang['validation_valid_base64']  = 'Password may only contain alpha-numeric characters, +\'s, and /\'s';
 
 /* End of file core_user_lang.php */

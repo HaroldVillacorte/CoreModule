@@ -4,22 +4,14 @@
 </p>
 <h4>User Login</h4>
 
-<?php echo form_open('user/login') ;?>
+<?php echo form_open($this->config->item('user_login_uri')) ;?>
 
 <label for="username">Username:</label>
-<<<<<<< HEAD
-<input class="<?php echo $this->core_library->form_error_class('username') ;?>"
-       type="text" name="username" value="" />
-
-<label for="password">Password:</label>
-<input class="<?php echo $this->core_library->form_error_class('password') ;?>"
-=======
 <input class="<?php echo $this->core_module_library->form_error_class('username') ;?>"
        type="text" name="username" value="" />
 
 <label for="password">Password:</label>
 <input class="<?php echo $this->core_module_library->form_error_class('password') ;?>"
->>>>>>> 66a0b12
        type="password" name="password" value="" autocomplete="off" />
 
 <label for="set_persistent_login">Remember me for two weeks?</label>

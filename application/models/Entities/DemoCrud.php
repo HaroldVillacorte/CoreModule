@@ -7,7 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * CrudDemo
  */
-class CrudDemo
+class DemoCrud
 {
     /**
      * @var integer
@@ -48,7 +48,7 @@ class CrudDemo
     /**
      * Get id
      *
-     * @return integer 
+     * @return integer
      */
     public function getId()
     {
@@ -64,14 +64,14 @@ class CrudDemo
     public function setOrdernumber($ordernumber)
     {
         $this->ordernumber = $ordernumber;
-    
+
         return $this;
     }
 
     /**
      * Get ordernumber
      *
-     * @return integer 
+     * @return integer
      */
     public function getOrdernumber()
     {
@@ -87,14 +87,14 @@ class CrudDemo
     public function setProductcode($productcode)
     {
         $this->productcode = $productcode;
-    
+
         return $this;
     }
 
     /**
      * Get productcode
      *
-     * @return string 
+     * @return string
      */
     public function getProductcode()
     {
@@ -110,14 +110,14 @@ class CrudDemo
     public function setQuantityordered($quantityordered)
     {
         $this->quantityordered = $quantityordered;
-    
+
         return $this;
     }
 
     /**
      * Get quantityordered
      *
-     * @return integer 
+     * @return integer
      */
     public function getQuantityordered()
     {
@@ -133,14 +133,14 @@ class CrudDemo
     public function setPriceeach($priceeach)
     {
         $this->priceeach = $priceeach;
-    
+
         return $this;
     }
 
     /**
      * Get priceeach
      *
-     * @return float 
+     * @return float
      */
     public function getPriceeach()
     {
@@ -156,14 +156,14 @@ class CrudDemo
     public function setOrderlinenumber($orderlinenumber)
     {
         $this->orderlinenumber = $orderlinenumber;
-    
+
         return $this;
     }
 
     /**
      * Get orderlinenumber
      *
-     * @return integer 
+     * @return integer
      */
     public function getOrderlinenumber()
     {
@@ -179,14 +179,14 @@ class CrudDemo
     public function setText($text)
     {
         $this->text = $text;
-    
+
         return $this;
     }
 
     /**
      * Get text
      *
-     * @return string 
+     * @return string
      */
     public function getText()
     {

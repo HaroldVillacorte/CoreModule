@@ -1,6 +1,6 @@
 <h5>Add user</h5>
 
-<?php echo form_open('user/admin_add_user') ;?>
+<?php echo form_open($this->config->item('user_admin_user_add_uri')) ;?>
 
 <label for="username">Username:</label>
 <input class="<?php echo $this->core_module_library->form_error_class('username') ;?>" type="text" name="username"

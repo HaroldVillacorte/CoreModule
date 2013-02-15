@@ -39,11 +39,6 @@ class User extends MX_Controller
     public function __construct()
     {
         parent::__construct();
-<<<<<<< HEAD
-        // Load libraries.
-        $this->load->library('user_library');
-        $this->load->library('core_library/core_library');
-=======
 
         // Load the config and language files.
         $this->config->load('core_user/core_user_config');
@@ -52,29 +47,10 @@ class User extends MX_Controller
         // Load libraries.
         $this->load->library('core_user/core_user_library');
         $this->load->library('core_module/core_module_library');
->>>>>>> 66a0b12
 
         // Load helpers.
         $this->load->helper('date');
         $this->load->helper('form');
-
-        // Load models.
-<<<<<<< HEAD
-        $this->load->model('user_model');
-
-        // Check if a user is logged in.
-        $this->user_library->check_logged_in();
-
-        // Sets the the data array.
-        self::$data = $this->core_model->site_info();
-
-        // Sets the module to be sent to the Template module.
-        self::$data['module'] = 'user';
-
-
-    }
-=======
-        $this->load->model('core_user/core_user_model');
 
         // Check if a user is logged in.
         $this->core_user_library->user_check_logged_in();
@@ -84,7 +60,6 @@ class User extends MX_Controller
 
         // Sets the module to be sent to the Template module.
         self::$data['module'] = 'user';
->>>>>>> 66a0b12
 
         // User admin remember paginated page.
         self::$user_page = NULL;
@@ -148,7 +123,7 @@ class User extends MX_Controller
         // button.
         if ($this->session->userdata('user_id'))
         {
-            $this->core_library->keep_flashdata_messages();
+            $this->core_module_library->keep_flashdata_messages();
             redirect(base_url() . $this->core_user_library->user_index_uri);
         }
 
@@ -188,10 +163,7 @@ class User extends MX_Controller
         }
         else
         {
-<<<<<<< HEAD
-=======
             // Code to run when user first visits.
->>>>>>> 66a0b12
             echo Modules::run(self::$template, self::$data);
         }
     }
@@ -214,17 +186,14 @@ class User extends MX_Controller
     public function edit()
     {
         self::$data['view_file'] = 'user_edit';
-
-<<<<<<< HEAD
         if ($this->session->userdata('user_id'))
-=======
+
         // Check if a user is logged in then set the user id from the session.
         if (!$this->session->userdata('user_id'))
         {
             redirect(base_url() . $this->core_user_library->user_index_uri);
         }
         else
->>>>>>> 66a0b12
         {
             $id   = $this->session->userdata('user_id');
             $user = $this->core_user_library->user_find($id);
@@ -366,7 +335,7 @@ class User extends MX_Controller
             $role = $this->core_user_library->admin_role_get($this->input->post('id'));
 
             // Check first if role is protected.
-            $this->core_user_library->admin_check_role_protected($role);
+            $this->core_user_library->admin_role_check_protected($role);
 
             $this->core_user_library->set_validation_rules('admin_role_update');
 
@@ -398,7 +367,7 @@ class User extends MX_Controller
         $role = $this->core_user_library->admin_role_get($id);
 
         // Check if role is protected.
-        $this->core_user_library->admin_check_role_protected($role);
+        $this->core_user_library->admin_role_check_protected($role);
 
         // Delete the role.
         $this->core_user_library->admin_role_delete($role->id);
@@ -425,7 +394,7 @@ class User extends MX_Controller
         }
 
         // Database queries.
-        $count = $this->core_user_library->admin_get_user_count();
+        $count = $this->core_user_library->admin_user_get_count();
         $output = $this->core_user_library->admin_user_limit_offset_get($per_page, $start);
 
         // Get first and last id's.
@@ -492,7 +461,7 @@ class User extends MX_Controller
                 $user = $this->core_user_library->user_find($id);
 
                 // Check first if user account is protected.
-                $this->core_user_library->admin_check_user_protected($user);
+                $this->core_user_library->admin_user_check_protected($user);
 
                 // Edit the user account.
                 $this->core_user_library->admin_user_edit($this->input->post());
@@ -555,7 +524,7 @@ class User extends MX_Controller
             $user = $this->core_user_library->user_find($id);
 
             // Check first if user account is protected.
-            $this->core_user_library->admin_check_user_protected($user);
+            $this->core_user_library->admin_user_check_protected($user);
 
             // Delete the user.
             $this->core_user_library->admin_user_delete($user->id, self::$user_page);

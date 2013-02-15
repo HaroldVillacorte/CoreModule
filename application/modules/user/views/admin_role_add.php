@@ -1,10 +1,6 @@
 <h4>Add Role</h4>
 
-<<<<<<< HEAD:application/modules/user_admin/views/user_admin_add_role.php
-<?php echo form_open('user_admin/add_role') ;?>
-=======
-<?php echo form_open('user/admin_add_role') ;?>
->>>>>>> 66a0b12:application/modules/user/views/admin_role_add.php
+<?php echo form_open($this->config->item('user_admin_role_add_uri')) ;?>
 
 <label for="role">Role:</label>
 <input class="<?php echo $this->core_module_library->form_error_class('role') ;?>"

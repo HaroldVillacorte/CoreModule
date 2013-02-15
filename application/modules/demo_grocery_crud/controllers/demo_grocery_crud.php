@@ -27,7 +27,7 @@ class Demo_Grocery_Crud extends MX_Controller
 
         // Load User library for permissions.
         $this->load->library('core_user/core_user_library');
-        $this->core_user_library->permission(array('admin', 'super_user'));
+        $this->core_user_library->user_permission(array('admin', 'super_user'));
     }
 
     public function index()
@@ -35,7 +35,7 @@ class Demo_Grocery_Crud extends MX_Controller
         $this->load->library('grocery_crud');
         $this->benchmark->mark('code_start');
         $crud = new grocery_CRUD ();
-        $crud->set_table('crud_demo');
+        $crud->set_table('demo_crud', 10);
         self::$data['output'] = $crud->render();
         $this->benchmark->mark('code_end');
         self::$data['elapsed_time'] = $this->benchmark->elapsed_time('code_start', 'code_end');
