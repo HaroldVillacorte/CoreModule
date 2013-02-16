@@ -7,7 +7,7 @@
     Email: <?php echo $email ;?>
 </p>
 
-<p>Visit this link within 24 hours to activate your account: <?php echo $activation_url_html ;?></p>
+<p>Visit this link within <?php echo $expire_time ;?> to activate your account: <?php echo $activation_url_html ;?></p>
 
 <p>Once activated you can log into our site at <?php echo $login_url_html ;?>.</p>
 

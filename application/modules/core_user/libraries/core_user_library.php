@@ -392,6 +392,7 @@ class Core_user_library
             case FALSE:
                 self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_user_account_failed'));
                 redirect(current_url());
+                exit();
                 break;
         }
     }
@@ -401,12 +402,17 @@ class Core_user_library
         // Load the email module.
         self::$CI->load->library('core_email/core_email_library');
 
+        // Load the date helper and set the expire time for email.
+        self::$CI->load->helper('date');
+        $expire_time = self::$CI->config->item('user_activation_expire_limit');
+
         // Find new user.
         $user = $this->user_find($result_id);
 
         // Message.
         self::$data['username']            = $user->username;
         self::$data['email']               = $user->email;
+        self::$data['expire_time']         = timespan($expire_time);
         self::$data['activation_url_text'] = base_url() . $this->user_activation_uri . $user->activation_code;
         self::$data['activation_url_html'] = anchor($this->user_activation_uri . $user->activation_code, 'Activate');
         self::$data['login_url_text']      = base_url() . $this->user_login_uri;
@@ -430,13 +436,14 @@ class Core_user_library
         {
             self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_user_account_created'));
             redirect(base_url() . $this->user_login_uri);
-
+            exit();
         }
         else
         {
             self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_user_account_failed'));
             self::$CI->core_user_model->admin_user_delete($user->id);
             redirect(current_url());
+            exit();
         }
     }
 
@@ -454,6 +461,7 @@ class Core_user_library
         {
             self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_user_account_activation_invalid'));
             redirect(base_url() . $this->user_login_uri);
+            exit();
         }
 
         // Submit to the database.
@@ -463,18 +471,22 @@ class Core_user_library
             case 'activated':
                 self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_user_account_activation'));
                 redirect(base_url() . $this->user_login_uri);
+                exit();
                 break;
             case FALSE:
                 self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_user_account_activation'));
                 redirect(base_url() . $this->user_login_uri);
+                exit();
                 break;
             case 'not_found':
                 self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_user_account_activation_not_found'));
                 redirect(base_url() . $this->user_login_uri);
+                exit();
                 break;
             case 'expired':
                 self::$CI->session->set_flashdata('message_notice', self::$CI->lang->line('notice_user_account_activation_expired'));
                 redirect(base_url() . $this->user_login_uri);
+                exit();
                 break;
         }
     }
@@ -497,6 +509,7 @@ class Core_user_library
             case TRUE:
                 self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_user_account_edited'));
                 redirect(base_url() . $this->user_index_uri);
+                exit();
 
                 // Reset the user session data ater update.
                 $updated_user = $this->user_find((int) $post['id']);
@@ -506,6 +519,7 @@ class Core_user_library
             case FALSE:
                 self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_user_account_edit_failed'));
                 redirect(current_url());
+                exit();
                 break;
         }
     }
@@ -524,11 +538,13 @@ class Core_user_library
         {
             case TRUE:
                 redirect(base_url() . $this->user_logout_uri);
+                exit();
                 break;
             case FALSE:
                 self::$CI->session
                     ->set_flashdata('message_error', self::$CI->lang->line('error_user_account_delete_failed'));
                 redirect(base_url() . $this->user_edit_uri);
+                exit();
                 break;
         }
     }
@@ -553,6 +569,7 @@ class Core_user_library
             {
                 self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_user_login_inactive'));
                 redirect(current_url());
+                exit();
             }
             else
             {
@@ -575,6 +592,7 @@ class Core_user_library
                 }
             }
             redirect(base_url() . $this->user_index_uri);
+            exit();
         }
 
         // Code to run if username and password combination is not found in the
@@ -585,6 +603,7 @@ class Core_user_library
             self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_user_login_failed'));
             $this->user_login_log_failed_attempt($username);
             redirect(current_url());
+            exit();
         }
     }
 
@@ -640,9 +659,10 @@ class Core_user_library
             {
                 // Set the flashdata message.
                 self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_user_login_locked_out_1')
-                . ucfirst($user->username) . self::$CI->lang->line('error_user_login_locked_out_2') . unix_to_human($time_to_unlock));
+                . ucfirst($user->username) . self::$CI->lang->line('error_user_login_locked_out_2') . timespan($time, $time_to_unlock));
                 // Redirect the user.
                 redirect(current_url());
+                exit();
             }
             // Lockout time is expired
             else
@@ -681,6 +701,7 @@ class Core_user_library
         $this->user_unset_persistent_login();
 
         redirect(base_url() . $this->user_login_uri);
+        exit();
         return TRUE;
     }
 
@@ -797,6 +818,7 @@ class Core_user_library
             // If the user is logged send user to the profile page.
             self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_user_permission'));
             redirect(base_url() . $this->user_login_uri);
+            exit();
         }
     }
 
@@ -824,6 +846,7 @@ class Core_user_library
         {
             self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_user_protected'));
             redirect(base_url() . $this->user_index_uri);
+            exit();
         }
     }
 
@@ -905,11 +928,13 @@ class Core_user_library
         {
             self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_admin_add_role'));
             redirect(base_url() . $this->user_admin_role_edit_uri . $result);
+            exit();
         }
         else
         {
             self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_admin_add_role'));
             redirect(current_url());
+            exit();
         }
     }
 
@@ -926,11 +951,13 @@ class Core_user_library
         {
             self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_admin_edit_role'));
             redirect(base_url() . $this->user_admin_role_edit_uri . $post['id']);
+            exit();
         }
         else
         {
             self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_admin_edit_role'));
             redirect(base_url() . $this->user_admin_role_edit_uri . $post['id']);
+            exit();
         }
     }
 
@@ -948,10 +975,12 @@ class Core_user_library
             case TRUE:
                 self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_admin_delete_role'));
                 redirect(base_url() . $this->user_admin_roles_uri);
+                exit();
                 break;
             case FALSE:
                 self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_admin_delete_role'));
                 redirect(base_url() . $this->user_admin_roles_uri);
+                exit();
                 break;
         }
     }
@@ -970,10 +999,12 @@ class Core_user_library
                     case TRUE:
                         self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_admin_add_user'));
                         redirect(base_url() . $this->user_admin_users_uri);
+                        exit();
                         break;
                     case FALSE:
                         self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_admin_add_user'));
                         redirect(base_url() . $this->user_admin_users_uri);
+                        exit();
                         break;
                 }
     }
@@ -992,10 +1023,12 @@ class Core_user_library
             case TRUE:
                 self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_admin_edit_user'));
                 redirect(base_url() . $this->user_admin_user_edit_uri . $post['id']);
+                exit();
                 break;
             case FALSE:
                 self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_admin_edit_user'));
                 redirect(base_url() . $this->user_admin_user_edit_uri . $post['id']);
+                exit();
                 break;
         }
     }
@@ -1015,10 +1048,12 @@ class Core_user_library
             case $result == TRUE:
                 self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_admin_delete_user'));
                 redirect(base_url() . $this->user_admin_users_uri);
+                exit();
                 break;
             case $result == FALSE:
                 self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_admin_delete_user'));
                 redirect(base_url() . $this->user_admin_users_uri . $user_page);
+                exit();
                 break;
         }
     }
@@ -1040,6 +1075,7 @@ class Core_user_library
         {
             self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_admin_get_user_count'));
             redirect(base_url() . $this->user_admin_index_uri);
+            exit();
         }
     }
 
@@ -1119,6 +1155,9 @@ class Core_user_library
     {
         self::$CI->load->helper('date');
 
+        // Set time date format.
+        $date_format = self::$CI->config->item('core_user_date_format');
+
         // Table headings
         $add_link = base_url() . $this->user_admin_user_add_uri;
         $heading  = array(
@@ -1149,7 +1188,7 @@ class Core_user_library
                 . $this->user_admin_user_edit_uri . $output[$key]['id']
                 . '" class="label secondary round right">Edit</a>';
 
-            $output[$key]['created'] = unix_to_human($output[$key]['created']);
+            $output[$key]['created'] = standard_date($date_format, $output[$key]['created']);
 
             if ($output[$key]['protected'])
             {
@@ -1178,6 +1217,7 @@ class Core_user_library
         {
             self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_admin_user_protected'));
             redirect(base_url() . $this->user_admin_users_uri);
+            exit();
         }
     }
 
@@ -1193,6 +1233,7 @@ class Core_user_library
         {
             self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_admin_role_protected'));
             redirect(base_url() . $this->user_admin_roles_uri);
+            exit();
         }
     }
 

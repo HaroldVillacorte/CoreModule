@@ -7,6 +7,7 @@
 */
 
 // Email settings.
+$config['core_email_smtp_Timeout'] = 60;
 $config['core_email_Priority']    = 3;
 $config['core_email_CharSet']     = 'utf-8';
 $config['core_email_ContentType'] = 'text/html';

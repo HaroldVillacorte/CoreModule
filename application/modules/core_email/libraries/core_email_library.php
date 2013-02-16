@@ -49,6 +49,7 @@ class Core_email_library
         $this->mail = new PHPMailer;
 
         // Get the email settings.
+        $this->mail->Timeout = self::$CI->config->item('core_email_smtp_Timeout');
         $this->mail->Priority = self::$CI->config->item('core_email_Priority');
         $this->mail->CharSet = self::$CI->config->item('core_email_CharSet');
         $this->mail->ContentType = self::$CI->config->item('core_email_ContentType');

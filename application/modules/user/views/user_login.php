@@ -14,7 +14,7 @@
 <input class="<?php echo $this->core_module_library->form_error_class('password') ;?>"
        type="password" name="password" value="" autocomplete="off" />
 
-<label for="set_persistent_login">Remember me for two weeks?</label>
+<label for="set_persistent_login">Remember me.</label>
 <p><?php echo form_checkbox('set_persistent_login', TRUE, set_value('set_persistent_login')) ;?></p>
 
 <?php echo form_submit('submit', 'Login') ;?>

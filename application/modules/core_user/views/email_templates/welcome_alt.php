@@ -6,7 +6,7 @@ echo "\r\n";
 echo 'Username: ' . $username  . "\r\n";
 echo 'Email: ' .  $email . "\r\n";
 echo "\r\n";
-echo 'Visit this link within 24 hours to activate your account: ' . $activation_url_text . "\r\n";
+echo 'Visit this link within '. $expire_time .' to activate your account: ' . $activation_url_text . "\r\n";
 echo "\r\n";
 echo 'Once activated you can log into our site at ' . $login_url_text . "\r\n";
 echo "\r\n";
