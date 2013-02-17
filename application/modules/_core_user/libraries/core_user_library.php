@@ -721,6 +721,11 @@ class Core_user_library
         }
     }
 
+    /**
+     * User visits page from email link.
+     * 
+     * @param array $code
+     */
     public function user_forgotten_password_login($code = NULL)
     {
         // Seperate the user id and the code.

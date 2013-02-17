@@ -303,7 +303,7 @@ class Core_user_model extends CI_Model
      * User logs in once.
      *
      * @param array $array
-     * @return boolean|string
+     * @return string
      */
     public function user_forgotten_password_login($array = array())
     {
