@@ -27,7 +27,7 @@ class User extends MX_Controller
      *
      * @var string
      */
-    private static $template = 'core_template/default_template';
+    private static $template = '_core_template/default_template';
 
     /**
      * Store in the session to remember visited page.
@@ -41,12 +41,12 @@ class User extends MX_Controller
         parent::__construct();
 
         // Load the config and language files.
-        $this->config->load('core_user/core_user_config');
-        $this->lang->load('core_user/core_user', $this->config->item('core_user_language'));
+        $this->config->load('_core_user/core_user_config');
+        $this->lang->load('_core_user/core_user', $this->config->item('core_user_language'));
 
         // Load libraries.
-        $this->load->library('core_user/core_user_library');
-        $this->load->library('core_module/core_module_library');
+        $this->load->library('_core_user/core_user_library');
+        $this->load->library('_core_module/core_module_library');
 
         // Load helpers.
         $this->load->helper('date');
@@ -98,6 +98,10 @@ class User extends MX_Controller
     public function login()
     {
         self::$data['view_file'] = 'user_login';
+        self::$data['user_add_url']                     = base_url()
+            . $this->core_user_library->user_add_uri;
+        self::$data['user_user_forgotten_password_url'] = base_url()
+            . $this->core_user_library->user_forgotten_password_uri;
 
         // Code to run when the user hits the Login button.
         if ($this->input->post('submit'))
@@ -128,6 +132,35 @@ class User extends MX_Controller
         }
 
         echo Modules::run(self::$template, self::$data);
+    }
+
+    /**
+     * User recovers password with email address.
+     */
+    public function forgotten_password()
+    {
+        self::$data['view_file'] = 'user_forgotten_password';
+
+        if ($this->input->post('submit'))
+        {
+            $this->core_user_library->set_validation_rules('user_forgotten_password');
+
+            if ($this->form_validation->run() == FALSE)
+            {
+                echo Modules::run(self::$template, self::$data);
+            }
+            else
+            {
+                $this->core_user_library-> user_forgotten_password($this->input->post('email'));
+            }
+        }
+
+        echo Modules::run(self::$template, self::$data);
+    }
+
+    public function forgotten_password_login($code = NULL)
+    {
+        $this->core_user_library->user_forgotten_password_login($code);
     }
 
     /**

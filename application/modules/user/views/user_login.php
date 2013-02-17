@@ -19,6 +19,6 @@
 
 <?php echo form_submit('submit', 'Login') ;?>
 
-<a href="<?php echo base_url() . 'user/add/' ;?>">Create account</a>
+<a href="<?php echo $user_add_url ;?>">Create account</a> | <a href="<?php echo $user_user_forgotten_password_url ;?>">Recover password</a>
 
 <?php echo form_close() ;?>

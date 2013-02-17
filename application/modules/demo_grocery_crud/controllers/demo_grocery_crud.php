@@ -26,7 +26,7 @@ class Demo_Grocery_Crud extends MX_Controller
         self::$data['module'] = 'demo_grocery_crud';
 
         // Load User library for permissions.
-        $this->load->library('core_user/core_user_library');
+        $this->load->library('_core_user/core_user_library');
         $this->core_user_library->user_permission(array('admin', 'super_user'));
     }
 
@@ -40,7 +40,7 @@ class Demo_Grocery_Crud extends MX_Controller
         $this->benchmark->mark('code_end');
         self::$data['elapsed_time'] = $this->benchmark->elapsed_time('code_start', 'code_end');
         self::$data['view_file'] = 'demo_grocery_crud';
-        echo Modules::run('core_template/default_template', self::$data);
+        echo Modules::run('_core_template/default_template', self::$data);
     }
 
 }
