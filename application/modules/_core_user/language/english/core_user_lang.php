@@ -6,6 +6,9 @@
 |--------------------------------------------------------------------------
 */
 
+// user_email_code_parse()
+$lang['error_user_email_code_invalid']   = 'There was a problem.  The code you submitted was not valid';
+
 // user_add()
 $lang['success_user_account_created'] = 'Acount was successfully created and an activation email was sent.  Please activate within 24 hours.';
 $lang['error_user_account_failed']    = 'There was a problem adding your account.';
@@ -15,7 +18,6 @@ $lang['success_user_account_activation']         = 'Your account has been activa
 $lang['error_user_account_activation']           = 'There was a problem.  We were unable to activate your account.';
 $lang['error_user_account_activation_not_found'] = 'We could not find an inactive account with the credentials you submitted.';
 $lang['notice_user_account_activation_expired']  = 'You activation email was expired.  For security purposes the account was deleted.  Please try again';
-$lang['error_user_account_activation_invalid']   = 'There was a problem.  The code you submitted was not valid';
 
 // user_edit()
 $lang['success_user_account_edited']          = 'Account was successfully saved.';

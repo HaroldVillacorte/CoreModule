@@ -194,7 +194,7 @@ class Core_user_library
             array(
                 'field' => 'password',
                 'label' => 'Password',
-                'rules' => 'required|trim|valid_base64|max_length[12]|sha1',
+                'rules' => 'trim|valid_base64|max_length[12]',
             ),
         );
 
@@ -215,7 +215,7 @@ class Core_user_library
             array(
                 'field' => 'password',
                 'label' => 'Password',
-                'rules' => 'required|trim|valid_base64|trim|max_length[12]|matches[passconf]|sha1',
+                'rules' => 'required|trim|valid_base64|trim|max_length[12]|matches[passconf]',
             ),
             array(
                 'field' => 'passconf',
@@ -243,7 +243,7 @@ class Core_user_library
             array(
                 'field' => 'password',
                 'label' => 'Password',
-                'rules' => 'trim|valid_base64|trim|max_length[12]|matches[passconf]|sha1',
+                'rules' => 'trim|valid_base64|trim|max_length[12]|matches[passconf]',
             ),
             array(
                 'field' => 'passconf',
@@ -297,7 +297,7 @@ class Core_user_library
             array(
                 'field' => 'password',
                 'label' => 'Password',
-                'rules' => 'required|trim|valid_base64|trim|max_length[12]|matches[passconf]|sha1',
+                'rules' => 'required|trim|valid_base64|trim|max_length[12]|matches[passconf]',
             ),
             array(
                 'field' => 'passconf',
@@ -378,6 +378,38 @@ class Core_user_library
     }
 
     /**
+     * Extract Id and code from meial codes.
+     *
+     * @param string $code
+     * @return array
+     */
+    public function user_email_code_parse($code = NULL)
+    {
+        // Seperate the user id and the code.
+        $array = explode('_', $code);
+
+        // Validate the url parameter.
+        $forgotten_password_code = $array[1];
+        $validate_code = self::$CI->core_module_library->validate_sha1($forgotten_password_code);
+        if (!$validate_code)
+        {
+            // Redirect if false.
+            self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_user_email_code_invalid'));
+            redirect(base_url());
+            exit();
+        }
+        else
+        {
+            // If the input validates set the array key.
+            $code_array = array();
+            $code_array['id'] = (int) $array[0];
+            $code_array['code'] = $forgotten_password_code;
+        }
+
+        return $code_array;
+    }
+
+    /**
      * Finds a user by primary key $id.
      *
      * @param integer $id
@@ -439,8 +471,10 @@ class Core_user_library
         self::$data['username']            = $user->username;
         self::$data['email']               = $user->email;
         self::$data['expire_time']         = timespan(0, $expire_time);
-        self::$data['activation_url_text'] = base_url() . $this->user_activation_uri . $user->activation_code;
-        self::$data['activation_url_html'] = anchor($this->user_activation_uri . $user->activation_code, 'Activate');
+        self::$data['activation_url_text'] = base_url() . $this->user_activation_uri
+                                             . $user->id . '_' . $user->activation_code;
+        self::$data['activation_url_html'] = anchor($this->user_activation_uri
+                                             . $user->id . '_' . $user->activation_code, 'Activate');
         self::$data['login_url_text']      = base_url() . $this->user_login_uri;
         self::$data['login_url_html']      = anchor($this->user_login_uri, 'Login');
         $message     = self::$CI->load->view('_core_user/email_templates/welcome', self::$data, TRUE);
@@ -478,20 +512,13 @@ class Core_user_library
      *
      * @param string $activation_code
      */
-    public function user_activate($activation_code = NULL)
+    public function user_activate($code = NULL)
     {
-        $check_code = self::$CI->core_module_library->validate_sha1($activation_code);
-
-        // Validate the activation code.
-        if (!$check_code)
-        {
-            self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_user_account_activation_invalid'));
-            redirect(base_url() . $this->user_login_uri);
-            exit();
-        }
+        // // Extract array from code.
+        $code_array = $this->user_email_code_parse($code);
 
         // Submit to the database.
-        $result = self::$CI->core_user_model->user_activate($activation_code);
+        $result = self::$CI->core_user_model->user_activate($code_array);
         switch ($result)
         {
             case 'activated':
@@ -600,7 +627,6 @@ class Core_user_library
             else
             {
                 // Login success.
-                log_message('error', $username . ' logged in.');
                 self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_user_login') . $username . '.');
                 $this->user_set_session_data($user);
             }
@@ -654,14 +680,14 @@ class Core_user_library
         {
             // Set the recovery code and time.
             self::$CI->load->helper('string');
-            $salt                    = random_string('alnum', 32);
-            $forgotten_password_code = sha1($user->email . $salt);
+            $string                         = random_string('alnum', 32);
+            $forgotten_password_code        = sha1($string);
             $forgotten_password_expire_time = time() + self::$CI->config->item('user_forgotten_password_code_expire_limit');
-            $forgotten_password_data = array(
-                'user_id'                 => $user->id,
-                'forgotten_password_code' => $forgotten_password_code,
-                'forgotten_password_expire_time' => $forgotten_password_expire_time,
-            );
+            $forgotten_password_data        = array(
+                                                'user_id'                        => $user->id,
+                                                'forgotten_password_code'        => $forgotten_password_code,
+                                                'forgotten_password_expire_time' => $forgotten_password_expire_time,
+                                              );
 
             // Send the forgotten password data to the database.
             $result = self::$CI->core_user_model
@@ -723,29 +749,13 @@ class Core_user_library
 
     /**
      * User visits page from email link.
-     * 
+     *
      * @param array $code
      */
     public function user_forgotten_password_login($code = NULL)
     {
-        // Seperate the user id and the code.
-        $array = explode('_', $code);
-
-        // Validate the url parameter.
-        $forgotten_password_code = $array[1];
-        $validate_code = self::$CI->core_module_library->validate_sha1($forgotten_password_code);
-        if (!$validate_code)
-        {
-            // Redirect if false.
-            redirect(base_url() . $this->user_login_uri);
-        }
-        else
-        {
-            // If the input validates set the array key.
-            $code_array = array();
-            $code_array['id'] = (int) $array[0];
-            $code_array['forgotten_password_code'] = $forgotten_password_code;
-        }
+        // Extract array from code.
+        $code_array = $this->user_email_code_parse($code);
 
         // Send the array to the database.
         $user = self::$CI->core_user_model->user_forgotten_password_login($code_array);
@@ -854,7 +864,8 @@ class Core_user_library
     {
         $username = self::$CI->session->userdata('username');
         $id       = self::$CI->session->userdata('user_id');
-        log_message('error', $username . ' logged out.');
+
+        //  Delete persistent login cookie.
         $result   = self::$CI->core_user_model->user_remember_code_delete($id);
 
         if (!$result)

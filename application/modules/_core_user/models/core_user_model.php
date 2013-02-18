@@ -3,12 +3,24 @@
 class Core_user_model extends CI_Model
 {
 
+    private static $PasswordHash;
+
     function __construct()
     {
         parent::__construct();
 
         // Load the config file.
         $this->config->load('_core_user/core_user_config');
+
+        // Load the libraries.
+        $this->load->library('encrypt');
+
+        // Load the helpers.
+        $this->load->helper('string');
+
+        // Load the PHPass class and instantiate.
+        require_once 'PasswordHash.php';
+        self::$PasswordHash = new PasswordHash(8, FALSE);
 
         // Load the database class.
         $this->load->database();
@@ -24,7 +36,7 @@ class Core_user_model extends CI_Model
     {
         foreach ($post_array as $key => $value)
         {
-            if ((!isset($post_array[$key]) || empty($value) || $value == '' || $value == NULL) && $value !== 0)
+            if ((!isset($post_array[$key]) || $value == '') && $value !== 0)
             {
                 unset($post_array[$key]);
             }
@@ -39,6 +51,30 @@ class Core_user_model extends CI_Model
     }
 
     /**
+     * Generate salt and hash password.
+     *
+     * @param array $post
+     * @return array
+     */
+    public function user_password_salt($post = array())
+    {
+        // Generate salt.
+        $salt = random_string('alnum', 16);
+        $encrypted_salt = $this->encrypt->encode($salt);
+
+        // Store salt encrypted in the database.
+        $post['salt'] = $encrypted_salt;
+
+        // Salt the password.
+        $salted_password = $post['password'] . $salt;
+
+        // Hash the salted password.
+        $post['password'] = self::$PasswordHash->HashPassword($salted_password);
+
+        return $post;
+    }
+
+    /**
      * Find user and join roles.
      *
      * @param integer $id
@@ -48,7 +84,7 @@ class Core_user_model extends CI_Model
     {
         $user = $this->db
             ->select('core_users.id, core_users.protected, username, email,activation_code,
-                      created, role_id, role, locked_out_time')
+                      created, active, role_id, role, locked_out_time')
             ->join('core_join_users_roles', 'core_join_users_roles.user_id = core_users.id')
             ->join('core_roles', 'core_roles.id = core_join_users_roles.role_id')
             ->get_where('core_users', array('core_users.id' => (int) $id));
@@ -70,7 +106,7 @@ class Core_user_model extends CI_Model
 
         $user = $this->db
             ->select('core_users.id, core_users.protected, username, email, activation_code,
-                      created, role_id, role, locked_out_time')
+                      created, active, role_id, role, locked_out_time')
             ->join('core_join_users_roles', 'core_join_users_roles.user_id = core_users.id')
             ->join('core_roles', 'core_roles.id = core_join_users_roles.role_id')
             ->get_where('core_users', array('core_users.' . $column => $identity));
@@ -116,18 +152,33 @@ class Core_user_model extends CI_Model
     {
         // Sanitize username.
         $sanitized_username = $this->db->escape_str($username);
-        // Sanitize and encrypt password.
-        $sanitized_password = $this->db->escape_str($password);
-        // Run the query.
-        $result = $this->db
-            ->select('core_users.id, username, email, created, role, active')
-            ->join('core_join_users_roles', 'core_join_users_roles.user_id = core_users.id')
-            ->join('core_roles', 'core_roles.id = core_join_users_roles.role_id')
-            ->get_where('core_users', array(
-            'username' => $sanitized_username,
-            'password' => $sanitized_password,), 1);
 
-        return ($result->num_rows() == 1) ? $result->row() : FALSE;
+        // Run the query.
+        $query = $this->db
+            ->select('id, password, salt')
+            ->where('username', $sanitized_username)
+            ->get('core_users', 1);
+
+        // Generate result.
+        $result = $query->row();
+
+        // Construct the password.
+        $salt = $this->encrypt->decode($result->salt);
+        $salted_password = $password . $salt;
+
+        // Authenticate password.
+        $authenticated = self::$PasswordHash->CheckPassword($salted_password, $result->password);
+
+        if (!$authenticated)
+        {
+            return FALSE;
+        }
+        else
+        {
+            // Find user and return user object.
+            $user = $this->user_find($result->id);
+            return ($user) ? $user : FALSE;
+        }
     }
 
     /**
@@ -313,7 +364,7 @@ class Core_user_model extends CI_Model
         // Run the query.
         $result = $this->db
             ->where('user_id', $post['id'])
-            ->where('forgotten_password_code', $post['forgotten_password_code'])
+            ->where('forgotten_password_code', $post['code'])
             ->get('core_user_forgotten_passwords', 1);
 
         if ($result->num_rows() != 1)
@@ -350,15 +401,22 @@ class Core_user_model extends CI_Model
      */
     public function user_add($post = NULL)
     {
-        $post = $this->prep_post($post);
+        $sanitized_post = $this->prep_post($post);
+
+        // Generate salt and hash password.
+        $post = $this->user_password_salt($sanitized_post);
 
         // Generate unique activation code from email.
-        $post['activation_code'] = sha1($post['email']);
+        $string = random_string('alnum', 32);
+        $post['activation_code'] = sha1($string);
 
+        // Set created time.
         $post['created'] = time();
+
         unset($post['passconf']);
         unset($post['add']);
 
+        // Run the query.
         $result  = $this->db->insert('core_users', $post);
         $id      = $this->db->insert_id();
 
@@ -380,13 +438,14 @@ class Core_user_model extends CI_Model
      * @param string $activation_code
      * @return string
      */
-    public function user_activate($activation_code = NULL)
+    public function user_activate($code_array = array())
     {
-        $code = $this->db->escape_str($activation_code);
+        $code = $this->db->escape_str($code_array['code']);
 
         // Find inactive user with activaton code.
         $result = $this->db
             ->get_where('core_users', array(
+                'id'              => (int) $code_array['id'],
                 'activation_code' => $code,
                 'active'          => 0,
                 ), 1);
@@ -432,15 +491,24 @@ class Core_user_model extends CI_Model
         // Make sure this is the logged in user.
         $user_id = $this->session->userdata('user_id');
 
+        // If logged in user and post id do not match.
         if ($post['id'] !== $user_id)
         {
+            // Redirect user.
             $this->session->set_flashdata('message_error', $this->lang->line('error_user_account_edit_unauthorized'));
-            redirect(base_url() . 'user/');
+            redirect(base_url());
         }
 
         unset($post['passconf']);
         unset($post['save']);
 
+        if (isset($post['password']))
+        {
+            // Generate salt and hash password.
+            $post = $this->user_password_salt($post);
+        }
+
+        // Run the query.
         $result = $this->db
             ->where('id', (int) $user_id)
             ->limit(1)
@@ -500,6 +568,10 @@ class Core_user_model extends CI_Model
         {
             // Add a user.
             case !isset($post['id']):
+
+                // Generate salt and hash password.
+                $post = $this->user_password_salt($post);
+
                 $post['created'] = time();
                 $result          = $this->db->insert('core_users', $post);
                 $id              = $this->db->insert_id();
@@ -638,10 +710,8 @@ class Core_user_model extends CI_Model
      */
     public function admin_role_delete($id = NULL)
     {
-        $query = $this->db->delete('core_roles', array('id' => (int) $id), 1);
-        $result = $this->db->affected_rows();
-
-        return ($result > 0) ? TRUE : FALSE;
+        $this->db->delete('core_roles', array('id' => (int) $id), 1);
+        return ($this->db->affected_rows() > 0) ? TRUE : FALSE;
     }
 
     /**
@@ -684,4 +754,5 @@ class Core_user_model extends CI_Model
     }
 
 }
+
 /* End of file core_user_model.php */
