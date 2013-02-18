@@ -455,6 +455,11 @@ class Core_user_library
         }
     }
 
+    /**
+     * Send activation email after user generates new account.
+     * 
+     * @param integer $result_id
+     */
     public function user_send_welcome_email($result_id = NULL)
     {
         // Load the email module.
