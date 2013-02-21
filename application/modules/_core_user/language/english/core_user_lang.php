@@ -14,6 +14,7 @@ $lang['success_user_account_created'] = 'Acount was successfully created and an 
 $lang['error_user_account_failed']    = 'There was a problem adding your account.';
 
 // user_activate()
+$lang['error_user_account_activation_invalid']   = 'The activation code you submitted was invalid.';
 $lang['success_user_account_activation']         = 'Your account has been activated.  You may now log in with your username and password.';
 $lang['error_user_account_activation']           = 'There was a problem.  We were unable to activate your account.';
 $lang['error_user_account_activation_not_found'] = 'We could not find an inactive account with the credentials you submitted.';
@@ -37,6 +38,7 @@ $lang['error_user_login_locked_out_2'] = ' is locked out. You may try again in '
 
 // user_forgotten_password()
 $lang['error_user_forgotten_password_email_not_found'] = 'The email you submitted was not found.';
+$lang['error_user_forgotten_password_email_not_valid'] = 'The forgotten password code you submitted was not valid.';
 $lang['error_user_forgotten_password_failed']          = 'There was problem generating recovery login.  Please try again later.';
 $lang['success_user_forgotten_password_sent']          = 'A one time login email has been sent.';
 

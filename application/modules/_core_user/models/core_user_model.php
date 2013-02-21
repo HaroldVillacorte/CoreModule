@@ -83,13 +83,13 @@ class Core_user_model extends CI_Model
     public function user_find($id = NULL)
     {
         $user = $this->db
-            ->select('core_users.id, core_users.protected, username, email,activation_code,
+            ->select('core_users.id, core_users.protected, username, email,
                       created, active, role_id, role, locked_out_time')
-            ->join('core_join_users_roles', 'core_join_users_roles.user_id = core_users.id')
-            ->join('core_roles', 'core_roles.id = core_join_users_roles.role_id')
+            ->join('core_user_join_users_roles', 'core_user_join_users_roles.user_id = core_users.id')
+            ->join('core_roles', 'core_roles.id = core_user_join_users_roles.role_id')
             ->get_where('core_users', array('core_users.id' => (int) $id));
 
-        return ($user) ? $user->row() : FALSE;
+        return ($user->num_rows() > 0) ? $user->row() : FALSE;
     }
 
     /**
@@ -105,13 +105,13 @@ class Core_user_model extends CI_Model
         $identity = $this->db->escape_str($identity);
 
         $user = $this->db
-            ->select('core_users.id, core_users.protected, username, email, activation_code,
+            ->select('core_users.id, core_users.protected, username, email,
                       created, active, role_id, role, locked_out_time')
-            ->join('core_join_users_roles', 'core_join_users_roles.user_id = core_users.id')
-            ->join('core_roles', 'core_roles.id = core_join_users_roles.role_id')
+            ->join('core_user_join_users_roles', 'core_user_join_users_roles.user_id = core_users.id')
+            ->join('core_roles', 'core_roles.id = core_user_join_users_roles.role_id')
             ->get_where('core_users', array('core_users.' . $column => $identity));
 
-        return ($user) ? $user->row() : FALSE;
+        return ($user->num_rows() > 0) ? $user->row() : FALSE;
     }
 
     /**
@@ -125,7 +125,7 @@ class Core_user_model extends CI_Model
         {
             $id       = $this->session->userdata('user_id');
             $role_ids = $this->db
-                ->get_where('core_join_users_roles', array('user_id' => (int) $id))
+                ->get_where('core_user_join_users_roles', array('user_id' => (int) $id))
                 ->result_array();
             $roles = array();
 
@@ -246,30 +246,41 @@ class Core_user_model extends CI_Model
     /**
      * Check if a user has an unexpired logged in cookie.
      *
-     * @param string $remember_code
-     * @param string $ip_address
-     * @param string $user_agent
+     * @param array $remember_code_array
      * @return object
      */
-    public function user_check_logged_in($remember_code = NULL, $ip_address = NULL, $user_agent = NULL)
+    public function user_check_logged_in($remember_code_array = array())
     {
         // Sanitize.
-        $remember_code_clean = $this->db->escape_str($remember_code);
-        $ip_address_clean    = $this->db->escape_str($ip_address);
-        $user_agent_clean    = $this->db->escape_str($user_agent);
+        $post = $this->prep_post($remember_code_array);
 
         // Run the query.
-        $result = $this->db
-                    ->select('core_users.id, core_users.protected, username, email, created, role')
-                    ->join('core_join_users_roles', 'core_join_users_roles.user_id = core_users.id')
-                    ->join('core_roles', 'core_roles.id = core_join_users_roles.role_id')
-                    ->get_where('core_users', array(
-                        'core_users.remember_code' => $remember_code_clean,
-                        'ip_address'          => $ip_address_clean,
-                        'user_agent'          => $user_agent_clean,
+        $query = $this->db
+                    ->select('remember_code')
+                    ->get_where('core_user_remember_codes', array(
+                        'user_id'       => (int) $post['user_id'],
+                        'ip_address'    => $post['ip_address'],
+                        'user_agent'    => $post['user_agent'],
                         ));
+        $row = $query->row();
 
-        return ($result->num_rows() > 0) ? $result->row() : FALSE;
+        // Validate the remember code.
+        $validated_code = self::$PasswordHash
+            ->CheckPassword($post['remember_code'], $row->remember_code);
+
+        // Return user object if code validates.
+        if (!$validated_code)
+        {
+            return FALSE;
+        }
+        else
+        {
+            // Find user and return user object.
+            $user = $this->user_find($post['user_id']);
+            return ($user) ? $user : FALSE;
+        }
+
+
     }
 
     /**
@@ -280,17 +291,21 @@ class Core_user_model extends CI_Model
      * @param integer $id
      * @return boolean
      */
-    public function user_remember_code_store($remember_code = NULL, $id = NULL)
+    public function user_remember_code_store($remember_code_array = array())
     {
-        $ip_address = $this->session->userdata('ip_address');
-        $user_agent = $this->session->userdata('user_agent');
+        // Clean up expired stuff.
+        $this->admin_user_tables_cleanup();
 
-        $this->db
-            ->set('remember_code', $remember_code)
-            ->set('ip_address', $ip_address)
-            ->set('user_agent', $user_agent)
-            ->where('id', (int) $id)
-            ->update('core_users');
+        // Sanitize array.
+        $post = $this->prep_post($remember_code_array);
+
+        // Assign user session data.
+        $post['ip_address']    = $this->session->userdata('ip_address');
+        $post['user_agent']    = $this->session->userdata('user_agent');
+        $post['remember_code'] = self::$PasswordHash->HashPassword($post['remember_code']);
+
+        // Runf the query.
+        $this->db->insert('core_user_remember_codes', $post);
         $num_rows = $this->db->affected_rows();
 
         return ($num_rows > 0) ? TRUE : FALSE;
@@ -305,12 +320,7 @@ class Core_user_model extends CI_Model
      */
     public function user_remember_code_delete($id = NULL)
     {
-        $this->db
-            ->set('remember_code', '')
-            ->set('ip_address', '')
-            ->set('user_agent', '')
-            ->where('id', (int) $id)
-            ->update('core_users');
+        $this->db->where('user_id', (int) $id)->delete('core_user_remember_codes');
         $num_rows = $this->db->affected_rows();
 
         return ($num_rows > 0) ? TRUE : FALSE;
@@ -324,15 +334,18 @@ class Core_user_model extends CI_Model
      */
     public function user_forgotten_password_code_add($forgotten_password_data = array())
     {
-        // First delete all expired records.
-        $this->db->where('forgotten_password_expire_time <', time())
-            ->delete('core_user_forgotten_passwords');
+        // Clean up expired stuff.
+        $this->admin_user_tables_cleanup();
 
         // Prep post.
         $post = $this->prep_post($forgotten_password_data);
 
         // Delete any previous records for this user.
         $this->user_forgotten_password_code_delete($post['user_id']);
+
+        // Hash code.
+        $post['forgotten_password_code'] = self::$PasswordHash
+            ->HashPassword($post['forgotten_password_code']);
 
         // Insert new record.
         $this->db->insert('core_user_forgotten_passwords', $post);
@@ -362,33 +375,46 @@ class Core_user_model extends CI_Model
         $post = $this->prep_post($array);
 
         // Run the query.
-        $result = $this->db
-            ->where('user_id', $post['id'])
-            ->where('forgotten_password_code', $post['code'])
+        $query = $this->db
+            ->select('forgotten_password_code, forgotten_password_expire_time')
+            ->where('user_id', (int) $post['id'])
             ->get('core_user_forgotten_passwords', 1);
 
-        if ($result->num_rows() != 1)
+        if ($query->num_rows() != 1)
         {
-            // Code and user id combination not found.
+            // User id not found.
             return 'not_found';
             exit();
         }
         else
         {
-            // Code and user id combination found.
-            $record = $result->row();
-            switch ($record)
+            // User id found.
+            $record = $query->row();
+
+            // Authenticate code.
+            $result = self::$PasswordHash->CheckPassword($post['code'], $record->forgotten_password_code);
+
+            if (!$result)
             {
-                // Forgotten password time is not expired.
-                case $record->forgotten_password_expire_time >= time():
-                    $this->user_forgotten_password_code_delete($record->user_id);
-                    return 'authenticated';
-                    break;
-                // Forgotten password time is expired.
-                case $record->forgotten_password_expire_time < time():
-                    $this->user_forgotten_password_code_delete($record->user_id);
-                    return 'expired';
-                    break;
+                // Code was not valid
+                return FALSE;
+            }
+            else
+            {
+                // Code validated check expired.
+                switch ($record)
+                {
+                    // Forgotten password time is not expired.
+                    case $record->forgotten_password_expire_time >= time():
+                        $this->user_forgotten_password_code_delete($record->user_id);
+                        return 'authenticated';
+                        break;
+                    // Forgotten password time is expired.
+                    case $record->forgotten_password_expire_time < time():
+                        $this->user_forgotten_password_code_delete($record->user_id);
+                        return 'expired';
+                        break;
+                }
             }
         }
     }
@@ -406,75 +432,124 @@ class Core_user_model extends CI_Model
         // Generate salt and hash password.
         $post = $this->user_password_salt($sanitized_post);
 
-        // Generate unique activation code from email.
-        $string = random_string('alnum', 32);
-        $post['activation_code'] = sha1($string);
-
         // Set created time.
         $post['created'] = time();
 
         unset($post['passconf']);
         unset($post['add']);
 
-        // Run the query.
-        $result  = $this->db->insert('core_users', $post);
-        $id      = $this->db->insert_id();
+        // Add the user.
+        $this->db->insert('core_users', $post);
+        $id = $this->db->insert_id();
 
-        if ($result)
+        if ($id)
         {
-            $result2 = $this->db
-            ->insert('core_join_users_roles', array(
+            // Add the user role
+            $this->db
+            ->insert('core_user_join_users_roles', array(
                 'user_id' => (int) $id,
                 'role_id' => 3,
             ));
-        }
 
-        return ($result2) ? $id : FALSE;
+            // Generate and add the activation code.
+            if ($this->db->affected_rows() > 0)
+            {
+                // Generate unique activation code from email.
+                $activation_code = sha1(random_string('alnum', 32));
+                $hashed_code = self::$PasswordHash->HashPassword($activation_code);
+                $expire_time = time() + $this->config->item('user_activation_expire_limit');
+                // Generate the activation code insert array.
+                $activation_code_array = array(
+                    'user_id' => (int) $id,
+                    'activation_code' => $this->db->escape_str($hashed_code),
+                    'expire_time' => (int) $expire_time,
+                );
+                // Run the query
+                $this->db->insert('core_user_activation_codes', $activation_code_array);
+
+                if ($this->db->affected_rows() > 0)
+                {
+                    // Reassign the unhased activation code to array and return.
+                    $activation_code_array['activation_code'] = $activation_code;
+                    return $activation_code_array;
+                }
+                else
+                {
+                    // Delete user and role record if activation code insert fail.
+                    $this->user_delete($id);
+                    return FALSE;
+                }
+            }
+            else
+            {
+                // Delete user and role record if role insert fail.
+                $this->user_delete($id);
+                return FALSE;
+            }
+        }
+        else
+        {
+            return FALSE;
+        }
     }
 
     /**
      * User activates own account through email link.
      *
-     * @param string $activation_code
+     * @param array $code_array
      * @return string
      */
     public function user_activate($code_array = array())
     {
+        // Sanitize code.
         $code = $this->db->escape_str($code_array['code']);
 
-        // Find inactive user with activaton code.
+        // Clean up expired stuff.
+        $this->admin_user_tables_cleanup();
+
+        // Find activaton code.
         $result = $this->db
-            ->get_where('core_users', array(
-                'id'              => (int) $code_array['id'],
-                'activation_code' => $code,
-                'active'          => 0,
-                ), 1);
-        if ($result->num_rows() > 0)
+            ->select('user_id, activation_code, expire_time')
+            ->where('user_id', (int) $code_array['id'])
+            ->get('core_user_activation_codes', 1);
+
+        if ($result->num_rows() != 1)
         {
-            $user = $result->row();
-            $time = time();
-            // Activate user if time now is less than 24 hours.
-            if (($time - $user->created) <= $this->config->item('user_activation_expire_limit'))
-            {
-                $data = array(
-                    'activation_code' => NULL,
-                    'active'          => 1,
-                );
-                $this->db->where('id', $user->id)->update('core_users', $data);
-                // Return 'updated if query success.'
-                return ($this->db->affected_rows() > 0) ? 'activated' : FALSE;
-            }
-            else
-            {
-                // Or delete expired account and return 'expired'.
-                $this->admin_user_delete($user->id);
-                return 'expired';
-            }
+            // If activation code id not found in the database.
+            return 'not_found';
         }
         else
         {
-            // If activation code/inactive not found in the database.
-            return 'not_found';
+            $code_row = $result->row();
+
+            // Check if code is valid.
+            $validated_code = self::$PasswordHash->CheckPassword($code, $code_row->activation_code);
+            if (!$validated_code)
+            {
+                return 'invalid';
+            }
+            // Check if code expired.
+            elseif ($code_row->expire_time < time())
+            {
+                // Or delete expired account and return 'expired'.
+                $this->admin_user_delete($code_row->user_id);
+                return 'expired';
+            }
+            else
+            {
+                $this->db->where('id', $code_row->user_id)->update('core_users', array('active' => 1));
+
+                if ($this->db->affected_rows() > 0)
+                {
+                    // Delete activation code and return TRUE.
+                    $this->db->delete('core_user_activation_codes', array('user_id' => $code_row->user_id));
+                    return 'activated';
+                }
+                else
+                {
+                    return FALSE;
+                }
+            }
         }
     }
 
@@ -527,15 +602,16 @@ class Core_user_model extends CI_Model
         // Get the user id from the session.
         $id = $this->session->userdata('user_id');
 
+        // Delete the roles records.
+        $this->db->delete('core_user_join_users_roles', array('user_id' => (int) $id), 1);
+        // Delete remember codes.
+        $this->db->delete('core_user_remember_codes', array('user_id' => (int) $id), 1);
+        // Delete forgotten password codes.
+        $this->db->delete('core_user_forgotten_passwords', array('user_id' => (int) $id), 1);
+        // Delete activation codes.
+        $this->db->delete('core_user_activation_codes', array('user_id' => (int) $id), 1);
         // Delete the user.
-        $result = $this->db->delete('core_users', array('id' => (int) $id), 1);
-
-        if ($result)
-        {
-            // Delete the user role from the join table.
-            $result2 = $this->db
-                ->delete('core_join_users_roles', array('user_id' => (int) $id), 1);
-        }
+        $this->db->delete('core_users', array('id' => (int) $id), 1);
 
         return ($this->db->affected_rows() > 0) ? TRUE : FALSE;
     }
@@ -580,7 +656,7 @@ class Core_user_model extends CI_Model
                 {
                     // Set the users role.
                     $result2 = $this->db->insert(
-                        'core_join_users_roles', array(
+                        'core_user_join_users_roles', array(
                         'user_id' => $id,
                         'role_id' => $role,
                         ));
@@ -600,7 +676,7 @@ class Core_user_model extends CI_Model
                     $result2 = $this->db
                         ->where('user_id', $post['id'])
                         ->limit(1)
-                        ->update('core_join_users_roles', array('role_id' => $role));
+                        ->update('core_user_join_users_roles', array('role_id' => $role));
                 }
                 break;
         }
@@ -616,16 +692,18 @@ class Core_user_model extends CI_Model
      */
     public function admin_user_delete($id = NULL)
     {
-        // Delte the user.
-        $result = $this->db->delete('core_users', array('id' => (int) $id), 1);
+        // Delete the roles records.
+        $this->db->delete('core_user_join_users_roles', array('user_id' => (int) $id), 1);
+        // Delete remember codes.
+        $this->db->delete('core_user_remember_codes', array('user_id' => (int) $id), 1);
+        // Delete forgotten password codes.
+        $this->db->delete('core_user_forgotten_passwords', array('user_id' => (int) $id), 1);
+        // Delete activation codes.
+        $this->db->delete('core_user_activation_codes', array('user_id' => (int) $id), 1);
+        // Delete the user.
+        $this->db->delete('core_users', array('id' => (int) $id), 1);
 
-        if ($result)
-        {
-            // Delete the user role.
-            $this->db->delete('core_join_users_roles', array('user_id' => (int) $id), 1);
-
-            return ($this->db->affected_rows() > 1) ? TRUE : FALSE;
-        }
+        return ($this->db->affected_rows() > 0) ? TRUE : FALSE;
     }
 
     /**
@@ -746,11 +824,39 @@ class Core_user_model extends CI_Model
     {
         $query = $this->db
             ->select('core_users.id, username, email, role, created, core_users.protected')
-            ->join('core_join_users_roles', 'core_join_users_roles.user_id = core_users.id')
-            ->join('core_roles', 'core_roles.id = core_join_users_roles.role_id')
+            ->join('core_user_join_users_roles', 'core_user_join_users_roles.user_id = core_users.id')
+            ->join('core_roles', 'core_roles.id = core_user_join_users_roles.role_id')
             ->get('core_users', (int) $per_page, (int) $start);
 
         return ($query->num_rows() > 0) ? $query->result_array() : FALSE;
+    }
+
+    /**
+     * Delete expired acivation codes and users, forgotten password codes, and
+     * remember codes.
+     */
+    public function admin_user_tables_cleanup()
+    {
+        $time = time();
+
+        // Find and delete expired inactive users.
+        $query = $this->db
+            ->select('user_id')
+            ->where('expire_time ' <  $time)
+            ->get('core_user_activation_codes');
+        if ($query->num_rows() > 0)
+        {
+            $expired_array = $query->result_array();
+            foreach ($expired_array as $expired_user)
+            {
+                $this->db->delete('core_users', array('id' => (int) $expired_user['user_id']));
+            }
+        }
+
+        // Delete expired codes.
+        $this->db->delete('core_user_activation_codes', array('expire_time <' => $time));
+        $this->db->delete('core_user_forgotten_passwords', array('forgotten_password_expire_time <' => $time));
+        $this->db->delete('core_user_remember_codes', array('expire_time <' => $time));
     }
 
 }

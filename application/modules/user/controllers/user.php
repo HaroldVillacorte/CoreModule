@@ -219,7 +219,6 @@ class User extends MX_Controller
     public function edit()
     {
         self::$data['view_file'] = 'user_edit';
-        if ($this->session->userdata('user_id'))
 
         // Check if a user is logged in then set the user id from the session.
         if (!$this->session->userdata('user_id'))

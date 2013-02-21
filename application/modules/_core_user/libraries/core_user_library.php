@@ -440,12 +440,12 @@ class Core_user_library
      */
     public function user_add($post = array())
     {
-        $result_id = self::$CI->core_user_model->user_add($post);
+        $activation_code_array = self::$CI->core_user_model->user_add($post);
 
-        switch ($result_id)
+        switch ($activation_code_array)
         {
             case TRUE:
-                $this->user_send_welcome_email($result_id);
+                $this->user_send_welcome_email($activation_code_array);
                 break;
             case FALSE:
                 self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_user_account_failed'));
@@ -457,10 +457,10 @@ class Core_user_library
 
     /**
      * Send activation email after user generates new account.
-     * 
+     *
      * @param integer $result_id
      */
-    public function user_send_welcome_email($result_id = NULL)
+    public function user_send_welcome_email($activation_code_array = array())
     {
         // Load the email module.
         self::$CI->load->library('_core_email/core_email_library');
@@ -470,16 +470,16 @@ class Core_user_library
         $expire_time = self::$CI->config->item('user_activation_expire_limit');
 
         // Find new user.
-        $user = $this->user_find($result_id);
+        $user = $this->user_find($activation_code_array['user_id']);
 
         // Message.
         self::$data['username']            = $user->username;
         self::$data['email']               = $user->email;
         self::$data['expire_time']         = timespan(0, $expire_time);
         self::$data['activation_url_text'] = base_url() . $this->user_activation_uri
-                                             . $user->id . '_' . $user->activation_code;
+                                             . $user->id . '_' . $activation_code_array['activation_code'];
         self::$data['activation_url_html'] = anchor($this->user_activation_uri
-                                             . $user->id . '_' . $user->activation_code, 'Activate');
+                                             . $user->id . '_' . $activation_code_array['activation_code'], 'Activate');
         self::$data['login_url_text']      = base_url() . $this->user_login_uri;
         self::$data['login_url_html']      = anchor($this->user_login_uri, 'Login');
         $message     = self::$CI->load->view('_core_user/email_templates/welcome', self::$data, TRUE);
@@ -526,6 +526,11 @@ class Core_user_library
         $result = self::$CI->core_user_model->user_activate($code_array);
         switch ($result)
         {
+            case 'invalid':
+                self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_user_account_activation_invalid'));
+                redirect(base_url() . $this->user_login_uri);
+                exit();
+                break;
             case 'activated':
                 self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_user_account_activation'));
                 redirect(base_url() . $this->user_login_uri);
@@ -639,8 +644,8 @@ class Core_user_library
             // Set the login cookie if checked.
             if ($set_persistent_login)
             {
-                $remember_code       = $this->user_set_persistent_login();
-                $store_remember_code = self::$CI->core_user_model->user_remember_code_store($remember_code, $user->id);
+                $remember_code_array = $this->user_set_persistent_login($user->id);
+                $store_remember_code = self::$CI->core_user_model->user_remember_code_store($remember_code_array);
 
                 if (!$store_remember_code)
                 {
@@ -785,10 +790,18 @@ class Core_user_library
                     $this->user_set_session_data($user);
                     self::$CI->session->set_flashdata('message_success', self::$CI->lang
                     ->line('success_user_forgotten_password_login'));
+                    // Delete the code.
+                    self::$CI->core_user_model->user_forgotten_password_code_delete($user->id);
                     redirect(base_url() . $this->user_login_uri);
                     exit();
                     break;
                 }
+                break;
+            case FALSE:
+                self::$CI->session->set_flashdata('message_error', self::$CI->lang
+                ->line('error_user_forgotten_password_email_not_valid'));
+                redirect(base_url() . $this->user_login_uri);
+                exit();
                 break;
         }
     }
@@ -914,27 +927,33 @@ class Core_user_library
      * Logged in cookie is set and the remember code is returned for storing in the
      * database.
      *
-     * @return string
+     * @param integer $user_id
+     * @return array
      */
-    public function user_set_persistent_login()
+    public function user_set_persistent_login($user_id = NULL)
     {
         self::$CI->load->helper('string');
         self::$CI->load->library('encrypt');
 
-        $cookie_name           = self::$CI->config->item('user_persistent_cookie_name');
-        $remember_code         = random_string('alnum', 32);
-        $remember_code_encoded = self::$CI->encrypt->encode($remember_code);
+        $cookie_name   = self::$CI->config->item('user_persistent_cookie_name');
+        $random_string = sha1(random_string('alnum', 32));
+        $remember_code = self::$CI->encrypt->encode($random_string);
         $cookie_expire = self::$CI->config->item('user_persistent_cookie_expire');
+        $user_id_encoded = self::$CI->encrypt->encode($user_id);
 
-        $data = array(
+        $cookie_data = array(
             'name'   => $cookie_name,
-            'value'  => $remember_code_encoded,
+            'value'  => $user_id_encoded . '_' . $remember_code,
             'expire' => $cookie_expire,
         );
 
-        self::$CI->input->set_cookie($data);
+        self::$CI->input->set_cookie($cookie_data);
 
-        return $remember_code;
+        return array(
+            'user_id'       => (int) $user_id,
+            'remember_code' => $random_string,
+            'expire_time'   => $cookie_expire + time(),
+        );
     }
 
     /**
@@ -966,11 +985,16 @@ class Core_user_library
             // Check the cookie against the database.
             if ($cookie)
             {
-                $remember_code = self::$CI->encrypt->decode($cookie);
-                $ip_address    = self::$CI->session->userdata('ip_address');
-                $user_agent    = self::$CI->session->userdata('user_agent');
+                // Parse the cookie content.
+                $cookie_array                         = explode('_', $cookie);
+                // Set the array to submit to model.
+                $remember_code_array                  = array();
+                $remember_code_array['user_id']       = self::$CI->encrypt->decode($cookie_array[0]);
+                $remember_code_array['remember_code'] = self::$CI->encrypt->decode($cookie_array[1]);
+                $remember_code_array['ip_address']    = self::$CI->session->userdata('ip_address');
+                $remember_code_array['user_agent']    = self::$CI->session->userdata('user_agent');
 
-                $user = self::$CI->core_user_model->user_check_logged_in($remember_code, $ip_address, $user_agent);
+                $user = self::$CI->core_user_model->user_check_logged_in($remember_code_array);
 
                 // If logged in cookie is validated set the userdata.
                 if ($user)
