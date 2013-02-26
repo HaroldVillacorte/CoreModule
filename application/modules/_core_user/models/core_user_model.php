@@ -41,9 +41,9 @@ class Core_user_model extends CI_Model
                 unset($post_array[$key]);
             }
 
-            if (is_string($value))
+            if (is_string($post_array[$key]))
             {
-                $this->db->escape_str($value);
+                $post_array[$key] = $this->db->escape_str($post_array[$key]);
             }
         }
 
@@ -455,7 +455,7 @@ class Core_user_model extends CI_Model
             if ($this->db->affected_rows() > 0)
             {
                 // Generate unique activation code from email.
-                $activation_code = sha1(random_string('alnum', 32));
+                $activation_code = random_string('alnum', 64);
                 $hashed_code = self::$PasswordHash->HashPassword($activation_code);
                 $expire_time = time() + $this->config->item('user_activation_expire_limit');
                 // Generate the activation code insert array.
@@ -714,7 +714,8 @@ class Core_user_model extends CI_Model
      */
     public function admin_role_get($id = NULL)
     {
-        $query = $this->db->where('id', (int) $id)->get('core_roles');
+        $query = $this->db->select('id, role, description, protected')
+            ->where('id', (int) $id)->get('core_roles');
         return ($query->num_rows() > 0) ? $query->row() : FALSE;
     }
 
@@ -726,7 +727,15 @@ class Core_user_model extends CI_Model
      */
     public function admin_role_get_all($data_type = 'object')
     {
-        $result = $this->db->get('core_roles');
+        // Exclude super_user role if not super user.
+        if ($this->session->userdata('role') != 'super_user')
+        {
+            $result = $this->db->select('id, role, description, protected')->where('id !=', 1)->get('core_roles');
+        }
+        else
+        {
+            $result = $this->db->select('id, role, description, protected')->get('core_roles');
+        }
 
         switch ($data_type)
         {
@@ -781,7 +790,7 @@ class Core_user_model extends CI_Model
     }
 
     /**
-     * Admin deltes a role.
+     * Admin deletes a role.
      *
      * @param integer $id
      * @return boolean
@@ -842,7 +851,7 @@ class Core_user_model extends CI_Model
         // Find and delete expired inactive users.
         $query = $this->db
             ->select('user_id')
-            ->where('expire_time ' <  $time)
+            ->where('expire_time <', $time)
             ->get('core_user_activation_codes');
         if ($query->num_rows() > 0)
         {

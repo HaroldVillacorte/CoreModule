@@ -19,6 +19,7 @@ class Demo_Doctrine2 extends MX_Controller
 
     protected static $data;
     protected static $user_page;
+    private static $template_array;
 
     function __construct()
     {
@@ -27,8 +28,11 @@ class Demo_Doctrine2 extends MX_Controller
         self::$data = $this->core_module_model->site_info();
         self::$data['module'] = 'demo_doctrine2';
 
-        // Load User library for permissions.
+        // Load the libraries.
         $this->load->library('_core_user/core_user_library');
+        $this->load->library('_core_raintpl/core_raintpl_library');
+
+        // Set the permission.
         $this->core_user_library->user_permission(array('admin', 'super_user'));
 
         self::$user_page = NULL;
@@ -37,6 +41,15 @@ class Demo_Doctrine2 extends MX_Controller
             self::$user_page = $this->session->userdata('demo_doctrine2_page');
         }
         self::$data['user_page'] = self::$user_page;
+
+        // Initialize the template data array.
+        self::$template_array = array(
+            'template_name' => 'default_template/',
+            'template_file' => 'slider_template',
+        );
+
+        // Add filenames to the $scripts array.
+        array_unshift(self::$data['scripts'], 'jquery.foundation.orbit.js');
     }
 
     public function index()
@@ -147,14 +160,21 @@ class Demo_Doctrine2 extends MX_Controller
         {
             // Set current page to session.
             $this->session->set_userdata(array('demo_doctrine2_page' => $page));
-            $this->load->view('demo_doctrine2_ajax', self::$data);
+
+            // Reset the template data array.
+            self::$template_array = array(
+                'template_name' => 'default_template/demos/',
+                'template_file' => 'demo_doctrine2_ajax',
+            );
+
+            echo $this->core_raintpl_library->render(self::$template_array, self::$data);
         }
         else
         {
             // Set current page to session.
             $this->session->set_userdata(array('demo_doctrine2_page' => $page));
-            self::$data['view_file'] = 'demo_doctrine2';
-            echo Modules::run('_core_template/default_template', self::$data);
+            self::$data['content_file'] = 'demo_doctrine2';
+            echo $this->core_raintpl_library->render(self::$template_array, self::$data);
         }
     }
 
@@ -198,8 +218,8 @@ class Demo_Doctrine2 extends MX_Controller
             array_unshift(self::$data['scripts'], 'demo_doctrine2_ajax.js');
             self::$data['elapsed_time'] = $this->benchmark->elapsed_time('start', 'stop');
             self::$data['record'] = $record;
-            self::$data['view_file'] = 'demo_doctrine2_edit';
-            echo Modules::run('_core_template/default_template', self::$data);
+            self::$data['content_file'] = 'demo_doctrine2_edit';
+            echo $this->core_raintpl_library->render(self::$template_array, self::$data);
         }
     }
 
@@ -231,8 +251,8 @@ class Demo_Doctrine2 extends MX_Controller
         else
         {
             array_unshift(self::$data['scripts'], 'demo_doctrine2_ajax.js');
-            self::$data['view_file'] = 'demo_doctrine2_add';
-            echo Modules::run('_core_template/default_template', self::$data);
+            self::$data['content_file'] = 'demo_doctrine2_add';
+            echo $this->core_raintpl_library->render(self::$template_array, self::$data);
         }
     }
 

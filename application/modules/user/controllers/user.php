@@ -23,11 +23,11 @@ class User extends MX_Controller
     private static $data;
 
     /**
-     * The template module to run.
+     * The template array sent to the Raintpl module.
      *
-     * @var string
+     * @var array
      */
-    private static $template = '_core_template/default_template';
+    private static $template_array;
 
     /**
      * Store in the session to remember visited page.
@@ -47,6 +47,7 @@ class User extends MX_Controller
         // Load libraries.
         $this->load->library('_core_user/core_user_library');
         $this->load->library('_core_module/core_module_library');
+        $this->load->library('_core_raintpl/core_raintpl_library');
 
         // Load helpers.
         $this->load->helper('date');
@@ -57,6 +58,12 @@ class User extends MX_Controller
 
         // Initialize the data array.
         self::$data = $this->core_module_model->site_info();
+
+        // Initialize the template data array.
+        self::$template_array = array(
+            'template_name' => 'default_template/',
+            'template_file' => 'default_template',
+        );
 
         // Sets the module to be sent to the Template module.
         self::$data['module'] = 'user';
@@ -76,7 +83,7 @@ class User extends MX_Controller
      */
     public function index()
     {
-        self::$data['view_file'] = 'user_profile';
+        self::$data['content_file'] = 'user_profile';
 
         // Checks if the user is logged in.  If not user is redirected to the
         // base_url().
@@ -89,7 +96,8 @@ class User extends MX_Controller
         $user = $this->core_user_library->user_find($id);
         self::$data['user'] = $user;
 
-        echo Modules::run(self::$template, self::$data);
+        // Render the page.
+        echo $this->core_raintpl_library->render(self::$template_array, self::$data);
     }
 
     /**
@@ -97,11 +105,10 @@ class User extends MX_Controller
      */
     public function login()
     {
-        self::$data['view_file'] = 'user_login';
-        self::$data['user_add_url']                     = base_url()
-            . $this->core_user_library->user_add_uri;
-        self::$data['user_user_forgotten_password_url'] = base_url()
-            . $this->core_user_library->user_forgotten_password_uri;
+        self::$data['content_file'] = 'user_login';
+        self::$data['user_add_url'] = base_url() . $this->core_user_library->user_add_uri;
+        self::$data['user_user_forgotten_password_url'] = base_url() . $this->core_user_library->user_forgotten_password_uri;
+        //self::$data['content'] = $this->load->view('user_login', self::$data, TRUE);
 
         // Code to run when the user hits the Login button.
         if ($this->input->post('submit'))
@@ -111,7 +118,8 @@ class User extends MX_Controller
             // Code to run form does not validate.
             if ($this->form_validation->run() == FALSE)
             {
-                echo Modules::run(self::$template, self::$data);
+                // Render the page.
+                echo $this->core_raintpl_library->render(self::$template_array, self::$data);
             }
             // Code to run when form validates.
             else
@@ -122,16 +130,19 @@ class User extends MX_Controller
                 $this->core_user_library->user_login($username, $password, $set_persistent_login);
             }
         }
-
-        // Code to run when the user visits the page without hitting the Login
-        // button.
-        if ($this->session->userdata('user_id'))
+        else
         {
-            $this->core_module_library->keep_flashdata_messages();
-            redirect(base_url() . $this->core_user_library->user_index_uri);
-        }
+            // Code to run when the user visits the page without hitting the Login
+            // button.
+            if ($this->session->userdata('user_id'))
+            {
+                $this->core_module_library->keep_flashdata_messages();
+                redirect(base_url() . $this->core_user_library->user_index_uri);
+            }
 
-        echo Modules::run(self::$template, self::$data);
+            // Render the page.
+            echo $this->core_raintpl_library->render(self::$template_array, self::$data);
+        }
     }
 
     /**
@@ -139,7 +150,7 @@ class User extends MX_Controller
      */
     public function forgotten_password()
     {
-        self::$data['view_file'] = 'user_forgotten_password';
+        self::$data['content_file'] = 'user_forgotten_password';
 
         if ($this->input->post('submit'))
         {
@@ -147,7 +158,8 @@ class User extends MX_Controller
 
             if ($this->form_validation->run() == FALSE)
             {
-                echo Modules::run(self::$template, self::$data);
+                // Render the page.
+                echo $this->core_raintpl_library->render(self::$template_array, self::$data);
             }
             else
             {
@@ -155,7 +167,8 @@ class User extends MX_Controller
             }
         }
 
-        echo Modules::run(self::$template, self::$data);
+        // Render the page.
+        echo $this->core_raintpl_library->render(self::$template_array, self::$data);
     }
 
     public function forgotten_password_login($code = NULL)
@@ -176,7 +189,7 @@ class User extends MX_Controller
      */
     public function add()
     {
-        self::$data['view_file'] = 'user_add';
+        self::$data['content_file'] = 'user_add';
 
         if ($this->input->post('add'))
         {
@@ -185,8 +198,8 @@ class User extends MX_Controller
             // Code to run when the the form does not validate.
             if ($this->form_validation->run() == FALSE)
             {
-                // Form does not validate.
-                echo Modules::run(self::$template, self::$data);
+                // Render the page.
+                echo $this->core_raintpl_library->render(self::$template_array, self::$data);
             }
             else
             {
@@ -194,13 +207,19 @@ class User extends MX_Controller
                 $this->core_user_library->user_add($this->input->post());
             }
         }
+        // Code to run when user first visits.
         else
         {
-            // Code to run when user first visits.
-            echo Modules::run(self::$template, self::$data);
+            // Render the page.
+            echo $this->core_raintpl_library->render(self::$template_array, self::$data);
         }
     }
 
+    /**
+     * User submits activation code from email link.
+     *
+     * @param string $activation_code
+     */
     public function activate($activation_code = NULL)
     {
         if ($activation_code == NULL)
@@ -218,7 +237,7 @@ class User extends MX_Controller
      */
     public function edit()
     {
-        self::$data['view_file'] = 'user_edit';
+        self::$data['content_file'] = 'user_edit';
 
         // Check if a user is logged in then set the user id from the session.
         if (!$this->session->userdata('user_id'))
@@ -250,8 +269,8 @@ class User extends MX_Controller
             // Code to run when the the form does not validate.
             if ($this->form_validation->run() == FALSE)
             {
-                // Form does not validate.
-                echo Modules::run(self::$template, self::$data);
+                // Render the page.
+                echo $this->core_raintpl_library->render(self::$template_array, self::$data);
             }
             // Code to run when the form passes validation.
             else
@@ -263,7 +282,8 @@ class User extends MX_Controller
         // Code to run when user first visits the page without hitting submit.
         else
         {
-            echo Modules::run(self::$template, self::$data);
+            // Render the page.
+            echo $this->core_raintpl_library->render(self::$template_array, self::$data);
         }
     }
 
@@ -272,7 +292,7 @@ class User extends MX_Controller
      */
     public function delete()
     {
-        self::$data['view_file'] = 'user_delete';
+        self::$data['content_file'] = 'user_delete';
 
         // Instanitate User based on session userdata('user_id').
         if ($id = $this->session->userdata('user_id'))
@@ -304,7 +324,9 @@ class User extends MX_Controller
         else
         {
             self::$data['user'] = $user;
-            echo Modules::run(self::$template, self::$data);
+
+            // Render the page.
+            echo $this->core_raintpl_library->render(self::$template_array, self::$data);
         }
     }
 
@@ -313,14 +335,15 @@ class User extends MX_Controller
      */
     public function admin_roles()
     {
-        self::$data['view_file'] = 'admin_roles';
+        self::$data['content_file'] = 'admin_roles';
 
         // Generate table
         $role_table = $this->core_user_library->admin_role_table();
 
-        // Render the page.
         self::$data['output'] = $role_table;
-        echo Modules::run(self::$template, self::$data);
+
+        // Render the page.
+        echo $this->core_raintpl_library->render(self::$template_array, self::$data);
     }
 
     /**
@@ -328,7 +351,7 @@ class User extends MX_Controller
      */
     public function admin_role_add()
     {
-        self::$data['view_file'] = 'admin_role_add';
+        self::$data['content_file'] = 'admin_role_add';
 
         if ($this->input->post('save'))
         {
@@ -336,7 +359,8 @@ class User extends MX_Controller
 
             if ($this->form_validation->run() == FALSE)
             {
-                echo Modules::run(self::$template, self::$data);
+                // Render the page.
+                 echo $this->core_raintpl_library->render(self::$template_array, self::$data);
             }
             else
             {
@@ -345,7 +369,8 @@ class User extends MX_Controller
         }
         else
         {
-            echo Modules::run(self::$template, self::$data);
+            // Render the page.
+             echo $this->core_raintpl_library->render(self::$template_array, self::$data);
         }
     }
 
@@ -356,7 +381,7 @@ class User extends MX_Controller
      */
     public function admin_role_edit($id = NULL)
     {
-        self::$data['view_file'] = 'admin_role_edit';
+        self::$data['content_file'] = 'admin_role_edit';
 
         // Instantiate the role to populate the form.
         $role = $this->core_user_library->admin_role_get($id);
@@ -373,7 +398,8 @@ class User extends MX_Controller
 
             if ($this->form_validation->run() == FALSE)
             {
-                echo Modules::run(self::$template, self::$data);
+                // Render the page.
+                echo $this->core_raintpl_library->render(self::$template_array, self::$data);
             }
             else
             {
@@ -382,7 +408,8 @@ class User extends MX_Controller
         }
         else
         {
-            echo Modules::run(self::$template, self::$data);
+            // Render the page.
+            echo $this->core_raintpl_library->render(self::$template_array, self::$data);
         }
     }
 
@@ -412,7 +439,7 @@ class User extends MX_Controller
      */
     public function admin_users($page = NULL)
     {
-        self::$data['view_file'] = 'admin_users';
+        self::$data['content_file'] = 'admin_users';
 
         // Per_page for pagination and model query.
         $per_page = 1;
@@ -448,18 +475,28 @@ class User extends MX_Controller
         // Add the javascript.
         array_unshift(self::$data['scripts'], 'user_admin_ajax.js');
 
-        // Check for ajax request then pick view_file.
+        // Check for ajax request then pick content_file.
         if ($this->input->is_ajax_request())
         {
             // Set current page to session.
             $this->session->set_userdata(array('user_admin_page' => $page));
-            $this->load->view('admin_users_ajax', self::$data);
+
+            // Reset the template data array.
+            self::$template_array = array(
+                'template_name' => 'default_template/content/',
+                'template_file' => 'admin_users_ajax',
+            );
+
+            // Render the page.
+            echo $this->core_raintpl_library->render(self::$template_array, self::$data);
         }
         else
         {
             // Set current page to session.
             $this->session->set_userdata(array('user_admin_page' => $page));
-            echo Modules::run(self::$template, self::$data);
+
+            // Render the page.
+            echo $this->core_raintpl_library->render(self::$template_array, self::$data);
         }
     }
 
@@ -470,8 +507,8 @@ class User extends MX_Controller
      */
     public function admin_user_edit($id = NULL)
     {
-        self::$data['view_file'] = 'admin_user_edit';
-        self::$data['all_roles'] = $this->core_user_library->admin_role_get_all();
+        self::$data['content_file'] = 'admin_user_edit';
+        self::$data['all_roles'] = $this->core_user_library->admin_role_get_all('array');
         $user = $this->core_user_library->user_find((int) $id);
 
         // Redirect admin user if id is not set.
@@ -479,13 +516,17 @@ class User extends MX_Controller
         {
             redirect(base_url() . $this->core_user_library->user_admin_users_uri);
         }
+        // Post submit.
         elseif ($this->input->post('save'))
         {
+            // Set validation rules.
             $this->core_user_library->set_validation_rules('admin_user_update');
 
+            // Form does not validate
             if ($this->form_validation->run() == FALSE)
             {
-                echo Modules::run(self::$template, self::$data);
+                // Render the page.
+                echo $this->core_raintpl_library->render(self::$template_array, self::$data);
             }
             else
             {
@@ -505,7 +546,9 @@ class User extends MX_Controller
             array_unshift(self::$data['scripts'], 'user_admin_ajax.js');
 
             self::$data['user'] = $user;
-            echo Modules::run(self::$template, self::$data);
+
+            // Render the page.
+            echo $this->core_raintpl_library->render(self::$template_array, self::$data);
         }
     }
 
@@ -514,16 +557,18 @@ class User extends MX_Controller
      */
     public function admin_user_add()
     {
-        self::$data['view_file'] = 'admin_user_add';
-        self::$data['all_roles'] = $this->core_user_library->admin_role_get_all();
+        self::$data['content_file'] = 'admin_user_add';
+        self::$data['all_roles'] = $this->core_user_library->admin_role_get_all('array');
 
         if ($this->input->post('save'))
         {
             $this->core_user_library->set_validation_rules('admin_user_insert');
 
+            // Form does not validate.
             if ($this->form_validation->run() == FALSE)
             {
-                echo Modules::run(self::$template, self::$data);
+                // Render the page.
+                echo $this->core_raintpl_library->render(self::$template_array, self::$data);
             }
             else
             {
@@ -536,7 +581,8 @@ class User extends MX_Controller
             // Add the js file.
             array_unshift(self::$data['scripts'], 'user_admin_ajax.js');
 
-            echo Modules::run(self::$template, self::$data);
+            // Render the page.
+            echo $this->core_raintpl_library->render(self::$template_array, self::$data);
         }
     }
 

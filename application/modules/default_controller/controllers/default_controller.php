@@ -16,10 +16,14 @@ class Default_controller extends MX_Controller
 
     // Sets the $data property.
     protected static $data;
+
     // Optionally set the default template.
     protected $default_template = '_core_template/slider_template';
+
     // Optinally set another tmeplate property.
     protected $columns_template = '_core_template/default_template';
+
+    private static $template_array;
 
     /**
      * The data property is set to the site_info() array which passes an array
@@ -32,10 +36,23 @@ class Default_controller extends MX_Controller
     public function __construct()
     {
         parent::__construct();
+
+        // Load the libraries.
+        $this->load->library('_core_raintpl/core_raintpl_library');
+
         // Sets the the data array.
         self::$data = $this->core_module_model->site_info();
+
         // Sets the module to be sent to the Template module.
         self::$data['module'] = 'default_controller';
+
+        // Initialize the template data array.
+        self::$template_array = array(
+            'template_name' => 'default_template/',
+            'template_file' => 'slider_template',
+        );
+        // Add filenames to the $scripts array.
+        array_unshift(self::$data['scripts'], 'jquery.foundation.orbit.js');
     }
 
     /**
@@ -52,12 +69,14 @@ class Default_controller extends MX_Controller
     public function index()
     {
         // Add filenames to the $scripts array.
-        array_unshift(self::$data['scripts'], 'jquery.foundation.orbit.js');
+        //array_unshift(self::$data['scripts'], 'jquery.foundation.orbit.js');
+
         // Uncomment and edit to add a css file.
         /* array_unshift(self::$data['stylesheets'], 'CSS file GOES HERE'); */
-        self::$data['view_file'] = 'grid';
+
+        self::$data['content_file'] = 'grid';
         // Template name is sent to the Template module along with the data array.
-        echo Modules::run($this->default_template, self::$data);
+        echo $this->core_raintpl_library->render(self::$template_array, self::$data);
     }
 
     /**
@@ -70,8 +89,14 @@ class Default_controller extends MX_Controller
      */
     public function columns($view)
     {
-        self::$data['view_file'] = $view;
-        echo Modules::run($this->columns_template, self::$data);
+        // Add filenames to the $scripts array.
+        //array_unshift(self::$data['scripts'], 'jquery.foundation.orbit.js');
+
+        // Uncomment and edit to add a css file.
+        /* array_unshift(self::$data['stylesheets'], 'CSS file GOES HERE'); */
+
+        self::$data['content_file'] = $view;
+        echo $this->core_raintpl_library->render(self::$template_array, self::$data);
     }
 
 }

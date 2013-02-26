@@ -23,7 +23,13 @@ class _Core_Messages extends MX_Controller
     {
         parent::__construct();
 
+        // Load the helpers.
         $this->load->helper('form');
+
+        // Restrict deirect access to module contrller.
+        $this->load->library('_core_module/core_module_library');
+        $this->core_module_library->module_direct_access_restrict('_core_messages');
+
     }
 
     // Automatically sets the $message_TYPE variable then loads the view.
@@ -34,11 +40,11 @@ class _Core_Messages extends MX_Controller
         {
             $data['message_success'] = $message_success;
         }
-        if ($message_error           = $this->session->flashdata('message_error'))
+        if ($message_error = $this->session->flashdata('message_error'))
         {
             $data['message_error'] = $message_error;
         }
-        if ($message_notice        = $this->session->flashdata('message_notice'))
+        if ($message_notice = $this->session->flashdata('message_notice'))
         {
             $data['message_notice'] = $message_notice;
         }

@@ -1,7 +1,6 @@
-<h5>Add user</h5>
-
 <?php echo form_open($this->config->item('user_admin_user_add_uri')) ;?>
 
+<?php echo form_fieldset('Add a user') ;?>
 <label for="username">Username:</label>
 <input class="<?php echo $this->core_module_library->form_error_class('username') ;?>" type="text" name="username"
        value="<?php set_value('username') ;?>" />
@@ -17,24 +16,23 @@
 <label for="email">Email:</label>
 <input class="<?php echo $this->core_module_library->form_error_class('email') ;?>" type="text" name="email"
        value="<?php echo set_value('email') ;?>" />
+<?php echo form_fieldset_close() ;?>
 
-<!-- Role form select -->
-<label for="role">Role:</label>
+<!-- Role form fieldset: radios -->
 <?php
-$role_select = array();
-foreach ($all_roles as $value) {
-    $role_select[$value->id] = $value->role;
-    if ($this->session->userdata('role') != 'super_user') {
-        unset($role_select[1]);
-    }
+echo form_fieldset('Select a role');
+foreach ($all_roles as $value)
+{
+    echo '<label for="' . $value['id'] . '">' . $value['role'] . ':</label>';
+    echo '<input type="radio" name="role" value="' . $value['id'] . '" />';
 }
-echo form_dropdown('role', $role_select, set_value('role'));
+echo form_fieldset_close();
 ?>
-<!-- // Role form select -->
 
+<!-- Protected form select -->
 <?php if ($this->session->userdata('role') == 'super_user') :?>
     <label for="protected_value">Protected:</label>
-    <?php echo form_dropdown('protected_value', array(TRUE => 'Yes', FALSE => 'No'), set_value('protected_value')) ;?>
+    <?php echo form_dropdown('protected_value', array(FALSE => 'No', TRUE => 'Yes'), set_value('protected_value')) ;?>
 <?php endif ;?>
 
 

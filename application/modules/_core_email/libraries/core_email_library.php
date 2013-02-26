@@ -38,6 +38,9 @@ class Core_email_library
         self::$CI->load->library('form_validation');
         self::$CI->load->library('encrypt');
 
+        // Load the helpers.
+        self::$CI->load->helper('language');
+
         // Load the models.
         self::$CI->load->model('_core_email/core_email_model');
 
@@ -178,12 +181,12 @@ class Core_email_library
 
         if ($result)
         {
-            self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_system_settings_set'));
+            self::$CI->session->set_flashdata('message_success', lang('success_system_settings_set'));
             redirect(current_url());
         }
         else
         {
-            self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_system_settings_set'));
+            self::$CI->session->set_flashdata('message_error', lang('error_system_settings_set'));
             redirect(current_url());
         }
     }
@@ -208,7 +211,7 @@ class Core_email_library
         }
         else
         {
-            self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_system_settings_get'));
+            self::$CI->session->set_flashdata('message_error', lang('error_system_settings_get'));
             redirect(current_url());
         }
     }
@@ -267,14 +270,14 @@ class Core_email_library
         $result = $this->system_email_send($email);
         if ($result)
         {
-            self::$CI->session->set_flashdata('message_success', self::$CI->lang->line('success_system_settings_test_send')
+            self::$CI->session->set_flashdata('message_success', lang('success_system_settings_test_send')
             . $this->mail->From);
             redirect(current_url());
             exit();
         }
         else
         {
-            self::$CI->session->set_flashdata('message_error', self::$CI->lang->line('error_system_settings_test_send'));
+            self::$CI->session->set_flashdata('message_error', lang('error_system_settings_test_send'));
             redirect(current_url());
             exit();
         }

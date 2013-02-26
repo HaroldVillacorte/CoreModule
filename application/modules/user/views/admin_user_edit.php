@@ -12,20 +12,17 @@
 <input class="<?php echo $this->core_module_library->form_error_class('email') ;?>" type="text" name="email"
        value="<?php echo isset($user) ? $user->email : set_value('email') ;?>" />
 
-<!-- Role form select -->
-<label for="role">Role:</label>
+<!-- Role form fieldset: radios -->
 <?php
-$role_select = array();
-foreach ($all_roles as $value) {
-    $role_select[$value->id] = $value->role;
-    if ($this->session->userdata('role') != 'super_user') {
-        unset($role_select[1]);
-    }
+echo form_fieldset('Select a role');
+foreach ($all_roles as $value)
+{
+    $checked = (isset($user) && $user->role == $value['role']) ? 'checked="checked"' : '';
+    echo '<label for="' . $value['id'] . '">' . $value['role'] . ':</label>';
+    echo '<input type="radio" name="role" value="' . $value['id'] . '"' . $checked .' />';
 }
-$role_selected = isset($user) ? $user->role_id : set_value('role');
-echo form_dropdown('role', $role_select, $role_selected);
+echo form_fieldset_close();
 ?>
-<!-- // Role form select -->
 
 <!-- Protected form select -->
 <?php if ($this->session->userdata('role') == 'super_user') :?>
@@ -37,7 +34,7 @@ echo form_dropdown('role', $role_select, $role_selected);
     } else {
         $selected = set_value('protected_value');
     }
-    echo form_dropdown('protected_value', array(1 => 'Yes', 0 => 'No'), $selected);
+    echo form_dropdown('protected_value', array(0 => 'No', 1 => 'Yes'), $selected);
     ?>
 <?php endif ;?>
 <!-- // Protected form select -->

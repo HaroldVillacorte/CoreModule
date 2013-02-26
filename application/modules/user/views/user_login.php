@@ -7,7 +7,7 @@
 <?php echo form_open($this->config->item('user_login_uri')) ;?>
 
 <label for="username">Username:</label>
-<input class="<?php echo $this->core_module_library->form_error_class('username') ;?>"
+<input class="{{ form_error_class('username') }}"
        type="text" name="username" value="" />
 
 <label for="password">Password:</label>
