@@ -44,8 +44,8 @@ class Demo_Doctrine2 extends MX_Controller
 
         // Initialize the template data array.
         self::$template_array = array(
-            'template_name' => 'default_template/',
-            'template_file' => 'slider_template',
+            'template_name' => 'admin_template/',
+            'template_file' => 'admin_template',
         );
 
         // Add filenames to the $scripts array.
@@ -173,7 +173,8 @@ class Demo_Doctrine2 extends MX_Controller
         {
             // Set current page to session.
             $this->session->set_userdata(array('demo_doctrine2_page' => $page));
-            self::$data['content_file'] = 'demo_doctrine2';
+            self::$data['content_file'] = '../demos/demo_doctrine2';
+            $this->output->enable_profiler(TRUE);
             echo $this->core_raintpl_library->render(self::$template_array, self::$data);
         }
     }

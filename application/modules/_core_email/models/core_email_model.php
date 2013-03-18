@@ -7,9 +7,6 @@ class Core_email_model extends CI_Model
     {
         parent::__construct();
 
-        // Load the libraries.
-        $this->load->library('_core_module/core_module_library');
-
         // Load the database class.
         $this->load->database();
     }

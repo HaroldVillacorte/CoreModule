@@ -37,9 +37,6 @@ class Default_controller extends MX_Controller
     {
         parent::__construct();
 
-        // Load the libraries.
-        $this->load->library('_core_raintpl/core_raintpl_library');
-
         // Sets the the data array.
         self::$data = $this->core_module_model->site_info();
 

@@ -27,30 +27,6 @@ class Core_user_model extends CI_Model
     }
 
     /**
-     * Sanitize the input post array and unset null values.
-     *
-     * @param array $post_array
-     * @return array
-     */
-    public function prep_post($post_array = array())
-    {
-        foreach ($post_array as $key => $value)
-        {
-            if ((!isset($post_array[$key]) || $value == '') && $value !== 0)
-            {
-                unset($post_array[$key]);
-            }
-
-            if (is_string($post_array[$key]))
-            {
-                $post_array[$key] = $this->db->escape_str($post_array[$key]);
-            }
-        }
-
-        return $post_array;
-    }
-
-    /**
      * Generate salt and hash password.
      *
      * @param array $post
@@ -189,7 +165,7 @@ class Core_user_model extends CI_Model
      */
     public function user_login_log_failed_attempt($post = array())
     {
-        $post = $this->prep_post($post);
+        $post = $this->core_module_library->prep_post($post);
         $expire_time = time() - $this->config->item('user_login_attempts_time');
 
         // Delete expired attempts.
@@ -252,7 +228,7 @@ class Core_user_model extends CI_Model
     public function user_check_logged_in($remember_code_array = array())
     {
         // Sanitize.
-        $post = $this->prep_post($remember_code_array);
+        $post = $this->core_module_library->prep_post($remember_code_array);
 
         // Run the query.
         $query = $this->db
@@ -297,7 +273,7 @@ class Core_user_model extends CI_Model
         $this->admin_user_tables_cleanup();
 
         // Sanitize array.
-        $post = $this->prep_post($remember_code_array);
+        $post = $this->core_module_library->prep_post($remember_code_array);
 
         // Assign user session data.
         $post['ip_address']    = $this->session->userdata('ip_address');
@@ -338,7 +314,7 @@ class Core_user_model extends CI_Model
         $this->admin_user_tables_cleanup();
 
         // Prep post.
-        $post = $this->prep_post($forgotten_password_data);
+        $post = $this->core_module_library->prep_post($forgotten_password_data);
 
         // Delete any previous records for this user.
         $this->user_forgotten_password_code_delete($post['user_id']);
@@ -372,7 +348,7 @@ class Core_user_model extends CI_Model
     public function user_forgotten_password_login($array = array())
     {
         // Prep the post array.
-        $post = $this->prep_post($array);
+        $post = $this->core_module_library->prep_post($array);
 
         // Run the query.
         $query = $this->db
@@ -427,7 +403,7 @@ class Core_user_model extends CI_Model
      */
     public function user_add($post = NULL)
     {
-        $sanitized_post = $this->prep_post($post);
+        $sanitized_post = $this->core_module_library->prep_post($post);
 
         // Generate salt and hash password.
         $post = $this->user_password_salt($sanitized_post);
@@ -561,7 +537,7 @@ class Core_user_model extends CI_Model
      */
     public function user_edit($post)
     {
-        $post = $this->prep_post($post);
+        $post = $this->core_module_library->prep_post($post);
 
         // Make sure this is the logged in user.
         $user_id = $this->session->userdata('user_id');
@@ -624,7 +600,7 @@ class Core_user_model extends CI_Model
      */
     public function admin_user_save($post)
     {
-        $post = $this->prep_post($post);
+        $post = $this->core_module_library->prep_post($post);
 
         // There is a name conflict in the core input class that prohibits using
         // 'protected' as a field name.  So the name is changed here.
@@ -758,7 +734,7 @@ class Core_user_model extends CI_Model
      */
     public function admin_role_save($post)
     {
-        $post = $this->prep_post($post);
+        $post = $this->core_module_library->prep_post($post);
 
         // There is a name conflict in the core input class that prohibits using
         // 'protected' as a field name.  So the name is changed here.

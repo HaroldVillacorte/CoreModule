@@ -1,1 +1,2 @@
 Deny from all
+DirectoryIndex index.html

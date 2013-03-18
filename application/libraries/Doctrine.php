@@ -52,6 +52,8 @@ class Doctrine
         // set up annotation driver
         $yamlDriver = new \Doctrine\ORM\Mapping\Driver\YamlDriver(APPPATH.'models/Mappings');
         $config->setMetadataDriverImpl($yamlDriver);
+        //$XmlDriver = new \Doctrine\ORM\Mapping\Driver\XmlDriver(APPPATH.'models/Mappings');
+        //$config->setMetadataDriverImpl($XmlDriver);
 
         // Database connection information
         $connectionOptions = array(

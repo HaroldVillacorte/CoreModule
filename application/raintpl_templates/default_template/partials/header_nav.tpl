@@ -27,22 +27,18 @@
             </li>
 
             <!-- Crud demos -->
-            <li class="has-flyout">
-                <a href="#">Crud demos</a>
-                <a href="#" class="flyout-toggle"><span> </span></a>
-                <ul class="flyout">
-                    <li><a href="{function="base_url()"}demo_grocery_crud/">Grocery Crud demo</a></li>
-                    <li><a href="{function="base_url()"}demo_doctrine2/">Doctrine 2 demo</a></li>
-                </ul>
+            <li>
+                <a href="{function="base_url()"}demo_doctrine2/">Doctrine 2 demo</a>
             </li>
 
             <!-- Admin menu -->
             <li class="has-flyout">
-                <a href="#">Admin menu</a>
+                <a href="#">Admin</a>
                 <a href="#" class="flyout-toggle"><span> </span></a>
                 <ul class="flyout">
-                    <li><a href="{function="base_url()"}user/admin_users/">Admin</a></li>
-                    <li><a href="{function="base_url()"}user/admin_roles/">User roles</a></li>
+                    <li><a href="{function="base_url()"}user/admin_users/">Users</a></li>
+                    <li><a href="{function="base_url()"}user/admin_roles/">Roles</a></li>
+                    <li><a href="{function="base_url()"}admin/email_settings/">Email settings</a></li>
                 </ul>
             </li>
 

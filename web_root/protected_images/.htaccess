@@ -1,0 +1,4 @@
+DirectoryIndex index.php
+RewriteEngine on
+RewriteCond $1 !^(index\.php)
+RewriteRule ^(.*)$ index.php/?image=$1 [L]

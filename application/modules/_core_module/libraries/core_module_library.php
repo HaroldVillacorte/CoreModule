@@ -17,7 +17,8 @@ class Core_module_library
     {
         self::$CI =& get_instance();
 
-        // Load config and language.
+        // Load config and language.'
+        self::$CI->load->config('_core_module/core_module_config');
         self::$CI->lang->load('_core_module/core_module', 'english');
 
         // Load the libraries.
@@ -97,6 +98,16 @@ class Core_module_library
 
             if (is_string($value))
             {
+                // Strip disallowed tags.
+                $post_array[$key] = strip_tags($post_array[$key], self::$CI->config->item('core_module_allowed_tags'));
+
+                // nl2br
+                $post_array[$key] = str_replace(array("\r\n", "\r", "\n"), "<br>", $post_array[$key]);
+
+                // Remove all tag attributes.
+                $post_array[$key] = preg_replace('/<([a-z]+)[^>]*>/i', '<\1>', $post_array[$key]);
+
+                // Escape input.
                 $post_array[$key] = self::$CI->db->escape_str($post_array[$key]);
             }
         }
@@ -126,6 +137,103 @@ class Core_module_library
         {
             redirect(base_url());
         }
+    }
+
+    /**
+     * Generates pagination links.
+     *
+     * @param integer $count
+     * @param integer $per_page
+     * @return string
+     */
+    public function pagination_setup($base_url, $count, $per_page)
+    {
+        // Load th elibrary.
+        self::$CI->load->library('pagination');
+
+        $pagination_config = array();
+
+        // Pagination setup
+        $pagination_config['base_url']   = $base_url;
+        $pagination_config['total_rows'] = $count;
+        $pagination_config['per_page']   = $per_page;
+
+        // Style pagination Foundation 3
+        // Full open
+        $pagination_config['full_tag_open'] = '<ul class="pagination">';
+
+        // Digits
+        $pagination_config['num_tag_open']  = '<li>';
+        $pagination_config['num_tag_close'] = '</li>';
+
+        // Current
+        $pagination_config['cur_tag_open']  = '<li class="current"><a href="#">';
+        $pagination_config['cur_tag_close'] = '</a></li>';
+
+        // Previous link
+        $pagination_config['prev_tag_open']  = '<li class="arrow">';
+        $pagination_config['prev_tag_close'] = '</li>';
+
+        // Next link
+        $pagination_config['next_tag_open']  = '<li class="arrow">';
+        $pagination_config['nect_tag_close'] = '<li>';
+
+        // First link
+        $pagination_config['first_tag_open']  = '<li>';
+        $pagination_config['first_tag_close'] = '</li>';
+
+        // Last link
+        $pagination_config['last_tag_open']  = '<li>';
+        $pagination_config['last_tag_close'] = '</li>';
+
+        // Full close
+        $pagination_config['full_tag_close'] = '</ul>';
+
+        self::$CI->pagination->initialize($pagination_config);
+        $links = self::$CI->pagination->create_links();
+
+        return $links;
+    }
+
+    /**
+     * Get an array of uris for a module class.
+     *
+     * @param string $module
+     * @return array
+     */
+    public function get_module_uris($module = NULL)
+    {
+        // Load the module.
+        //self::$CI->load->module($module . '/' . $module);
+
+        // Get the method names.
+        $methods = get_class_methods($module);
+
+        // Generate the uri's.
+        foreach ($methods as $key => $value)
+        {
+            if ($methods[$key] == '__construct' || $methods[$key] == '__get')
+            {
+                unset($methods[$key]);
+            }
+            $key = $value;
+            $methods[$key] = $module . '/' . $value . '/';
+
+        }
+
+        // Return array of uri's
+        return $methods;
+    }
+
+    /**
+     * Strip all white space form a string.
+     * 
+     * @param string $string
+     * @return string
+     */
+    public function strip_whitespace($string = NULL)
+    {
+        return str_replace(' ', '', $string);
     }
 
 }

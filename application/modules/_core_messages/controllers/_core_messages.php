@@ -27,7 +27,6 @@ class _Core_Messages extends MX_Controller
         $this->load->helper('form');
 
         // Restrict deirect access to module contrller.
-        $this->load->library('_core_module/core_module_library');
         $this->core_module_library->module_direct_access_restrict('_core_messages');
 
     }

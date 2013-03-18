@@ -154,6 +154,7 @@ class Core_user_library
 
         // Load the models.
         self::$CI->load->model('_core_user/core_user_model');
+        self::$CI->load->model('_core_module/core_module_model');
 
         // Intialize the data array.
         self::$data = self::$CI->core_module_model->site_info();

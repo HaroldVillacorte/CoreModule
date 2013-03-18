@@ -38,6 +38,26 @@
 |
 */
 
+// Load the database class.
+require_once( BASEPATH .'database/DB'. EXT );
+
+// Reference the database object.
+$db =& DB();
+
+// Get the page slugs.
+$query = $db->select('slug')->get('core_pages');
+
+// Define the page routes.
+if ($query->num_rows() > 0)
+{
+    $routes = $query->result();
+
+    foreach ($routes as $route_row)
+    {
+        $route[$route_row->slug] = '_core_pages/page/' . $route_row->slug;
+    }
+}
+
 $route['default_controller'] = "default_controller";
 $route['404_override'] = '';
 

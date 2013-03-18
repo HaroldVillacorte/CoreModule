@@ -34,7 +34,6 @@ class Core_email_library
 
         // Load the libraries.
         self::$CI->load->library('_core_email/phpmailer');
-        self::$CI->load->library('_core_module/core_module_library');
         self::$CI->load->library('form_validation');
         self::$CI->load->library('encrypt');
 
@@ -77,7 +76,6 @@ class Core_email_library
             $system_smtp_settings->core_email_reply_to,
             $system_smtp_settings->core_email_reply_to_name
         );
-
     }
 
     /**
@@ -89,52 +87,52 @@ class Core_email_library
             array(
                 'field' => 'core_email_Host',
                 'label' => 'Host',
-                'rules' => 'required',
+                'rules' => 'required|trim',
             ),
             array(
                 'field' => 'core_email_Port',
                 'label' => 'Port',
-                'rules' => 'required|integer',
+                'rules' => 'required|trim|integer',
             ),
             array(
                 'field' => 'core_email_SMTPAuth',
                 'label' => 'Authorization Required',
-                'rules' => 'integer|exact_length[1]',
+                'rules' => 'trim|integer|exact_length[1]',
             ),
             array(
                 'field' => 'core_email_SMTPSecure',
                 'label' => 'Security protocol',
-                'rules' => '',
+                'rules' => 'trim',
             ),
             array(
                 'field' => 'core_email_Username',
                 'label' => 'Username',
-                'rules' => '',
+                'rules' => 'trim',
             ),
             array(
                 'field' => 'core_email_Password',
                 'label' => 'Password',
-                'rules' => '',
+                'rules' => 'trim',
             ),
             array(
                 'field' => 'core_email_From',
                 'label' => 'From email',
-                'rules' => 'valid_email',
+                'rules' => 'required|trim|valid_email',
             ),
             array(
                 'field' => 'core_email_FromName',
                 'label' => 'From name',
-                'rules' => '',
+                'rules' => 'required|trim',
             ),
             array(
                 'field' => 'core_email_reply_to',
                 'label' => 'Reply-to email',
-                'rules' => 'valid_email',
+                'rules' => 'required|trim|valid_email',
             ),
             array(
                 'field' => 'core_email_reply_to_name',
                 'label' => 'Reply-to name',
-                'rules' => '',
+                'rules' => 'required|trim',
             ),
         );
 

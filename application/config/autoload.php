@@ -52,7 +52,8 @@ $autoload['packages'] = array();
 |	$autoload['libraries'] = array('database', 'session', 'xmlrpc');
 */
 
-$autoload['libraries'] = array('session');
+$autoload['libraries'] = array('session', '_core_module/core_module_library',
+    '_core_user/core_user_library', '_core_raintpl/core_raintpl_library');
 
 
 /*

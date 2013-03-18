@@ -23,4 +23,12 @@ $config['core_module_asset_path']   = 'assets/templates/default_template';
 $config['core_module_scripts']      = array('custom.js');
 $config['core_module_stylesheets']  = array('custom.css');
 
+/*
+|--------------------------------------------------------------------------
+| Set allowable html tags in posts.
+|--------------------------------------------------------------------------
+*/
+
+$config['core_module_allowed_tags'] = '<h1><h2><h3><h4><h5><h6><p><strong><em><ul><ol><li><br>';
+
 /* End of file core_module_config.php */

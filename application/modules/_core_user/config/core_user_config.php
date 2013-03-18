@@ -29,16 +29,16 @@ $config['user_delete_uri']                   = 'user/delete/';
 $config['user_admin_index_uri'] = base_url();
 
 // User admin roles.
-$config['user_admin_roles_uri']       = 'user/admin_roles/';
-$config['user_admin_role_add_uri']    = 'user/admin_role_add/';
-$config['user_admin_role_edit_uri']   = 'user/admin_role_edit/';
-$config['user_admin_role_delete_uri'] = 'user/admin_role_delete/';
+$config['user_admin_roles_uri']       = 'admin/user_roles/';
+$config['user_admin_role_add_uri']    = 'admin/user_role_add/';
+$config['user_admin_role_edit_uri']   = 'admin/user_role_edit/';
+$config['user_admin_role_delete_uri'] = 'admin/user_role_delete/';
 
 // User admin users.
-$config['user_admin_users_uri']       = 'user/admin_users/';
-$config['user_admin_user_edit_uri']   = 'user/admin_user_edit/';
-$config['user_admin_user_add_uri']    = 'user/admin_user_add/';
-$config['user_admin_user_delete_uri'] = 'user/admin_user_delete/';
+$config['user_admin_users_uri']       = 'admin/users/';
+$config['user_admin_user_edit_uri']   = 'admin/user_edit/';
+$config['user_admin_user_add_uri']    = 'admin/user_add/';
+$config['user_admin_user_delete_uri'] = 'admin/user_delete/';
 
 /*
 |--------------------------------------------------------------------------
