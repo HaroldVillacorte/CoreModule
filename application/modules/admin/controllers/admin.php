@@ -21,13 +21,6 @@ class Admin extends MX_Controller
     protected static $data;
 
     /**
-     * The template array.
-     *
-     * @var array
-     */
-    private static $template_array;
-
-    /**
      * The data property is set to the site_info() array which passes an array
      * containing the site wide information such as the site name and asset path
      * information.  self::$data['module'] is the name of this module which is
@@ -40,9 +33,9 @@ class Admin extends MX_Controller
         parent::__construct();
 
         // Load the libraries.
-        $this->load->library('_core_raintpl/core_raintpl_library');
-        $this->load->library('_core_pages/core_pages_library');
-        $this->load->library('_core_menu/core_menu_library');
+        $this->load->library('core_pages/core_module_library');
+        $this->load->library('core_menu/core_menu_library');
+        $this->load->library('core_template/core_template_library');
 
         // Load the helpers.
         $this->load->helper('date');
@@ -50,34 +43,36 @@ class Admin extends MX_Controller
         // Sets the the data array.
         self::$data = $this->core_module_model->site_info();
 
-        // Initialize the Template array.
-        self::$template_array = array(
-            'template_name' => 'admin_template/',
-            'template_file' => 'admin_template',
-        );
+        // Set the template file.
+        $this->template = 'admin_template/admin_template';
+
+        // Get the link count.
+        $max_link_count = $this->config->item('menu_link_maximum_weight');
+
+        // Set the count array.
+        self::$data['max_link_count'] = array();
+
+        // Iterate count and add to count array.
+        for ($i = 1; $i <= $max_link_count; $i++)
+        {
+            self::$data['max_link_count'][] = $i;
+        }
+
+        // Get the template names.
+        self::$data['template_array'] = $this->core_template_library->get_template_names();
     }
 
     /**
-     * Javascript and css filenames are added to the script array from
-     * core_model then the Asset Loader module will load these files.  Using
-     * array_unshift adds the file to the begining of the array causing it to be
-     * loaded first.  Alternatively you can use this method:
-     * self::$data['scripts'][] = 'js_file_name.js'
-     * to add the file to the end of the array causing it to be loaded last.
-     *
-     * @see core_model.php
-     * @see asset_loader.php
+     * The admin index page.
      */
     public function index()
     {
-        // Add filenames to the $scripts array.
-        array_unshift(self::$data['scripts'], 'jquery.foundation.orbit.js');
-        // Uncomment and edit to add a css file.
-        /* array_unshift(self::$data['stylesheets'], 'CSS file GOES HERE'); */
-        self::$data['content_file'] = 'grid';
+        self::$data['content_file'] = 'admin';
+
+        self::$data['links'] = $this->core_menu_library->menu_link_find('parent_menu_id', 1, 'result');
 
         // render the page.
-        echo $this->core_raintpl_library->render(self::$template_array, self::$data);
+        echo $this->core_template_library->parse_view($this->template, self::$data);
     }
 
     /**
@@ -86,7 +81,7 @@ class Admin extends MX_Controller
     public function email_settings()
     {
         // Load th elibrary.
-        $this->load->library('_core_email/core_email_library');
+        $this->load->library('core_email/core_email_library');
 
         self::$data['content_file'] = 'admin_email_settings';
 
@@ -97,7 +92,7 @@ class Admin extends MX_Controller
             if ($this->form_validation->run() == FALSE)
             {
                 // render the page.
-                echo $this->core_raintpl_library->render(self::$template_array, self::$data);
+               echo $this->core_template_library->parse_view($this->template, self::$data);
             }
             else
             {
@@ -111,153 +106,75 @@ class Admin extends MX_Controller
         else
         {
             self::$data['settings'] = $this->core_email_library->system_settings_get(FALSE);
+
             // render the page.
-            echo $this->core_raintpl_library->render(self::$template_array, self::$data);
+            echo $this->core_template_library->parse_view($this->template, self::$data);
         }
     }
 
     /**
-     * The adminstrtive page of all pages.
-     */
-    public function pages($page = 0)
-    {
-        self::$data['content_file'] = 'admin_pages';
-
-        // Load the libraries.
-        $this->load->library('pagination');
-
-        // Per page used for pagination and query.
-        $per_page = 1;
-
-        // Run the query.
-        self::$data['pages'] = $this->core_pages_library->page_find_limit_offset($per_page, $page, 'object');
-
-        // Get the count.
-        $count = count($this->core_pages_library->page_find_all('array'));
-
-        // Get the pagination links.
-        $base_url = base_url() . $this->config->item('pages_uri');
-        self::$data['pagination'] = $this->core_module_library->pagination_setup($base_url, $count, $per_page);
-
-        // Render the page.
-        echo $this->core_raintpl_library->render(self::$template_array, self::$data);
-    }
-
-    /**
-     * Add a page.
-     */
-    public function page_add()
-    {
-        // Set the permission.
-        $this->core_user_library->user_permission(array('admin', 'super_user'));
-
-        // Set the content template file.
-        self::$data['content_file'] = 'admin_page_add';
-
-        // Post submit.
-        if ($this->input->post('submit'))
-        {
-            // Set the validation rles.
-            $this->core_pages_library->set_validation_rules('page_insert');
-
-            // Form does not validate.
-            if ($this->form_validation->run() == FALSE)
-            {
-                // Render the page.
-                echo $this->core_raintpl_library->render(self::$template_array, self::$data);
-            }
-            // Form validates.
-            else
-            {
-                // Send to the database.
-                $this->core_pages_library->page_add($this->input->post());
-            }
-        }
-        // First page visit.
-        else
-        {
-            // Render the page.
-            echo $this->core_raintpl_library->render(self::$template_array, self::$data);
-        }
-    }
-
-    /**
-     * Edit a page.
-     */
-    public function page_edit($id = NULL)
-    {
-        // Set the permission.
-        $this->core_user_library->user_permission(array('admin', 'super_user'));
-
-        // Set the content template file.
-        self::$data['content_file'] = 'admin_page_edit';
-
-        // Post submit.
-        if ($this->input->post('submit'))
-        {
-            // Set the validation rles.
-            $this->core_pages_library->set_validation_rules('page_update');
-
-            // Form does not validate.
-            if ($this->form_validation->run() == FALSE)
-            {
-                // Render the page.
-                echo $this->core_raintpl_library->render(self::$template_array, self::$data);
-            }
-            // Form validates.
-            else
-            {
-                // Send to the database.
-                $this->core_pages_library->page_edit($this->input->post());
-            }
-        }
-        // First page visit.
-        else
-        {
-            // Find page to edit.
-            self::$data['page'] = $this->core_pages_library->page_find('id', (int) $id);
-
-            // Render the page.
-            echo $this->core_raintpl_library->render(self::$template_array, self::$data);
-        }
-    }
-
-    /**
-     * Delete a page.
+     * The menus admin page.
      *
-     * @param integer $id
+     * @param integer $menu
      */
-    public function page_delete($id = NULL)
+    public function menus($menu = 1)
     {
-        // Delete the page.
-        $this->core_pages_library->page_delete($id);
-    }
-
-    /**
-     * The adminstrtive page of all menus.
-     */
-    public function menus($page = 0)
-    {
+        // Set the tempalte file.
         self::$data['content_file'] = 'admin_menus';
 
-        // Load the libraries.
-        $this->load->library('pagination');
+        // Get the menus.
+        self::$data['menus'] = $this->core_menu_library->menu_find_all('object');
 
-        // Per page used for pagination and query.
-        $per_page = 1;
+        // Get the menu.
+        self::$data['menu'] = $this->core_menu_library->menu_find('id', $menu);
 
-        // Run the query.
-        self::$data['menus'] = $this->core_menu_library->menu_find_limit_offset($per_page, $page, 'object');
+        // Get the menu links.
+        self::$data['links'] = $this->core_menu_library->menu_link_find('parent_menu_id', $menu, 'array');
 
-        // Get the count.
-        $count = count($this->core_menu_library->menu_find_all('array'));
+        // Set the menu link edit weight url.  Will be used by ajax.
+        self::$data['menu_link_edit_weight_url'] = base_url() . $this->core_menu_library->menu_link_edit_weight_uri;
 
-        // Get the pagination links.
-        $base_url = base_url() . $this->config->item('menus_uri');
-        self::$data['pagination'] = $this->core_module_library->pagination_setup($base_url, $count, $per_page);
+        // Set the csrf test name.  For some reason it is not getting output.
+        self::$data['csrf_test_name'] = $this->input->cookie('csrf_cookie_name');
 
-        // Render the page.
-        echo $this->core_raintpl_library->render(self::$template_array, self::$data);
+        // Edit a menu link.
+        if ($this->input->post('submit'))
+        {
+            // Set the validation rules.
+            $this->core_menu_library->set_validation_rules('menu_link_update');
+
+            // Form does not validate.
+            if ($this->form_validation->run() == FALSE)
+            {
+                // Check for set_value() and set the values.
+                foreach (self::$data['links'] as $key => $value)
+                {
+                    if (set_value('id') && set_value('id') == self::$data['links'][$key]['id'])
+                    {
+                        foreach (self::$data['links'][$key] as $k => $v)
+                        {
+                            self::$data['links'][$key][$k] = set_value($k) ;
+                        }
+                    }
+                }
+
+                // Render the page.
+                echo $this->core_template_library->parse_view($this->template, self::$data);
+            }
+            // Form validates.
+            else
+            {
+                // Send to the database.
+                $this->core_menu_library->menu_link_edit($this->input->post());
+            }
+        }
+
+        // Non post visit.
+        else
+        {
+            // Render the page.
+            echo $this->core_template_library->parse_view($this->template, self::$data);
+        }
     }
 
     /**
@@ -281,7 +198,7 @@ class Admin extends MX_Controller
             if ($this->form_validation->run() == FALSE)
             {
                 // Render the menu.
-                echo $this->core_raintpl_library->render(self::$template_array, self::$data);
+                echo $this->core_template_library->parse_view($this->template, self::$data);
             }
             // Form validates.
             else
@@ -294,7 +211,7 @@ class Admin extends MX_Controller
         else
         {
             // Render the menu.
-            echo $this->core_raintpl_library->render(self::$template_array, self::$data);
+            echo $this->core_template_library->parse_view($this->template, self::$data);
         }
     }
 
@@ -319,7 +236,7 @@ class Admin extends MX_Controller
             if ($this->form_validation->run() == FALSE)
             {
                 // Render the menu.
-                echo $this->core_raintpl_library->render(self::$template_array, self::$data);
+                echo $this->core_template_library->parse_view($this->template, self::$data);
             }
             // Form validates.
             else
@@ -333,7 +250,7 @@ class Admin extends MX_Controller
         {
             // Render the menu.
             self::$data['menu'] = $this->core_menu_library->menu_find('id', $id);
-            echo $this->core_raintpl_library->render(self::$template_array, self::$data);
+            echo $this->core_template_library->parse_view($this->template, self::$data);
         }
     }
 
@@ -384,7 +301,7 @@ class Admin extends MX_Controller
             if ($this->form_validation->run() == FALSE)
             {
                 // Render the menu.
-                echo $this->core_raintpl_library->render(self::$template_array, self::$data);
+                echo $this->core_template_library->parse_view($this->template, self::$data);
             }
             // Form validates.
             else
@@ -397,49 +314,58 @@ class Admin extends MX_Controller
         else
         {
             // Render the menu.
-            echo $this->core_raintpl_library->render(self::$template_array, self::$data);
+            echo $this->core_template_library->parse_view($this->template, self::$data);
         }
     }
 
     /**
-     * Edit a menu link.
+     * Delete a menu link.
+     *
+     * @param integer $id
      */
-    public function menu_link_edit($id = NULL)
+    public function menu_link_delete($id = NULL)
     {
-        // Set the permission.
-        $this->core_user_library->user_permission(array('admin', 'super_user'));
+        if ($id == NULL)
+        {
+            redirect(base_url());
+            exit();
+        }
+        else
+        {
+            // Delete the menu.
+            $this->core_menu_library->menu_link_delete($id);
+        }
+    }
 
-        // Get the menus.
-        self::$data['menus'] = $this->core_menu_library->menu_find_all('object');
+    /**
+     * Edit a menu link weight.
+     */
+    public function menu_link_edit_weight()
+    {
+        // This method should be available only to ajax post requests.
+        if (!$this->input->is_ajax_request() || !$this->input->post())
+        {
+            redirect(base_url());
+            exit();
+        }
 
-        // Set the content template file.
-        self::$data['content_file'] = 'admin_menu_link_edit';
-
-        // Post submit.
         if ($this->input->post('submit'))
         {
-            // Set the validation rles.
-            $this->core_menu_library->set_validation_rules('menu_link_update');
-
-            // Form does not validate.
+            // Run the validation.
+            $this->core_menu_library->set_validation_rules('menu_link_update_weight');
             if ($this->form_validation->run() == FALSE)
             {
-                // Render the menu.
-                echo $this->core_raintpl_library->render(self::$template_array, self::$data);
+                // Read by the javascript.
+                echo 'invalid';
             }
-            // Form validates.
             else
             {
                 // Send to the database.
-                $this->core_menu_library->menu_link_edit($this->input->post());
+                $result = $this->core_menu_library->menu_link_edit($this->input->post(), TRUE);
+
+                // Read by the javascript.
+                echo ($result) ? 'true' : 'false';
             }
-        }
-        // First menu visit.
-        else
-        {
-            // Render the menu.
-            self::$data['menu_link'] = $this->core_menu_library->menu_link_find('id', $id, TRUE);
-            echo $this->core_raintpl_library->render(self::$template_array, self::$data);
         }
     }
 
@@ -456,7 +382,7 @@ class Admin extends MX_Controller
         self::$data['output'] = $role_table;
 
         // Render the page.
-        echo $this->core_raintpl_library->render(self::$template_array, self::$data);
+        echo $this->core_template_library->parse_view($this->template, self::$data);
     }
 
     /**
@@ -473,7 +399,7 @@ class Admin extends MX_Controller
             if ($this->form_validation->run() == FALSE)
             {
                 // Render the page.
-                 echo $this->core_raintpl_library->render(self::$template_array, self::$data);
+                 echo $this->core_template_library->parse_view($this->template, self::$data);
             }
             else
             {
@@ -483,7 +409,7 @@ class Admin extends MX_Controller
         else
         {
             // Render the page.
-             echo $this->core_raintpl_library->render(self::$template_array, self::$data);
+            echo $this->core_template_library->parse_view($this->template, self::$data);
         }
     }
 
@@ -512,17 +438,24 @@ class Admin extends MX_Controller
             if ($this->form_validation->run() == FALSE)
             {
                 // Render the page.
-                echo $this->core_raintpl_library->render(self::$template_array, self::$data);
+                echo $this->core_template_library->parse_view($this->template, self::$data);
             }
             else
             {
+                // Send to the database.
                 $this->core_user_library->admin_role_edit($this->input->post());
             }
         }
         else
         {
+            // Redirect if parameter not set.
+            if (!$id)
+            {
+                redirect(base_url() . $this->core_user_library->user_admin_roles_uri);
+            }
+
             // Render the page.
-            echo $this->core_raintpl_library->render(self::$template_array, self::$data);
+            echo $this->core_template_library->parse_view($this->template, self::$data);
         }
     }
 
@@ -594,14 +527,11 @@ class Admin extends MX_Controller
             // Set current page to session.
             $this->session->set_userdata(array('user_admin_page' => $page));
 
-            // Reset the template data array.
-            self::$template_array = array(
-                'template_name' => 'admin_template/content/',
-                'template_file' => 'admin_users_ajax',
-            );
+            // Reset the template name.
+            $this->template = 'admin_template/content/admin_users_ajax';
 
             // Render the page.
-            echo $this->core_raintpl_library->render(self::$template_array, self::$data);
+            echo $this->core_template_library->parse_view($this->template, self::$data);
         }
         else
         {
@@ -609,7 +539,7 @@ class Admin extends MX_Controller
             $this->session->set_userdata(array('user_admin_page' => $page));
 
             // Render the page.
-            echo $this->core_raintpl_library->render(self::$template_array, self::$data);
+            echo $this->core_template_library->parse_view($this->template, self::$data);
         }
     }
 
@@ -639,7 +569,7 @@ class Admin extends MX_Controller
             if ($this->form_validation->run() == FALSE)
             {
                 // Render the page.
-                echo $this->core_raintpl_library->render(self::$template_array, self::$data);
+                echo $this->core_template_library->parse_view($this->template, self::$data);
             }
             else
             {
@@ -661,7 +591,7 @@ class Admin extends MX_Controller
             self::$data['user'] = $user;
 
             // Render the page.
-            echo $this->core_raintpl_library->render(self::$template_array, self::$data);
+            echo $this->core_template_library->parse_view($this->template, self::$data);
         }
     }
 
@@ -681,7 +611,7 @@ class Admin extends MX_Controller
             if ($this->form_validation->run() == FALSE)
             {
                 // Render the page.
-                echo $this->core_raintpl_library->render(self::$template_array, self::$data);
+                echo $this->core_template_library->parse_view($this->template, self::$data);
             }
             else
             {
@@ -695,7 +625,7 @@ class Admin extends MX_Controller
             array_unshift(self::$data['scripts'], 'user_admin_ajax.js');
 
             // Render the page.
-            echo $this->core_raintpl_library->render(self::$template_array, self::$data);
+            echo $this->core_template_library->parse_view($this->template, self::$data);
         }
     }
 

@@ -18,10 +18,10 @@ class Default_controller extends MX_Controller
     protected static $data;
 
     // Optionally set the default template.
-    protected $default_template = '_core_template/slider_template';
+    protected $default_template = 'core_template/slider_template';
 
     // Optinally set another tmeplate property.
-    protected $columns_template = '_core_template/default_template';
+    protected $columns_template = 'core_template/default_template';
 
     private static $template_array;
 

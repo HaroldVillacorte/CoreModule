@@ -54,11 +54,11 @@ if ($query->num_rows() > 0)
 
     foreach ($routes as $route_row)
     {
-        $route[$route_row->slug] = '_core_pages/page/' . $route_row->slug;
+        $route['(:any)'] = 'core_module';
     }
 }
 
-$route['default_controller'] = "default_controller";
+$route['default_controller'] = "core_module/core_module";
 $route['404_override'] = '';
 
 

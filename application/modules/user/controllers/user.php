@@ -41,12 +41,12 @@ class User extends MX_Controller
         parent::__construct();
 
         // Load the config and language files.
-        $this->config->load('_core_user/core_user_config');
-        $this->lang->load('_core_user/core_user', $this->config->item('core_user_language'));
+        $this->config->load('core_user/core_user_config');
+        $this->lang->load('core_user/core_user', $this->config->item('core_user_language'));
 
         // Load libraries.
-        $this->load->library('_core_user/core_user_library');
-        $this->load->library('_core_raintpl/core_raintpl_library');
+        $this->load->library('core_user/core_user_library');
+        $this->load->library('core_raintpl/core_raintpl_library');
 
         // Load helpers.
         $this->load->helper('date');
@@ -75,73 +75,6 @@ class User extends MX_Controller
         }
         self::$data['user_page'] = self::$user_page;
 
-    }
-
-    /**
-     * The user profile page.
-     */
-    public function index()
-    {
-        self::$data['content_file'] = 'user_profile';
-
-        // Checks if the user is logged in.  If not user is redirected to the
-        // base_url().
-
-        $id = $this->session->userdata('user_id');
-        if (!$id)
-        {
-            redirect(base_url() . $this->core_user_library->user_login_uri);
-        }
-        $user = $this->core_user_library->user_find($id);
-        self::$data['user'] = $user;
-
-        // Render the page.
-        echo $this->core_raintpl_library->render(self::$template_array, self::$data);
-    }
-
-    /**
-     * Basic login method.
-     */
-    public function login()
-    {
-        self::$data['content_file'] = 'user_login';
-        self::$data['user_add_url'] = base_url() . $this->core_user_library->user_add_uri;
-        self::$data['user_user_forgotten_password_url'] = base_url() . $this->core_user_library->user_forgotten_password_uri;
-        //self::$data['content'] = $this->load->view('user_login', self::$data, TRUE);
-
-        // Code to run when the user hits the Login button.
-        if ($this->input->post('submit'))
-        {
-            // Sets the CI validation rules.
-            $this->core_user_library->set_validation_rules('user_login');
-            // Code to run form does not validate.
-            if ($this->form_validation->run() == FALSE)
-            {
-                // Render the page.
-                echo $this->core_raintpl_library->render(self::$template_array, self::$data);
-            }
-            // Code to run when form validates.
-            else
-            {
-                $username = $this->input->post('username');
-                $password = $this->input->post('password');
-                $set_persistent_login = (bool) $this->input->post('set_persistent_login');
-                $this->core_user_library->user_login($username, $password, $set_persistent_login);
-            }
-        }
-        else
-        {
-            // Code to run when the user visits the page without hitting the Login
-            // button.
-            if ($this->session->userdata('user_id'))
-            {
-                $this->core_module_library->keep_flashdata_messages();
-                redirect(base_url() . $this->core_user_library->user_index_uri);
-            }
-
-            // Render the page.
-            echo $this->core_raintpl_library->render(self::$template_array, self::$data);
-        }
     }
 
     /**

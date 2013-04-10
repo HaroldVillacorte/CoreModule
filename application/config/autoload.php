@@ -52,8 +52,8 @@ $autoload['packages'] = array();
 |	$autoload['libraries'] = array('database', 'session', 'xmlrpc');
 */
 
-$autoload['libraries'] = array('session', '_core_module/core_module_library',
-    '_core_user/core_user_library', '_core_raintpl/core_raintpl_library');
+$autoload['libraries'] = array('session', 'core_module/core_module_library',
+    'core_user/core_user_library', 'core_template/core_template_library');
 
 
 /*
@@ -65,7 +65,7 @@ $autoload['libraries'] = array('session', '_core_module/core_module_library',
 |	$autoload['helper'] = array('url', 'file');
 */
 
-$autoload['helper'] = array('url');
+$autoload['helper'] = array('url', 'core_module_helper');
 
 
 /*
@@ -110,7 +110,7 @@ $autoload['language'] = array();
 |
 */
 
-$autoload['model'] = array('_core_module/core_module_model');
+$autoload['model'] = array('core_module/core_module_model');
 
 
 /* End of file autoload.php */

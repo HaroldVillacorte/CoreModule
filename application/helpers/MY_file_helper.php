@@ -55,28 +55,28 @@ if ( ! function_exists('get_dir_file_info'))
 				}
 			}
 
-            // Set the array to be customized.
-            $new_filedata = array();
+            // Initailize a new array.
+            $dir_file_info = array();
 
             /**
              * Customize the array to have a custom relative path as the key.
              */
-            foreach ($_filedata as $key => $value)
+            foreach ($_filedata as $file)
             {
                 // Changed 'relative_path' to exclude the $source_dir.
-                $relative_path = str_replace($source_dir, '', $_filedata[$key]['server_path']);
+                $relative_path = str_replace($source_dir, '', $file['server_path']);
 
                 // Set the new array index to ralative path.
-                $new_filedata[$relative_path] = $_filedata[$key];
+                $dir_file_info[$relative_path] = $file;
 
                 // add relative path as index.
-                $new_filedata[$relative_path]['relative_path'] = $relative_path;
+                $dir_file_info[$relative_path]['relative_path'] = $relative_path;
             }
 
             /**
              * Return custom array.
              */
-            return $new_filedata;
+            return $dir_file_info;
 
 			//return $_filedata;
 		}

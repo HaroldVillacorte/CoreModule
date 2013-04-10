@@ -3,11 +3,11 @@
 <?php echo form_open($this->config->item('user_admin_role_add_uri')) ;?>
 
 <label for="role">Role:</label>
-<input class="<?php echo $this->core_module_library->form_error_class('role') ;?>"
+<input class="<?php echo form_error_class('role') ;?>"
        type="text" name="role" value="<?php echo set_value('role') ;?>" />
 
 <label for="description">Description:</label>
-<textarea class="<?php echo $this->core_module_library->form_error_class('description') ;?>"
+<textarea class="<?php echo form_error_class('description') ;?>"
           name="description"><?php echo set_value('description') ;?></textarea>
 
 <?php if ($this->session->userdata('role') == 'super_user') :?>

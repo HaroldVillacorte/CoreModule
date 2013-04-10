@@ -13,7 +13,7 @@ class Admin_library
     {
         self::$CI =& get_instance();
 
-        $admin_uris = self::$CI->core_module_library->get_module_uris('admin');
+        $admin_uris = get_module_uris('admin');
 
         foreach ($admin_uris as $key => $value)
         {
