@@ -44,14 +44,12 @@ class Core_template_library
      */
     public function parse_view($view_file = NULL, $data = array(), $cache_assets = TRUE)
     {
-        if ($cache_assets)
-        {
-            // Initial process.
-            $array = $this->process_parse($view_file, $data, $cache_assets);
+        // Initial process.
+        $array = $this->process_parse($view_file, $data, $cache_assets);
 
-            // Set the asset variable.
-            $data['asset'] = $array['asset'];
-        }
+        // Set the asset variable.
+        $data['asset'] = $array['asset'];
+
 
         // Return the rendered view.
         return self::$CI->load->view($view_file, $data, TRUE);
@@ -118,8 +116,16 @@ class Core_template_library
         // Set the asset directory variable available to the views.
         $array['asset'] = base_url() . 'asset_cache/' . $array['template']['name'] . '/';
 
-        // Set the asset directory of the template.
-        $array['asset_directory'] = APPPATH . 'views/' . $array['template']['name'] . '/assets/';
+        if (is_dir(APPPATH . 'modules/' . $array['template']['name'] . '/assets/'))
+        {
+            // Set the asset directory of the template.
+            $array['asset_directory'] = APPPATH . 'modules/' . $array['template']['name'] . '/assets/';
+        }
+        else
+        {
+            // Set the asset directory of the template.
+            $array['asset_directory'] = APPPATH . 'views/' . $array['template']['name'] . '/assets/';
+        }
 
         // Write template assets to asset cache if design mode enabled.
         if (self::$CI->config->item('template_design_mode'))

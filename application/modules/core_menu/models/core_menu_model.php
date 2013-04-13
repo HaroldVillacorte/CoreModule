@@ -5,9 +5,6 @@ class Core_menu_model extends CI_Model
     function __construct()
     {
         parent::__construct();
-
-        // Load the database class.
-        $this->load->database();
     }
 
     /**
@@ -50,6 +47,7 @@ class Core_menu_model extends CI_Model
         // Run the query.
         $query = $this->db
             ->select('id, menu_name, description')
+            ->order_by('menu_name')
             ->get('core_menus');
 
         // Choose data type.
@@ -123,6 +121,9 @@ class Core_menu_model extends CI_Model
         // Get the menu id.
         $id = $this->db->insert_id();
 
+        // Clear the database cache.
+        $this->db->cache_delete_all();
+
         // Return result.
         return ($id) ? $id : FALSE;
     }
@@ -144,6 +145,9 @@ class Core_menu_model extends CI_Model
         // Run the query.
         $result = $this->db->where('id', (int) $post['id'])->update('core_menus', $post);
 
+        // Clear the database cache.
+        $this->db->cache_delete_all();
+
         // Return result.
         return ($result) ? TRUE : FALSE;
     }
@@ -158,6 +162,9 @@ class Core_menu_model extends CI_Model
     {
         // Delete the menu.
         $this->db->delete('core_menus', array('id' => (int) $id), 1);
+
+        // Clear the database cache.
+        $this->db->cache_delete_all();
 
         // If menu delete was successful.
         if ($this->db->affected_rows() == 1)
@@ -240,6 +247,9 @@ class Core_menu_model extends CI_Model
         // Get the menu id.
         $id = $this->db->insert_id();
 
+        // Clear the database cache.
+        $this->db->cache_delete_all();
+
         // Return result.
         return ($id) ? $id : FALSE;
     }
@@ -263,12 +273,15 @@ class Core_menu_model extends CI_Model
             // Remove white space from permissions string.
             $post['permissions'] = strip_whitespace($post['permissions']);
         }
-        
+
         // Sanitize.
         $post = prep_post($post);
 
         // Run the query.
         $result = $this->db->where('id', (int) $post['id'])->update('core_menu_links', $post);
+
+        // Clear the database cache.
+        $this->db->cache_delete_all();
 
         // Return result.
         return ($result) ? TRUE : FALSE;
@@ -284,6 +297,9 @@ class Core_menu_model extends CI_Model
     {
         // Delete the menu.
         $this->db->delete('core_menu_links', array('id' => (int) $id), 1);
+
+        // Clear the database cache.
+        $this->db->cache_delete_all();
 
         // If menu delete was successful.
         return ($this->db->affected_rows() == 1) ? TRUE: FALSE;

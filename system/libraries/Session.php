@@ -134,6 +134,7 @@ class CI_Session {
 	 */
 	function sess_read()
 	{
+        $this->CI->db->cache_off();
 		// Fetch the cookie
 		$session = $this->CI->input->cookie($this->sess_cookie_name);
 
@@ -238,6 +239,8 @@ class CI_Session {
 		// Session is valid!
 		$this->userdata = $session;
 		unset($session);
+
+        $this->CI->db->cache_on();
 
 		return TRUE;
 	}

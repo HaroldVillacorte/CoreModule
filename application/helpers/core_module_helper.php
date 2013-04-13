@@ -1,6 +1,52 @@
 <?php if (!defined('BASEPATH')) exit('No direct script access allowed.');
 
-$CI = & get_instance();
+/**
+ * Make a module a Core module module.
+ *
+ * @global object $CI
+ * @param string $module
+ * @return array
+ */
+function initialize_module($module = NULL)
+{
+    $CI =& get_instance();
+
+    // Load the core libraries.
+    $libraries = array('core_module/core_module_library', 'core_user/core_user_library',
+        'core_template/core_template_library');
+    $CI->load->library($libraries);
+
+    // Restrict direct module access.
+    module_direct_access_restrict($module);
+
+    // Do the check logged in.
+    $CI->core_user_library->user_check_logged_in();
+
+    // Set the data array.
+    $data = $CI->core_module_model->site_info();
+
+    // Turn profiler on when setting is set to TRUE.
+    //$CI->output->enable_profiler(TRUE);
+
+    // Return the data array.
+    return $data;
+}
+
+/**
+ * Restrict direct access to modules that have a controller.
+ *
+ * @param string $controller_name
+ */
+function module_direct_access_restrict($controller_name = NULL)
+{
+    $CI =& get_instance();
+
+    if ($CI->uri->segment(1) == $controller_name)
+    {
+        redirect(base_url());
+        exit();
+    }
+}
 
 /**
  * Dynamically set the css class of a form field or label.
@@ -23,7 +69,7 @@ function form_error_class($field)
  */
 function keep_flashdata_messages()
 {
-    global $CI;
+    $CI =& get_instance();
     $CI->session->keep_flashdata('message_success');
     $CI->session->keep_flashdata('message_error');
     $CI->session->keep_flashdata('message_notice');
@@ -48,7 +94,7 @@ function validate_alnum_64($str)
  */
 function prep_post($post_array = array())
 {
-    global $CI;
+    $CI =& get_instance();
 
     foreach ($post_array as $key => $value)
     {
@@ -74,25 +120,10 @@ function prep_post($post_array = array())
  */
 function set_valid_base_64_error($field = '')
 {
-    global $CI;
+    $CI =& get_instance();
 
     $valid_base64_error = $field . lang('validation_valid_base64');
     $CI->form_validation->set_message('valid_base64', $valid_base64_error);
-}
-
-/**
- * Restrict direct access to modules that have a controller.
- *
- * @param string $controller_name
- */
-function module_direct_access_restrict($controller_name = NULL)
-{
-    global $CI;
-
-    if ($CI->uri->segment(1) == $controller_name)
-    {
-        redirect(base_url());
-    }
 }
 
 /**
@@ -102,9 +133,9 @@ function module_direct_access_restrict($controller_name = NULL)
  * @param integer $per_page
  * @return string
  */
-function pagination_setup($base_url, $count, $per_page)
+function pagination_setup($base_url, $count, $per_page, $uri_segment = 2)
 {
-    global $CI;
+    $CI =& get_instance();
 
     // Load the elibrary.
     $CI->load->library('pagination');
@@ -115,6 +146,7 @@ function pagination_setup($base_url, $count, $per_page)
     $pagination_config['base_url']   = $base_url;
     $pagination_config['total_rows'] = $count;
     $pagination_config['per_page']   = $per_page;
+    $pagination_config['uri_segment']   = $uri_segment;
 
     // Style pagination Foundation 3
     // Full open
@@ -168,35 +200,6 @@ function determine_form_value($array = array())
 }
 
 /**
- * Get an array of uris for a module class.
- *
- * @param string $module
- * @return array
- */
-function get_module_uris($module = NULL)
-{
-    // Load the module.
-    // global $CI;
-    // $CI->load->module($module . '/' . $module);
-    // Get the method names.
-    $methods = get_class_methods($module);
-
-    // Generate the uri's.
-    foreach ($methods as $key => $value)
-    {
-        if ($methods[$key] == '__construct' || $methods[$key] == '__get')
-        {
-            unset($methods[$key]);
-        }
-        $key           = $value;
-        $methods[$key] = $module . '/' . $value . '/';
-    }
-
-    // Return array of uri's
-    return $methods;
-}
-
-/**
  * Strip all white space form a string.
  *
  * @param string $string
@@ -207,18 +210,77 @@ function strip_whitespace($string = NULL)
     return str_replace(' ', '', $string);
 }
 
+/**
+ * Set appication settings.
+ *
+ * @param string $name
+ * @param type $setting
+ * @return type
+ */
 function setting_set($name = NULL, $setting = NULL)
 {
-    global $CI;
+    $CI =& get_instance();
     $CI->load->model('core_module/core_module_model');
     return $CI->core_module_model->setting_set($name, $setting);
 }
 
+/**
+ * Get application settings.
+ *
+ * @param type $name
+ * @return type
+ */
 function setting_get($name = NULL)
 {
-    global $CI;
+    $CI =& get_instance();
     $CI->load->model('core_module/core_module_model');
     return $CI->core_module_model->setting_get($name);
+}
+
+/**
+ * Set an array of settings.
+ *
+ * @param array $post
+ */
+function process_settings($post = array())
+{
+    $CI =& get_instance();
+
+    // Loop through post array.
+    foreach ($post as $key => $value)
+    {
+        // Send to the database.
+        $result = setting_set($key, $value);
+        if (!$result)
+        {
+            // Failed to set.
+            $CI->session->set_flashdata('message_error', lang('error_setting set') . ucfirst($key));
+            redirect(current_url());
+        }
+    }
+    // Set successfully.
+    $CI->session->set_flashdata('message_success', lang('success_setting set'));
+    redirect(current_url());
+}
+
+/**
+ * Set server referer to the session.
+ */
+function set_back_link()
+{
+    $CI =& get_instance();
+    $referer = $CI->input->server('HTTP_REFERER');
+    $CI->session->set_userdata('back_link', $referer);
+}
+
+/**
+ * Get server referer from the session.
+ * @return string
+ */
+function get_back_link()
+{
+    $CI =& get_instance();
+    return $CI->session->userdata('back_link');
 }
 
 /* End of file core_module_heper.php */

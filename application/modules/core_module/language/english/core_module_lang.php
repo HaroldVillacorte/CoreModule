@@ -4,6 +4,15 @@ $lang['validation_valid_base64'] = ' field may only contain alpha-numeric charac
 
 /*
 |--------------------------------------------------------------------------
+| Settngs.
+|--------------------------------------------------------------------------
+*/
+
+$lang['error_setting set']   = 'There was a problem. Unable to set ';
+$lang['success_setting set'] = 'Settings were set successfully';
+
+/*
+|--------------------------------------------------------------------------
 | Pages library.
 |--------------------------------------------------------------------------
 */

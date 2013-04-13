@@ -63,7 +63,7 @@ $lang['error_user_protected'] = 'Unable to process.  User account is protected.'
 */
 
 // admin_role_table()
-$lang['confirm_admin_role_delete']  = '\'Are you sure you want to delete this role?\'';
+$lang['confirm_admin_role_delete']  = 'Are you sure you want to delete this role?';
 
 // admin_role_add()
 $lang['success_admin_add_role']     = 'Role was successfully added.';
@@ -93,7 +93,7 @@ $lang['error_admin_delete_user']    = 'There was a problem.  Record could not be
 $lang['error_admin_get_user_count']  = 'No users were found.';
 
 // admin_user_page_table_setup()
-$lang['confirm_admin_user_delete']  = '\'Are you sure you want to delete this user?\'';
+$lang['confirm_admin_user_delete']  = 'Are you sure you want to delete this user?';
 
 // admin_user_check_protected()
 $lang['error_admin_user_protected'] = 'Unable to process.  User account is protected.';

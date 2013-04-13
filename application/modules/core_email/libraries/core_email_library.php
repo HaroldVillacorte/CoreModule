@@ -40,9 +40,6 @@ class Core_email_library
         // Load the helpers.
         self::$CI->load->helper('language');
 
-        // Load the models.
-        self::$CI->load->model('core_email/core_email_model');
-
         // Initialize the data array.
         self::$data = self::$CI->core_module_model->site_info();
 
@@ -61,20 +58,20 @@ class Core_email_library
         $this->mail->Mailer = self::$CI->config->item('core_email_Mailer');
 
         // Set the smtp config database.
-        $system_smtp_settings   = $this->system_settings_get(TRUE);
-        $this->mail->Host       = $system_smtp_settings->core_email_Host;
-        $this->mail->Port       = $system_smtp_settings->core_email_Port;
-        $this->mail->SMTPAuth   = $system_smtp_settings->core_email_SMTPAuth;
-        $this->mail->SMTPSecure = $system_smtp_settings->core_email_SMTPSecure;
-        $this->mail->Username   = $system_smtp_settings->core_email_Username;
-        $this->mail->Password   = $system_smtp_settings->core_email_Password;
-        $this->mail->From       = $system_smtp_settings->core_email_From;
-        $this->mail->FromName   = $system_smtp_settings->core_email_FromName;
+        //$system_smtp_settings   = $this->system_settings_get(TRUE);
+        $this->mail->Host       = setting_get('core_email_Host');
+        $this->mail->Port       = setting_get('core_email_Port');
+        $this->mail->SMTPAuth   = setting_get('core_email_SMTPAuth');
+        $this->mail->SMTPSecure = setting_get('core_email_SMTPSecure');
+        $this->mail->Username   = setting_get('core_email_Username');
+        $this->mail->Password   = self::$CI->encrypt->decode(setting_get('core_email_Password'));
+        $this->mail->From       = setting_get('core_email_From');
+        $this->mail->FromName   = setting_get('core_email_FromName');
 
         // Set reply-to.
         $this->mail->AddReplyTo(
-            $system_smtp_settings->core_email_reply_to,
-            $system_smtp_settings->core_email_reply_to_name
+            setting_get('core_email_reply_to'),
+            setting_get('core_email_reply_to_name')
         );
     }
 
@@ -87,52 +84,52 @@ class Core_email_library
             array(
                 'field' => 'core_email_Host',
                 'label' => 'Host',
-                'rules' => 'required|trim',
+                'rules' => 'required|trim|xss_clean',
             ),
             array(
                 'field' => 'core_email_Port',
                 'label' => 'Port',
-                'rules' => 'required|trim|integer',
+                'rules' => 'required|trim|integer|xss_clean',
             ),
             array(
                 'field' => 'core_email_SMTPAuth',
                 'label' => 'Authorization Required',
-                'rules' => 'trim|integer|exact_length[1]',
+                'rules' => 'trim|integer|exact_length[1]|xss_clean',
             ),
             array(
                 'field' => 'core_email_SMTPSecure',
                 'label' => 'Security protocol',
-                'rules' => 'trim',
+                'rules' => 'trim|xss_clean',
             ),
             array(
                 'field' => 'core_email_Username',
                 'label' => 'Username',
-                'rules' => 'trim',
+                'rules' => 'trim|xss_clean',
             ),
             array(
                 'field' => 'core_email_Password',
                 'label' => 'Password',
-                'rules' => 'trim',
+                'rules' => 'trim|xss_clean',
             ),
             array(
                 'field' => 'core_email_From',
                 'label' => 'From email',
-                'rules' => 'required|trim|valid_email',
+                'rules' => 'required|trim|valid_email|xss_clean',
             ),
             array(
                 'field' => 'core_email_FromName',
                 'label' => 'From name',
-                'rules' => 'required|trim',
+                'rules' => 'required|trim|xss_clean',
             ),
             array(
                 'field' => 'core_email_reply_to',
                 'label' => 'Reply-to email',
-                'rules' => 'required|trim|valid_email',
+                'rules' => 'required|trim|valid_email|xss_clean',
             ),
             array(
                 'field' => 'core_email_reply_to_name',
                 'label' => 'Reply-to name',
-                'rules' => 'required|trim',
+                'rules' => 'required|trim|xss_clean',
             ),
         );
 
@@ -164,54 +161,6 @@ class Core_email_library
         }
 
         return $post;
-    }
-
-    /**
-     * Set the system email settings.
-     *
-     * @param array $post
-     */
-    public function system_settings_set($post = array())
-    {
-        $post = $this->system_settings_process_post($post);
-
-        $result = self::$CI->core_email_model->system_settings_set($post);
-
-        if ($result)
-        {
-            self::$CI->session->set_flashdata('message_success', lang('success_system_settings_set'));
-            redirect(current_url());
-        }
-        else
-        {
-            self::$CI->session->set_flashdata('message_error', lang('error_system_settings_set'));
-            redirect(current_url());
-        }
-    }
-
-    /**
-     * Get the system email settings.
-     *
-     * @param boolean $return_password
-     * @return object
-     */
-    public function  system_settings_get($return_password = FALSE)
-    {
-        $settings = self::$CI->core_email_model->system_settings_get($return_password);
-
-        if ($settings)
-        {
-            if ($return_password)
-            {
-                $settings->core_email_Password = self::$CI->encrypt->decode($settings->core_email_Password);
-            }
-            return $settings;
-        }
-        else
-        {
-            self::$CI->session->set_flashdata('message_error', lang('error_system_settings_get'));
-            redirect(current_url());
-        }
     }
 
     /**
@@ -249,6 +198,9 @@ class Core_email_library
         return ($result) ? TRUE : FALSE;
     }
 
+    /**
+     * Send a test email.
+     */
     public function system_email_test_send()
     {
         // Message.

@@ -17,125 +17,6 @@ class Core_user_library
      */
     private static $data;
 
-    /**
-     * User profile uri.
-     *
-     * @var string
-     */
-    public $user_index_uri;
-
-    /**
-     * User login uri.
-     *
-     * @var string
-     */
-    public $user_login_uri;
-
-    /**
-     * User password recovery uri.
-     *
-     * @var string
-     */
-    public $user_forgotten_password_uri;
-
-    /**
-     * User password recovery login uri.
-     *
-     * @var string
-     */
-    public $user_forgotten_password_login_uri;
-
-    /**
-     * User logout uri.
-     *
-     * @var string
-     */
-    public $user_logout_uri;
-
-    /**
-     * User create account uri.
-     *
-     * @var string
-     */
-    public $user_add_uri;
-
-    /**
-     * User activate account uri.
-     *
-     * @var string
-     */
-    public $user_activation_uri;
-
-    /**
-     * User edit account uri.
-     *
-     * @var string
-     */
-    public $user_edit_uri;
-
-    /**
-     * User delete own account uri.
-     *
-     * @var string
-     */
-    public $user_delete_uri;
-
-    /**
-     * Admin user roles uri.
-     *
-     * @var string
-     */
-    public $user_admin_roles_uri;
-
-    /**
-     * Admin add user role uri.
-     *
-     * @var string
-     */
-    public $user_admin_role_add_uri;
-
-    /**
-     * Admin edit user roles uri.
-     *
-     * @var string
-     */
-    public $user_admin_role_edit_uri;
-
-    /**
-     * Admin delete user roles uri.
-     *
-     * @var string
-     */
-    public $user_admin_role_delete_uri;
-
-    /**
-     * Admin paginted users page uri.
-     *
-     * @var string
-     */
-    public $user_admin_users_uri;
-
-    /**
-     * Admin edit user page uri.
-     *
-     * @var string
-     */
-    public $user_admin_user_edit_uri;
-
-    /**
-     * Admin add user page uri.
-     *
-     * @var string
-     */
-    public $user_admin_user_add_uri;
-
-    /**
-     * Admin delete user uri.
-     *
-     * @var string
-     */
-    public $user_admin_user_delete_uri;
-
     function __construct()
     {
         self::$CI = & get_instance();
@@ -189,6 +70,43 @@ class Core_user_library
      */
     public function set_validation_rules($rules = '')
     {
+        $settings = array(
+            array(
+                'field' => 'user_activation_expire_limit',
+                'label' => 'User activation email expire limit',
+                'rules' => 'required|trim|integer|xss_clean',
+            ),
+            array(
+                'field' => 'user_forgotten_password_code_expire_limit',
+                'label' => 'Forgotten password code expire limit',
+                'rules' => 'required|trim|integer|xss_clean',
+            ),
+            array(
+                'field' => 'user_persistent_cookie_name',
+                'label' => 'Logged-in cookie name',
+                'rules' => 'required|trim|alpha_dash|xss_clean',
+            ),
+            array(
+                'field' => 'user_persistent_cookie_expire',
+                'label' => 'Logged-in cookie expire time',
+                'rules' => 'required|trim|integer|xss_clean',
+            ),
+            array(
+                'field' => 'user_login_attempts_max',
+                'label' => 'Max login attempts',
+                'rules' => 'required|trim|integer|xss_clean',
+            ),
+            array(
+                'field' => 'user_login_attempts_time',
+                'label' => 'Max login attempts time span',
+                'rules' => 'required|trim|integer|xss_clean',
+            ),
+            array(
+                'field' => 'user_login_attempts_lockout_time',
+                'label' => 'User locked out time',
+                'rules' => 'required|trim|integer|xss_clean',
+            ),
+        );
         $user_login = array(
             array(
                 'field' => 'username',
@@ -368,6 +286,9 @@ class Core_user_library
 
         switch ($rules)
         {
+            case 'settings':
+                $rule_set = $settings;
+                break;
             case 'user_login':
                 $rule_set = $user_login;
                 break;
@@ -491,7 +412,7 @@ class Core_user_library
 
         // Load the date helper and set the expire time for email.
         self::$CI->load->helper('date');
-        $expire_time = self::$CI->config->item('user_activation_expire_limit');
+        $expire_time = setting_get('user_activation_expire_limit');
 
         // Find new user.
         $user = $this->user_find($activation_code_array['user_id']);
@@ -715,7 +636,7 @@ class Core_user_library
             // Set the recovery code and time.
             self::$CI->load->helper('string');
             $forgotten_password_code        = random_string('alnum', 64);
-            $forgotten_password_expire_time = time() + self::$CI->config->item('user_forgotten_password_code_expire_limit');
+            $forgotten_password_expire_time = time() + setting_get('user_forgotten_password_code_expire_limit');
             $forgotten_password_data        = array(
                                                 'user_id'                        => $user->id,
                                                 'forgotten_password_code'        => $forgotten_password_code,
@@ -737,7 +658,7 @@ class Core_user_library
             {
                 // Set the expire time for email.
                 self::$CI->load->helper('date');
-                $expire_time = self::$CI->config->item('user_forgotten_password_code_expire_limit');
+                $expire_time = setting_get('user_forgotten_password_code_expire_limit');
 
                 // Message.
                 self::$data['username']          = $user->username;
@@ -871,7 +792,7 @@ class Core_user_library
         $time = time();
 
         // The time when a user can try to login again.
-        $time_to_unlock = $user->locked_out_time + self::$CI->config->item('user_login_attempts_lockout_time');
+        $time_to_unlock = $user->locked_out_time + setting_get('user_login_attempts_lockout_time');
 
         // If user has a lockout time.
         if ($user->locked_out_time)
@@ -958,10 +879,10 @@ class Core_user_library
         self::$CI->load->helper('string');
         self::$CI->load->library('encrypt');
 
-        $cookie_name   = self::$CI->config->item('user_persistent_cookie_name');
+        $cookie_name   = setting_get('user_persistent_cookie_name');
         $random_string = random_string('alnum', 64);
         $remember_code = self::$CI->encrypt->encode($random_string);
-        $cookie_expire = self::$CI->config->item('user_persistent_cookie_expire');
+        $cookie_expire = setting_get('user_persistent_cookie_expire');
         $user_id_encoded = self::$CI->encrypt->encode($user_id);
 
         $cookie_data = array(
@@ -985,7 +906,7 @@ class Core_user_library
     public function user_unset_persistent_login()
     {
 
-        $cookie_name = self::$CI->config->item('user_persistent_cookie_name');
+        $cookie_name = setting_get('user_persistent_cookie_name');
 
         self::$CI->load->helper('cookie');
         delete_cookie($cookie_name);
@@ -999,17 +920,17 @@ class Core_user_library
         self::$CI->load->helper('string');
         self::$CI->load->library('encrypt');
 
-        $cookie_name = self::$CI->config->item('user_persistent_cookie_name');
+        $cookie_name = setting_get('user_persistent_cookie_name');
         $cookie = self::$CI->input->cookie($cookie_name);
+        // Parse the cookie content.
+        $cookie_array = explode('_', $cookie);
 
         // If user is already logged in skip the checking.
         if (!self::$CI->session->userdata('user_id'))
         {
             // Check the cookie against the database.
-            if ($cookie)
+            if (count($cookie_array) == 2)
             {
-                // Parse the cookie content.
-                $cookie_array                         = explode('_', $cookie);
                 // Set the array to submit to model.
                 $remember_code_array                  = array();
                 $remember_code_array['user_id']       = self::$CI->encrypt->decode($cookie_array[0]);
@@ -1088,68 +1009,41 @@ class Core_user_library
     }
 
     /**
-     * Generates the table for the paginated roles page.
+     * Get a role.
      *
-     * @return mixed
+     * @param integer $id
+     * @return object
      */
-    public function admin_role_table()
-    {
-        // Get roles.
-        $output = $this->admin_role_get_all('array');
-
-        // Table headings
-        $add_link = base_url() . $this->user_admin_role_add_uri;
-
-        $heading = array(
-            'ID', 'Role', 'Description', 'Protected',
-            '<a href="' . $add_link . '" class="right">Add role +</a>',
-        );
-
-        self::$CI->table->set_heading($heading);
-
-        // Table template
-        $template = array(
-            'table_open'  => '<table width="100%">',
-            'table_close' => '</table>',
-        );
-
-        self::$CI->table->set_template($template);
-
-        foreach ($output as $key => $value)
-        {   // add edit link.
-            $output[$key]['edit'] =
-                '<a href="' . base_url() . $this->user_admin_role_delete_uri
-                . $output[$key]['id']
-                . '" class="label alert round right" style="margin-left:10px;"'
-                . 'onClick="return confirm(' . lang('confirm_admin_role_delete') . ')">Del</a>'
-                . '<a href="' . base_url()
-                . $this->user_admin_role_edit_uri . $output[$key]['id']
-                . '" class="label secondary round right">Edit</a>';
-
-            if ($output[$key]['protected'])
-            {
-                $output[$key]['protected'] = 'Yes';
-            }
-            else
-            {
-                $output[$key]['protected'] = 'No';
-            }
-        }
-
-        $role_table = self::$CI->table->generate($output);
-        return $role_table;
-    }
-
     public function admin_role_get($id = NULL)
     {
         $role = self::$CI->core_user_model->admin_role_get($id);
         return ($role) ? $role : FALSE ;
     }
 
+    /**
+     * Get all the roles.
+     *
+     * @param string $data_type
+     * @return mixed
+     */
     public function admin_role_get_all($data_type = 'object')
     {
         $result = self::$CI->core_user_model->admin_role_get_all($data_type);
         return ($result) ? $result : FALSE;
+    }
+
+    /**
+     * Get paginated results for role table.
+     *
+     * @param integer $per_page
+     * @param integer $start
+     * @param string $data_type
+     * @return mixed
+     */
+    public function admin_role_get_limit_offset($per_page = NULL, $start = NULL, $data_type = 'object')
+    {
+        $roles = self::$CI->core_user_model->admin_role_get_limit_offset($per_page, $start , $data_type );
+        return ($roles) ? $roles : FALSE;
     }
 
     /**
@@ -1231,19 +1125,19 @@ class Core_user_library
     {
         $result = self::$CI->core_user_model->admin_user_save($post);
 
-                switch ($result)
-                {
-                    case TRUE:
-                        self::$CI->session->set_flashdata('message_success', lang('success_admin_add_user'));
-                        redirect(base_url() . $this->user_admin_users_uri);
-                        exit();
-                        break;
-                    case FALSE:
-                        self::$CI->session->set_flashdata('message_error', lang('error_admin_add_user'));
-                        redirect(base_url() . $this->user_admin_users_uri);
-                        exit();
-                        break;
-                }
+        switch ($result)
+        {
+            case TRUE:
+                self::$CI->session->set_flashdata('message_success', lang('success_admin_add_user'));
+                redirect(base_url() . $this->user_admin_users_uri);
+                exit();
+                break;
+            case FALSE:
+                self::$CI->session->set_flashdata('message_error', lang('error_admin_add_user'));
+                redirect(base_url() . $this->user_admin_users_uri);
+                exit();
+                break;
+        }
     }
 
     /**
@@ -1327,119 +1221,6 @@ class Core_user_library
     {
         $result = self::$CI->core_user_model->admin_user_limit_offset_get($limit, $offset);
         return ($result) ? $result : FALSE;
-    }
-
-    /**
-     * Generates pagination links for user admin page.
-     *
-     * @param integer $count
-     * @param integer $per_page
-     * @return string
-     */
-    public function admin_user_page_pagination_setup($count, $per_page)
-    {
-        $pagination_config = array();
-
-        // Pagination setup
-        $pagination_config['base_url']   = base_url() . $this->user_admin_users_uri;
-        $pagination_config['total_rows'] = $count;
-        $pagination_config['per_page']   = $per_page;
-
-        // Style pagination Foundation 3
-        // Full open
-        $pagination_config['full_tag_open'] = '<ul class="pagination">';
-
-        // Digits
-        $pagination_config['num_tag_open']  = '<li>';
-        $pagination_config['num_tag_close'] = '</li>';
-
-        // Current
-        $pagination_config['cur_tag_open']  = '<li class="current"><a href="#">';
-        $pagination_config['cur_tag_close'] = '</a></li>';
-
-        // Previous link
-        $pagination_config['prev_tag_open']  = '<li class="arrow">';
-        $pagination_config['prev_tag_close'] = '</li>';
-
-        // Next link
-        $pagination_config['next_tag_open']  = '<li class="arrow">';
-        $pagination_config['nect_tag_close'] = '<li>';
-
-        // First link
-        $pagination_config['first_tag_open']  = '<li>';
-        $pagination_config['first_tag_close'] = '</li>';
-
-        // Last link
-        $pagination_config['last_tag_open']  = '<li>';
-        $pagination_config['last_tag_close'] = '</li>';
-
-        // Full close
-        $pagination_config['full_tag_close'] = '</ul>';
-
-        self::$CI->pagination->initialize($pagination_config);
-        $links = self::$CI->pagination->create_links();
-
-        return $links;
-    }
-
-    /**
-     * Generates the table for the paginated user admin page.
-     *
-     * @param array $output
-     * @return array
-     */
-    public function admin_user_page_table_setup($output = NULL)
-    {
-        self::$CI->load->helper('date');
-
-        // Set time date format.
-        $date_format = self::$CI->config->item('core_user_date_format');
-
-        // Table headings
-        $add_link = base_url() . $this->user_admin_user_add_uri;
-        $heading  = array(
-            'ID', 'Username', 'Email', 'Role', 'Member since', 'Protected',
-            '<a href="' . $add_link . '" class="right">Add user +</a>',
-        );
-
-        self::$CI->table->set_heading($heading);
-
-        // Table template
-        $template = array(
-            'table_open'  => '<table width="100%">',
-            'table_close' => '</table>',
-        );
-
-        self::$CI->table->set_template($template);
-
-        foreach ($output as $key => $value)
-        {   // add edit link.
-            unset($output[$key]['password']);
-
-            $output[$key]['edit'] =
-                '<a href="' . base_url() . $this->user_admin_user_delete_uri
-                . $output[$key]['id']
-                . '" class="label alert round right" style="margin-left:10px;"'
-                . 'onClick="return confirm(' . lang('confirm_admin_user_delete') . ')">Del</a>'
-                . '<a href="' . base_url()
-                . $this->user_admin_user_edit_uri . $output[$key]['id']
-                . '" class="label secondary round right">Edit</a>';
-
-            $output[$key]['created'] = standard_date($date_format, $output[$key]['created']);
-
-            if ($output[$key]['protected'])
-            {
-                $output[$key]['protected'] = 'Yes';
-            }
-            else
-            {
-                $output[$key]['protected'] = 'No';
-            }
-        }
-
-        // Table render
-        $table = self::$CI->table->generate($output);
-        return $table;
     }
 
     /**

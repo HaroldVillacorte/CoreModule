@@ -44,6 +44,9 @@ require_once( BASEPATH .'database/DB'. EXT );
 // Reference the database object.
 $db =& DB();
 
+// Disable database caching here to avoid WSOD.
+$db->cache_off();
+
 // Get the page slugs.
 $query = $db->select('slug')->get('core_pages');
 
@@ -54,11 +57,28 @@ if ($query->num_rows() > 0)
 
     foreach ($routes as $route_row)
     {
-        $route['(:any)'] = 'core_module';
+        $route[$route_row->slug] = 'core_module/page/' . $route_row->slug;
     }
 }
 
-$route['default_controller'] = "core_module/core_module";
+// Get the admin page slugs.
+$query = $db->select('slug')->get('core_pages_admin');
+
+// Define the page routes.
+if ($query->num_rows() > 0)
+{
+    $routes = $query->result();
+
+    foreach ($routes as $route_row)
+    {
+        $route[$route_row->slug . '(.*)'] = 'core_module/admin/' . $route_row->slug;
+    }
+}
+
+// Reenable database caching.
+$db->cache_on();
+
+$route['default_controller'] = 'core_module/core_module';
 $route['404_override'] = '';
 
 

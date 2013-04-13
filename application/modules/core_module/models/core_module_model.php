@@ -3,13 +3,12 @@
 /**
  * Default Controller Module
  *
- * Serves as a basic boilerplate for develeping with CI Starter.
+ * Serves as a basic boilerplate for develeping with CoreModule.
  *
- * @package CI Starter
+ * @package CoreModule
  * @subpackage Modules
  * @category Core
  * @author Harold Villacorte
- * @link http://laughinghost.com/CI_Starter/
  */
 class Core_module_model extends CI_Model
 {
@@ -20,9 +19,6 @@ class Core_module_model extends CI_Model
 
         // Load the configs.
         $this->config->load('core_module/core_module_config');
-
-        // Load the databease.
-        $this->load->database();
     }
 
     /**
@@ -66,42 +62,73 @@ class Core_module_model extends CI_Model
         return $data;
     }
 
+    /**
+     * Set a setting.
+     *
+     * @param string $name
+     * @param mixed $setting
+     * @return boolean
+     */
     public function setting_set($name = NULL, $setting = NULL)
     {
+        // Escape, type case, and serialize.
         $name = $this->db->escape_str($name);
-        $setting = serialize($this->db->escape($setting));
+        $setting = (is_int($setting) || is_numeric($setting)) ? (int) $setting : $setting;
+        $setting = serialize($this->db->escape_str($setting));
 
+        // Set the post array.
         $array = array(
             'name' => $name,
             'setting' => $setting,
         );
 
+        // Check if the setting exists.
         if (!$this->setting_get($name))
         {
-            $result = $this->db->insert('core_settings', $array);
+            // Insert if setting does not exist.
+            $query = $this->db->insert('core_settings', $array);
+            $result = ($this->db->insert_id());
         }
         else
         {
-            $result = $this->db
+            // Update if setting exists.
+            $query = $this->db
                            ->where('name', $name)
-                           ->update('core_settings', array('setting' => $setting));
+                           ->update('core_settings', $array);
+            $result = ($query);
         }
 
-        return ($this->db->affected_rows() > 0);
+        // Clear the database cache.
+        $this->db->cache_delete_all();
+
+        // Return result.
+        return $result;
     }
 
+    /**
+     * Get a setting.
+     *
+     * @param string $name
+     * @return mixed
+     */
     public function setting_get($name = NULL)
     {
+        // Excape.
         $name = $this->db->escape_str($name);
 
+        // Runf the query.
         $result = $this->db
                        ->select('setting')
                        ->get_where('core_settings', array('name' => $name), 1);
 
+        // Get result.
         $row = $result->row();
-        $setting = $row->setting;
 
-        return ($result->num_rows() > 0) ? unserialize($setting) : FALSE;
+        // Get the setting field and unserialize.
+        $setting = ($result->num_rows() > 0) ? unserialize($row->setting) : NULL;
+
+        // Reurn the setting.
+        return ($result->num_rows() > 0) ? $setting : FALSE;
     }
 
     /**
@@ -111,7 +138,7 @@ class Core_module_model extends CI_Model
      * @param mixed $identifier
      * @return object
      */
-    public function page_find($by = 'id', $identifier = NULL)
+    public function page_find($table = 'core_pages', $by = 'id', $identifier = NULL)
     {
         // Sanitize.
         $by = $this->db->escape_str($by);
@@ -126,11 +153,10 @@ class Core_module_model extends CI_Model
 
         // Run the query.
         $query = $this->db
-            ->select('core_pages.id, is_front, published, username, core_pages.created, last_edit,
+            ->select($table . '.id, is_front, published, author, created, last_edit,
                 last_edit_username, slug, title, body, template')
-            ->join('core_users', 'core_users.id = core_pages.user_id')
-            ->where('core_pages.' . $by, $identifier)
-            ->get('core_pages', 1);
+            ->where($table . '.' . $by, $identifier)
+            ->get($table, 1);
 
         // Return result.
         return ($query->num_rows() == 1) ? $query->row() : FALSE;
@@ -141,14 +167,13 @@ class Core_module_model extends CI_Model
      *
      * @return array
      */
-    public function page_find_all($data_type = 'object')
+    public function page_find_all($table = 'core_pages', $data_type = 'object')
     {
         // Run the query.
         $query = $this->db
-            ->select('core_pages.id, is_front, published, core_users.username, core_pages.created, last_edit,
+            ->select($table . '.id, is_front, published, author, created, last_edit,
                 last_edit_username, slug, title, body, template')
-            ->join('core_users', 'core_users.id = core_pages.user_id')
-            ->get('core_pages');
+            ->get($table);
 
         // Choose data type.
         switch ($data_type)
@@ -170,14 +195,13 @@ class Core_module_model extends CI_Model
      *
      * @return array
      */
-    public function page_find_limit_offset($limit = 1, $offset = 0, $data_type = 'object')
+    public function page_find_limit_offset($table = 'core_pages', $limit = 1, $offset = 0, $data_type = 'object')
     {
         // Run the query.
         $query = $this->db
-            ->select('core_pages.id, is_front, published, core_users.username, core_pages.created, last_edit,
+            ->select($table . '.id, is_front, published, author, created, last_edit,
                 last_edit_username, slug, title, body, template')
-            ->join('core_users', 'core_users.id = core_pages.user_id')
-            ->get('core_pages', (int) $limit, (int) $offset);
+            ->get($table, (int) $limit, (int) $offset);
 
         // Choose data type.
         switch ($data_type)
@@ -200,21 +224,24 @@ class Core_module_model extends CI_Model
      * @param array $post
      * @return integer
      */
-    public function page_add($post = array())
+    public function page_add($table = 'core_pages', $post = array())
     {
         // Sanitize.
         $post = prep_post($post);
 
         // Set and unset.
         unset($post['submit']);
-        $post['user_id'] = $this->session->userdata('user_id');
+        $post['author'] = $this->session->userdata('username');
         $post['created'] = time();
 
         // Run the query.
-        $this->db->insert('core_pages', $post);
+        $this->db->insert($table, $post);
 
         // Get the page id.
         $id = $this->db->insert_id();
+
+        // Clear the database cache.
+        $this->db->cache_delete_all();
 
         // Return result.
         return ($id) ? $id : FALSE;
@@ -226,7 +253,7 @@ class Core_module_model extends CI_Model
      * @param array $post
      * @return boolean
      */
-    public function page_edit($post = array())
+    public function page_edit($table = 'core_pages', $post = array())
     {
         // Set and unset.
         unset($post['submit']);
@@ -239,7 +266,10 @@ class Core_module_model extends CI_Model
         $post = prep_post($post);
 
         // Run the query.
-        $result = $this->db->where('id', (int) $post['id'])->update('core_pages', $post);
+        $result = $this->db->where('id', (int) $post['id'])->update($table, $post);
+
+        // Clear the database cache.
+        $this->db->cache_delete_all();
 
         // Return result.
         return ($result) ? TRUE : FALSE;
@@ -251,10 +281,13 @@ class Core_module_model extends CI_Model
      * @param integer $id
      * @return boolean
      */
-    public function page_delete($id = NULL)
+    public function page_delete($table = 'core_pages', $id = NULL)
     {
         // Run the query.
-        $this->db->delete('core_pages', array('id' => (int) $id), 1);
+        $this->db->delete($table, array('id' => (int) $id), 1);
+
+        // Clear the database cache.
+        $this->db->cache_delete_all();
 
         // Return the result.
         return ($this->db->affected_rows() == 1) ? TRUE : FALSE;

@@ -21,9 +21,6 @@ class Core_user_model extends CI_Model
         // Load the PHPass class and instantiate.
         require_once 'PasswordHash.php';
         self::$PasswordHash = new PasswordHash(8, FALSE);
-
-        // Load the database class.
-        $this->load->database();
     }
 
     /**
@@ -166,7 +163,7 @@ class Core_user_model extends CI_Model
     public function user_login_log_failed_attempt($post = array())
     {
         $post = prep_post($post);
-        $expire_time = time() - $this->config->item('user_login_attempts_time');
+        $expire_time = time() - setting_get('user_login_attempts_time');
 
         // Delete expired attempts.
         $this->db->where('time <', $expire_time)->delete('core_user_login_attempts');
@@ -180,8 +177,11 @@ class Core_user_model extends CI_Model
                                    ))
                                    ->get('core_user_login_attempts');
 
+        // Clear the database cache.
+        $this->db->cache_delete_all();
+
         // Count number of attempts.
-        if ($all_login_attempts->num_rows() < $this->config->item('user_login_attempts_max'))
+        if ($all_login_attempts->num_rows() < setting_get('user_login_attempts_max'))
         {
             // Insert if less than the max.
             $this->db->set($post)->insert('core_user_login_attempts');
@@ -217,6 +217,9 @@ class Core_user_model extends CI_Model
         $this->db
             ->where('id', $user->id)
             ->update('core_users', array('locked_out_time' => NULL));
+
+        // Clear the database cache.
+        $this->db->cache_delete_all();
     }
 
     /**
@@ -284,6 +287,9 @@ class Core_user_model extends CI_Model
         $this->db->insert('core_user_remember_codes', $post);
         $num_rows = $this->db->affected_rows();
 
+        // Clear the database cache.
+        $this->db->cache_delete_all();
+
         return ($num_rows > 0) ? TRUE : FALSE;
     }
 
@@ -298,6 +304,9 @@ class Core_user_model extends CI_Model
     {
         $this->db->where('user_id', (int) $id)->delete('core_user_remember_codes');
         $num_rows = $this->db->affected_rows();
+
+        // Clear the database cache.
+        $this->db->cache_delete_all();
 
         return ($num_rows > 0) ? TRUE : FALSE;
     }
@@ -323,6 +332,9 @@ class Core_user_model extends CI_Model
         $post['forgotten_password_code'] = self::$PasswordHash
             ->HashPassword($post['forgotten_password_code']);
 
+        // Clear the database cache.
+        $this->db->cache_delete_all();
+
         // Insert new record.
         $this->db->insert('core_user_forgotten_passwords', $post);
         return ($this->db->affected_rows() > 0) ? TRUE : FALSE;
@@ -337,6 +349,9 @@ class Core_user_model extends CI_Model
     {
         $this->db->where('user_id', (int) $id)
             ->delete('core_user_forgotten_passwords');
+
+        // Clear the database cache.
+        $this->db->cache_delete_all();
     }
 
     /**
@@ -418,6 +433,9 @@ class Core_user_model extends CI_Model
         $this->db->insert('core_users', $post);
         $id = $this->db->insert_id();
 
+        // Clear the database cache.
+        $this->db->cache_delete_all();
+
         if ($id)
         {
             // Add the user role
@@ -433,7 +451,7 @@ class Core_user_model extends CI_Model
                 // Generate unique activation code from email.
                 $activation_code = random_string('alnum', 64);
                 $hashed_code = self::$PasswordHash->HashPassword($activation_code);
-                $expire_time = time() + $this->config->item('user_activation_expire_limit');
+                $expire_time = time() + setting_get('user_activation_expire_limit');
                 // Generate the activation code insert array.
                 $activation_code_array = array(
                     'user_id' => (int) $id,
@@ -488,6 +506,9 @@ class Core_user_model extends CI_Model
             ->select('user_id, activation_code, expire_time')
             ->where('user_id', (int) $code_array['id'])
             ->get('core_user_activation_codes', 1);
+
+        // Clear the database cache.
+        $this->db->cache_delete_all();
 
         if ($result->num_rows() != 1)
         {
@@ -565,6 +586,9 @@ class Core_user_model extends CI_Model
             ->limit(1)
             ->update('core_users', $post);
 
+        // Clear the database cache.
+        $this->db->cache_delete_all();
+
         return ($result) ? TRUE : FALSE;
     }
 
@@ -589,6 +613,9 @@ class Core_user_model extends CI_Model
         // Delete the user.
         $this->db->delete('core_users', array('id' => (int) $id), 1);
 
+        // Clear the database cache.
+        $this->db->cache_delete_all();
+
         return ($this->db->affected_rows() > 0) ? TRUE : FALSE;
     }
 
@@ -608,6 +635,10 @@ class Core_user_model extends CI_Model
         {
             $post['protected'] = (int) $post['protected_value'];
             unset($post['protected_value']);
+        }
+        else
+        {
+            $post['protected'] = 0;
         }
 
         $role = (int) $post['role'];
@@ -657,6 +688,9 @@ class Core_user_model extends CI_Model
                 break;
         }
 
+        // Clear the database cache.
+        $this->db->cache_delete_all();
+
         return ($result2) ? TRUE : FALSE;
     }
 
@@ -678,6 +712,9 @@ class Core_user_model extends CI_Model
         $this->db->delete('core_user_activation_codes', array('user_id' => (int) $id), 1);
         // Delete the user.
         $this->db->delete('core_users', array('id' => (int) $id), 1);
+
+        // Clear the database cache.
+        $this->db->cache_delete_all();
 
         return ($this->db->affected_rows() > 0) ? TRUE : FALSE;
     }
@@ -727,6 +764,36 @@ class Core_user_model extends CI_Model
     }
 
     /**
+     * Get paginated results for role table.
+     *
+     * @param integer $per_page
+     * @param integer $start
+     * @param string $data_type
+     * @return mixed
+     */
+    public function admin_role_get_limit_offset($per_page = NULL, $start = NULL, $data_type = 'object')
+    {
+        // Run the query.
+        $result = $this->db
+            ->select('id, role, description, protected')
+            ->get('core_roles', (int) $per_page, (int) $start);
+
+        // Return results.
+        switch ($data_type)
+        {
+            case 'object':
+                return ($result->num_rows() > 0) ? $result->result() : FALSE;
+                break;
+            case 'array':
+                return ($result->num_rows() > 0) ? $result->result_array() : FALSE;
+                break;
+            case 'row':
+                return ($result->num_rows() > 0) ? $result->row() : FALSE;
+                break;
+        }
+    }
+
+    /**
      * Admin adds or edits a role.
      *
      * @param array $post
@@ -745,6 +812,9 @@ class Core_user_model extends CI_Model
         }
 
         unset($post['save']);
+
+        // Clear the database cache.
+        $this->db->cache_delete_all();
 
         switch ($post)
         {
@@ -774,6 +844,10 @@ class Core_user_model extends CI_Model
     public function admin_role_delete($id = NULL)
     {
         $this->db->delete('core_roles', array('id' => (int) $id), 1);
+
+        // Clear the database cache.
+        $this->db->cache_delete_all();
+
         return ($this->db->affected_rows() > 0) ? TRUE : FALSE;
     }
 
@@ -805,7 +879,7 @@ class Core_user_model extends CI_Model
      * @param integer $start
      * @return mixed
      */
-    public function admin_user_limit_offset_get($per_page, $start)
+    public function admin_user_limit_offset_get($per_page = NULL, $start = NULL)
     {
         $query = $this->db
             ->select('core_users.id, username, email, role, created, core_users.protected')
@@ -842,6 +916,9 @@ class Core_user_model extends CI_Model
         $this->db->delete('core_user_activation_codes', array('expire_time <' => $time));
         $this->db->delete('core_user_forgotten_passwords', array('forgotten_password_expire_time <' => $time));
         $this->db->delete('core_user_remember_codes', array('expire_time <' => $time));
+
+        // Clear the database cache.
+        $this->db->cache_delete_all();
     }
 
 }

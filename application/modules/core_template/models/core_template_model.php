@@ -37,17 +37,17 @@ class Core_template_model extends CI_Model
             else
             {
                 // Loop through the directories.
-                foreach ($dir_map[$key] as $k => $v)
+                foreach ($value as $v)
                 {
                     // Set a new array index for each php file.
                     if (!is_dir(APPPATH . 'views/' . $key . '/' . $v) && strstr($v, '.php'))
                     {
-                        $dir_map[$k] = array();
-                        $dir_map[$k]['name'] = $key;
-                        $dir_map[$k]['file'] = str_replace('.php', '', $v);
+                        $dir_map[$key] = array();
+                        $dir_map[$key]['name'] = $key;
+                        $dir_map[$key]['file'] = str_replace('.php', '', $v);
                     }
                     // Unset the original indexes,
-                    unset($dir_map[$key]);
+                    unset($v);
                 }
             }
         }

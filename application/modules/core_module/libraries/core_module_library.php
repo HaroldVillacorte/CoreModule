@@ -32,14 +32,15 @@ class Core_module_library
         // Load the models.
         self::$CI->load->model('core_module/core_module_model');
 
-        // Load the database class.
-        self::$CI->load->database();
-
         // Set the uri's.
-        $this->page_add_uri    = self::$CI->config->item('page_add_uri');
-        $this->page_edit_uri   = self::$CI->config->item('page_edit_uri');
-        $this->page_delete_uri = self::$CI->config->item('page_delete_uri');
-        $this->pages_uri       = self::$CI->config->item('pages_uri');
+        $this->pages_uri             = self::$CI->config->item('pages_uri');
+        $this->admin_pages_uri       = self::$CI->config->item('admin_pages_uri');
+        $this->page_add_uri          = self::$CI->config->item('page_add_uri');
+        $this->admin_page_add_uri    = self::$CI->config->item('admin_page_add_uri');
+        $this->page_edit_uri         = self::$CI->config->item('page_edit_uri');
+        $this->admin_page_edit_uri   = self::$CI->config->item('admin_page_edit_uri');
+        $this->page_delete_uri       = self::$CI->config->item('page_delete_uri');
+        $this->admin_page_delete_uri = self::$CI->config->item('admin_page_delete_uri');
     }
 
     /**
@@ -63,7 +64,7 @@ class Core_module_library
             array(
                 'field' => 'slug',
                 'label' => 'Slug',
-                'rules' => 'required|trim|xss_clean'
+                'rules' => 'required|trim|is_unique[core_pages.slug]|is_unique[core_pages_admin.slug]|xss_clean'
             ),
             array(
                 'field' => 'title',
@@ -141,10 +142,10 @@ class Core_module_library
      * @param mixed $identifier
      * @return object
      */
-    public function page_find($by = 'id', $identifier = NULL)
+    public function page_find($table = 'core_pages', $by = 'id', $identifier = NULL)
     {
         // Get the page.
-        $page = self::$CI->core_module_model->page_find($by, $identifier);
+        $page = self::$CI->core_module_model->page_find($table, $by, $identifier);
 
         // Prep data.
         if (isset($page->created))
@@ -161,10 +162,10 @@ class Core_module_library
      *
      * @return array
      */
-    public function page_find_all($data_type = 'object')
+    public function page_find_all($table = 'core_pages', $data_type = 'object')
     {
         // Get the page.
-        $pages = self::$CI->core_module_model->page_find_all($data_type);
+        $pages = self::$CI->core_module_model->page_find_all($table, $data_type);
 
         // Only id object is requested.
         if ($data_type == 'object')
@@ -193,10 +194,10 @@ class Core_module_library
      *
      * @return array
      */
-    public function page_find_limit_offset($limit = 1, $offset = 0, $data_type = 'object')
+    public function page_find_limit_offset($table = 'core_pages', $limit = 1, $offset = 0, $data_type = 'object')
     {
         // Get the page.
-        $pages = self::$CI->core_module_model->page_find_limit_offset($limit, $offset, $data_type);
+        $pages = self::$CI->core_module_model->page_find_limit_offset($table, $limit, $offset, $data_type);
 
         // Prep data.
         if ($pages)
@@ -219,13 +220,13 @@ class Core_module_library
      *
      * @param array $post
      */
-    public function page_add($post = array())
+    public function page_add($table = 'core_pages', $post = array())
     {
         // Format the special characters in page body.
         $post['body'] = self::$CI->typography->format_characters($post['body']);
 
         // Send post to the model.
-        $page_id = self::$CI->core_module_model->page_add($post);
+        $page_id = self::$CI->core_module_model->page_add($table, $post);
 
         // Insert failed.
         if (!$page_id)
@@ -240,7 +241,7 @@ class Core_module_library
             self::$CI->session->set_flashdata('message_success', lang('page_add_success'));
 
             // Redirect to the edit page.
-            redirect(base_url() . $this->page_edit_uri . $page_id);
+            redirect(current_url());
             exit();
         }
     }
@@ -250,19 +251,19 @@ class Core_module_library
      *
      * @param array $post
      */
-    public function page_edit($post = array())
+    public function page_edit($table = 'core_pages', $post = array())
     {
         // Format the special characters in page body.
         $post['body'] = self::$CI->typography->format_characters($post['body']);
 
         // Send post to the model.
-        $result = self::$CI->core_module_model->page_edit($post);
+        $result = self::$CI->core_module_model->page_edit($table, $post);
 
         // Insert failed.
         if (!$result)
         {
             self::$CI->session->set_flashdata('message_error', lang('page_edit_failed'));
-            redirect(base_url() . $this->page_edit_uri . $post['id']);
+            redirect(current_url());
             exit();
         }
         // Insert success.
@@ -271,7 +272,7 @@ class Core_module_library
             self::$CI->session->set_flashdata('message_success', lang('page_edit_success'));
 
             // Redirect to the edit page.
-            redirect(base_url() . $this->page_edit_uri . $post['id']);
+            redirect(current_url());
             exit();
         }
     }
@@ -281,10 +282,10 @@ class Core_module_library
      *
      * @param integer $id
      */
-    public function page_delete($id = NULL)
+    public function page_delete($table = 'core_pages', $id = NULL)
     {
         // Run the query.
-        $result = self::$CI->core_module_model->page_delete($id);
+        $result = self::$CI->core_module_model->page_delete($table, $id);
 
         switch ($result)
         {

@@ -9,41 +9,6 @@ class Core_menu_library
      */
     private static $CI;
 
-    /**
-     * The menus uri.
-     *
-     * @var string
-     */
-    public $menus_uri;
-
-    /**
-     * The add menu uri.
-     *
-     * @var string
-     */
-    public $menu_add_uri;
-
-    /**
-     * The edit menu uri.
-     *
-     * @var string
-     */
-    public $menu_edit_uri;
-
-    /**
-     * The delete menu uri.
-     *
-     * @var string
-     */
-    public $menu_delete_uri;
-
-    /**
-     * The delete menu link uri.
-     *
-     * @var string
-     */
-    public $menu_link_delete_uri;
-
     function __construct()
     {
         self::$CI =& get_instance();
@@ -613,17 +578,20 @@ class Core_menu_library
 
         if ($data['links'])
         {
+            // Array of the link tags.
+            $link_tags = array('#', '{front}','{label}', '{login}');
+
             // Parse the links.
             foreach ($data['links'] as $link)
             {
                 // Internal links.
-                if (!$link->external && $link->link != '#' && $link->link != '{front}' && $link->link != '{label}')
+                if (!$link->external && !in_array($link->link, $link_tags))
                 {
                     $link->link = 'href="' .  base_url() . $link->link . '"';
                 }
 
                 // External links.
-                elseif ($link->external && $link->link != '#' && $link->link != '{front}' && $link->link != '{label}')
+                elseif ($link->external && !in_array($link->link, $link_tags))
                 {
                     $link->link = 'href="http://' . $link->link . '"';
                 }
@@ -644,6 +612,21 @@ class Core_menu_library
                 elseif ($link->link == '{label}')
                 {
                     $link->link = '';
+                }
+
+                // Parse login links.
+                elseif ($link->link == '{login}')
+                {
+                    if (self::$CI->session->userdata('user_id'))
+                    {
+                        $link->link  = 'href="' . base_url() . self::$CI->core_user_library->user_logout_uri . '"';
+                        $link->text = 'Logout';
+                    }
+                    else
+                    {
+                        $link->link  = 'href="' . base_url() . self::$CI->core_user_library->user_login_uri . '"';
+                        $link->text = 'Login';
+                    }
                 }
 
                 // Add the active class to current url.

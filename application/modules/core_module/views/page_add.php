@@ -1,6 +1,6 @@
 <h4>Add page</h4>
 
-<?php echo form_open($this->core_module_library->page_add_uri) ;?>
+<?php echo form_open(current_url()) ;?>
 
 <fieldset>
     <legend>Options</legend>
@@ -44,5 +44,7 @@
 </fieldset>
 
 <input type="submit" value="Add page" name="submit" />
+
+<a href="<?php echo get_back_link() ;?>">Cancel</a>
 
 <?php echo form_close() ;?>

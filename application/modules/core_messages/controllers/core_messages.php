@@ -10,11 +10,10 @@
  * 2. message_error
  * 3. message_notice
  *
- * @package CI Starter
+ * @package CoreModule
  * @subpackage Modules
  * @category Core
  * @author Harold Villacorte
- * @link http://laughinghost.com/CI_Starter/
  */
 class Core_Messages extends MX_Controller
 {

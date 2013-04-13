@@ -1,6 +1,6 @@
 <h4>Edit page</h4>
 
-<?php echo form_open($this->core_module_library->page_edit_uri) ;?>
+<?php echo form_open(current_url()) ;?>
 
 <input type="hidden" name="id" value="<?php echo (isset($page->id)) ? $page->id : set_value('id') ;?>" />
 
@@ -21,11 +21,11 @@
     <legend>Slug and title</legend>
 
 <label for="slug">Slug:</label>
-<input type="text" name="slug" class="<?php form_error_class('slug') ;?>"
+<input type="text" name="slug" class="<?php echo form_error_class('slug') ;?>"
        value="<?php echo (isset($page->slug)) ? $page->slug : set_value('slug') ;?>" />
 
 <label for="title">Title:</label>
-<input type="text" name="title" class="<?php form_error_class('title') ;?>"
+<input type="text" name="title" class="<?php echo form_error_class('title') ;?>"
        value="<?php echo (isset($page->title)) ? $page->title : set_value('title') ;?>" />
 
 </fieldset>
@@ -34,7 +34,7 @@
     <legend>Body</legend>
 
 <label for="body">Body:</label>
-<textarea name="body" class="<?php form_error_class('body') ;?>" />
+<textarea name="body" class="<?php echo form_error_class('body') ;?>" />
 <?php echo (isset($page->body)) ? $page->body : set_value('body') ;?></textarea>
 
 </fieldset>
@@ -50,5 +50,7 @@
 </fieldset>
 
 <input type="submit" value="Save page" name="submit" />
+
+<a href="<?php echo get_back_link() ;?>">Cancel</a>
 
 <?php echo form_close() ;?>

@@ -3,11 +3,10 @@
 /**
  * User Controller Module.
  *
- * @package CI Starter
+ * @package CoreModule
  * @subpackage Modules
  * @category Core
  * @author Harold Villacorte
- * @link http://laughinghost.com/CI_Starter/
  */
 class Core_user extends MX_Controller
 {
@@ -27,44 +26,59 @@ class Core_user extends MX_Controller
     private static $user_page;
 
     /**
-     * The data property is set to the site_info() array which passes an array
-     * containing the site wide information such as the site name and asset path
-     * information.  self::$data['module'] is the name of this module which is
-     * passed to the Template module.
-     *
-     * @see core_model.php
+     * The Core user constructor.
      */
     public function __construct()
     {
         parent::__construct();
 
+        // Initialize the data array.
+        self::$data = initialize_module('core_user');
+
         // Load the config and language files.
         $this->config->load('core_user/core_user_config');
         $this->lang->load('core_user/core_user', $this->config->item('core_user_language'));
 
-        // Load libraries.
-        $this->load->library('core_user/core_user_library');
-
         // Load helpers.
         $this->load->helper('date');
         $this->load->helper('form');
+    }
 
-        // Check if a user is logged in.
-        $this->core_user_library->user_check_logged_in();
+    /**
+     * The core user settings page.
+     */
+    public function core_user_settings()
+    {
+        $template = 'core_user/settings';
 
-        // Initialize the data array.
-        self::$data = $this->core_module_model->site_info();
-
-        // Sets the module to be sent to the Template module.
-        self::$data['module'] = 'user';
-
-        // User admin remember paginated page.
-        self::$user_page = NULL;
-        if ($this->session->userdata('user_admin_page'))
+        if ($this->input->post('submit'))
         {
-            self::$user_page = $this->session->userdata('user_admin_page');
+            // Set the validation rules.
+            $this->core_user_library->set_validation_rules('settings');
+
+            // Run the validation.
+            if ($this->form_validation->run() == FALSE)
+            {
+                // Render the page.
+                echo $this->core_template_library->parse_view($template, self::$data);
+            }
+            else
+            {
+                // Set the settings.
+                $post = $this->input->post();
+                unset($post['submit']);
+
+                // Send to the database.
+                process_settings($post);
+            }
         }
-        self::$data['user_page'] = self::$user_page;
+        // First visit.
+        else
+        {
+            // Render the page.
+            echo $this->core_template_library->parse_view($template, self::$data);
+        }
+
     }
 
     /**
@@ -86,7 +100,7 @@ class Core_user extends MX_Controller
         self::$data['user'] = $user;
 
         // Render the page.
-        echo $this->load->view($template, self::$data);
+        $this->load->view($template, self::$data);
     }
 
     /**
@@ -95,9 +109,6 @@ class Core_user extends MX_Controller
     public function login()
     {
         $template = 'user_login';
-        self::$data['user_add_url'] = base_url() . $this->core_user_library->user_add_uri;
-        self::$data['user_user_forgotten_password_url'] = base_url() . $this->core_user_library->user_forgotten_password_uri;
-        //self::$data['content'] = $this->load->view('user_login', self::$data, TRUE);
 
         // Code to run when the user hits the Login button.
         if ($this->input->post('submit'))
@@ -144,27 +155,227 @@ class Core_user extends MX_Controller
     }
 
     /**
+     * User recovers password with email address.
+     */
+    public function forgotten_password()
+    {
+        $template = 'user_forgotten_password';
+
+        if ($this->input->post('submit'))
+        {
+            $this->core_user_library->set_validation_rules('user_forgotten_password');
+
+            if ($this->form_validation->run() == FALSE)
+            {
+                // Render the page.
+                $this->load->view($template, self::$data);
+            }
+            else
+            {
+                $this->core_user_library-> user_forgotten_password($this->input->post('email'));
+            }
+        }
+        else
+        {
+            // Render the page.
+            $this->load->view($template, self::$data);
+        }
+
+
+    }
+
+    /**
+     * User comes to this link from an email with the lost password code.
+     *
+     * @param string $code
+     */
+    public function forgotten_password_login($code = NULL)
+    {
+        // Send to the model.
+        $this->core_user_library->user_forgotten_password_login($code);
+    }
+
+    /**
+     * New user create account.
+     */
+    public function user_add()
+    {
+        $template = 'user_add';
+
+        if ($this->input->post('add'))
+        {
+            $this->core_user_library->set_validation_rules('user_insert');
+
+            // Code to run when the the form does not validate.
+            if ($this->form_validation->run() == FALSE)
+            {
+                // Render the page.
+                $this->load->view($template, self::$data);
+            }
+            else
+            {
+                // Form validation passed.
+                $this->core_user_library->user_add($this->input->post());
+            }
+        }
+        // Code to run when user first visits.
+        else
+        {
+            // Render the page.
+            $this->load->view($template, self::$data);
+        }
+    }
+
+    /**
+     * User submits activation code from email link.
+     *
+     * @param string $activation_code
+     */
+    public function user_activate($activation_code = NULL)
+    {
+        if ($activation_code == NULL)
+        {
+            redirect(base_url() . $this->core_user_library->user_login_uri);
+        }
+        else
+        {
+            $this->core_user_library->user_activate($activation_code);
+        }
+    }
+
+    /**
+     * User edits own account.
+     */
+    public function user_edit()
+    {
+        $template = 'user_edit';
+
+        // Check if a user is logged in then set the user id from the session.
+        if (!$this->session->userdata('user_id'))
+        {
+            redirect(base_url() . $this->core_user_library->user_index_uri);
+        }
+        else
+        {
+            $id   = $this->session->userdata('user_id');
+            $user = $this->core_user_library->user_find($id);
+            self::$data['user'] = $user;
+        }
+
+        // When the user hits the delete button redirect them to the delete method.
+        if ($this->input->post('delete'))
+        {
+            if ($this->session->userdata('user_id'))
+            {
+                redirect(base_url() . $this->core_user_library->user_delete_uri);
+            }
+        }
+
+        // Code to run when the user hits the save button.
+        if ($this->input->post('save'))
+        {
+            // Set the validation rules for updating a user.
+            $this->core_user_library->set_validation_rules('user_update');
+
+            // Code to run when the the form does not validate.
+            if ($this->form_validation->run() == FALSE)
+            {
+                // Render the page.
+                $this->load->view($template, self::$data);
+            }
+            // Code to run when the form passes validation.
+            else
+            {
+                $this->core_user_library->user_edit($user, $this->input->post());
+            }
+        }
+
+        // Code to run when user first visits the page without hitting submit.
+        else
+        {
+            // Render the page.
+            $this->load->view($template, self::$data);
+        }
+    }
+
+    /**
+     * User deletes own account.
+     */
+    public function user_delete()
+    {
+        $template = 'user_delete';
+
+        // Instanitate User based on session userdata('user_id').
+        if ($id = $this->session->userdata('user_id'))
+        {
+            $user = $this->core_user_library->user_find($id);
+        }
+        else
+        {
+            redirect(base_url());
+        }
+
+        // Code to run when user hits the final delete button.
+        if ($this->input->post('delete'))
+        {
+            // Check first if account is protected.
+            $this->core_user_library->user_check_protected($user, 'delete');
+
+            // Delete.
+            $this->core_user_library->user_delete($user);
+        }
+
+        // Redirect user if they come to this page without being logged in.
+        elseif ($id == NULL)
+        {
+            redirect(base_url());
+        }
+
+        // Code to run when logged in user first visits the page.
+        else
+        {
+            self::$data['user'] = $user;
+
+            // Render the page.
+            $this->load->view($template, self::$data);
+        }
+    }
+
+    /**
      * Admin view all roles.
      */
-    public function user_roles()
+    public function admin_user_roles($start = NULL)
     {
-        self::$data['content_file'] = 'admin_roles';
+        $template = 'core_user/admin_roles';
 
-        // Generate table
-        $role_table = $this->core_user_library->admin_role_table();
+        $per_page = 2;
+        $start = ($start) ? $start : 0;
+        $count = count($this->core_user_library->admin_role_get_all('array'));
+        $base_url = base_url() . $this->core_user_library->user_admin_roles_uri;
 
-        self::$data['output'] = $role_table;
+        // Pagination setup.
+        self::$data['pagination'] = pagination_setup($base_url, $count, $per_page, 2);
+
+        // Get the roles.
+        self::$data['roles'] = $this->core_user_library->admin_role_get_limit_offset($per_page, $start, 'object');
+
+        // Parse values if neccessary.
+        foreach (self::$data['roles'] as $value)
+        {
+            // Convert the protected boolean field to string.
+            $value->protected = ($value->protected) ? 'Yes' : 'No';
+        }
 
         // Render the page.
-        echo $this->core_template_library->parse_view($this->template, self::$data);
+        echo $this->core_template_library->parse_view($template, self::$data);
     }
 
     /**
      * Admin add a role.
      */
-    public function user_role_add()
+    public function admin_user_role_add()
     {
-        self::$data['content_file'] = 'admin_role_add';
+        $template = 'admin_role_add';
 
         if ($this->input->post('save'))
         {
@@ -173,7 +384,7 @@ class Core_user extends MX_Controller
             if ($this->form_validation->run() == FALSE)
             {
                 // Render the page.
-                 echo $this->core_template_library->parse_view($this->template, self::$data);
+                $this->load->view($template, self::$data);
             }
             else
             {
@@ -183,7 +394,7 @@ class Core_user extends MX_Controller
         else
         {
             // Render the page.
-            echo $this->core_template_library->parse_view($this->template, self::$data);
+            $this->load->view($template, self::$data);
         }
     }
 
@@ -192,9 +403,9 @@ class Core_user extends MX_Controller
      *
      * @param integer $id
      */
-    public function user_role_edit($id = NULL)
+    public function admin_user_role_edit($id = NULL)
     {
-        self::$data['content_file'] = 'admin_role_edit';
+        $template = 'admin_role_edit';
 
         // Instantiate the role to populate the form.
         $role = $this->core_user_library->admin_role_get($id);
@@ -212,7 +423,7 @@ class Core_user extends MX_Controller
             if ($this->form_validation->run() == FALSE)
             {
                 // Render the page.
-                echo $this->core_template_library->parse_view($this->template, self::$data);
+                $this->load->view($template, self::$data);
             }
             else
             {
@@ -229,7 +440,7 @@ class Core_user extends MX_Controller
             }
 
             // Render the page.
-            echo $this->core_template_library->parse_view($this->template, self::$data);
+            $this->load->view($template, self::$data);
         }
     }
 
@@ -238,7 +449,7 @@ class Core_user extends MX_Controller
      *
      * @param integer $id
      */
-    public function user_role_delete($id = NULL)
+    public function admin_user_role_delete($id = NULL)
     {
         // Redirect if role id is not set.
         if (!$id) redirect(base_url() . $this->core_user_library->user_admin_roles_uri);
@@ -257,9 +468,9 @@ class Core_user extends MX_Controller
      *
      * @param integer $page
      */
-    public function users($page = NULL)
+    public function admin_users($page = NULL)
     {
-        self::$data['content_file'] = 'admin_users';
+        $template = 'core_user/admin_users';
 
         // Per_page for pagination and model query.
         $per_page = 1;
@@ -274,47 +485,32 @@ class Core_user extends MX_Controller
 
         // Database queries.
         $count = $this->core_user_library->admin_user_get_count();
-        $output = $this->core_user_library->admin_user_limit_offset_get($per_page, $start);
+        self::$data['users'] = $this->core_user_library->admin_user_limit_offset_get($per_page, $start);
+
+        // Parse user data that needs parsing.
+        $date_format = $this->config->item('core_user_date_format');
+        foreach (self::$data['users'] as $key => $value)
+        {
+            // Convert the protected boolean field to string.
+            self::$data['users'][$key]['protected'] = (self::$data['users'][$key]['protected']) ? 'Yes' : 'No';
+            // Convert created unix time stamp to time.
+            self::$data['users'][$key]['created'] = standard_date($date_format, self::$data['users'][$key]['created']);
+        }
 
         // Get first and last id's.
         self::$data['first'] = $page + 1;
-        self::$data['last'] = $page + count($output);
+        self::$data['last'] = $page + count(self::$data['users']);
 
         // Pagination setup
-        $pagination_links = $this->core_user_library
-            ->admin_user_page_pagination_setup($count, $per_page);
-
-        // Table render
-        $table_output = $this->core_user_library->admin_user_page_table_setup($output);
+        $base_url = base_url() . 'admin_users/';
+        $pagination_links = pagination_setup($base_url, $count, $per_page);
 
         // Page setup
         self::$data['pagination_links'] = $pagination_links;
-        self::$data['output'] = $table_output;
         self::$data['count'] = $count;
 
-        // Add the javascript.
-        array_unshift(self::$data['scripts'], 'user_admin_ajax.js');
-
-        // Check for ajax request then pick content_file.
-        if ($this->input->is_ajax_request())
-        {
-            // Set current page to session.
-            $this->session->set_userdata(array('user_admin_page' => $page));
-
-            // Reset the template name.
-            $this->template = 'admin_template/content/admin_users_ajax';
-
-            // Render the page.
-            echo $this->core_template_library->parse_view($this->template, self::$data);
-        }
-        else
-        {
-            // Set current page to session.
-            $this->session->set_userdata(array('user_admin_page' => $page));
-
-            // Render the page.
-            echo $this->core_template_library->parse_view($this->template, self::$data);
-        }
+        // Render the page.
+        echo $this->core_template_library->parse_view($template, self::$data);
     }
 
     /**
@@ -322,9 +518,9 @@ class Core_user extends MX_Controller
      *
      * @param integer $id
      */
-    public function user_edit($id = NULL)
+    public function admin_user_edit($id = NULL)
     {
-        self::$data['content_file'] = 'admin_user_edit';
+        $template = 'admin_user_edit';
         self::$data['all_roles'] = $this->core_user_library->admin_role_get_all('array');
         $user = $this->core_user_library->user_find((int) $id);
 
@@ -343,7 +539,7 @@ class Core_user extends MX_Controller
             if ($this->form_validation->run() == FALSE)
             {
                 // Render the page.
-                echo $this->core_template_library->parse_view($this->template, self::$data);
+                $this->load->view($template, self::$data);
             }
             else
             {
@@ -365,16 +561,16 @@ class Core_user extends MX_Controller
             self::$data['user'] = $user;
 
             // Render the page.
-            echo $this->core_template_library->parse_view($this->template, self::$data);
+            $this->load->view($template, self::$data);
         }
     }
 
     /**
      * Admin adds a user.
      */
-    public function user_add()
+    public function admin_user_add()
     {
-        self::$data['content_file'] = 'admin_user_add';
+        $template = 'admin_user_add';
         self::$data['all_roles'] = $this->core_user_library->admin_role_get_all('array');
 
         if ($this->input->post('save'))
@@ -385,7 +581,7 @@ class Core_user extends MX_Controller
             if ($this->form_validation->run() == FALSE)
             {
                 // Render the page.
-                echo $this->core_template_library->parse_view($this->template, self::$data);
+                $this->load->view($template, self::$data);
             }
             else
             {
@@ -399,7 +595,7 @@ class Core_user extends MX_Controller
             array_unshift(self::$data['scripts'], 'user_admin_ajax.js');
 
             // Render the page.
-            echo $this->core_template_library->parse_view($this->template, self::$data);
+            $this->load->view($template, self::$data);
         }
     }
 
@@ -408,7 +604,7 @@ class Core_user extends MX_Controller
      *
      * @param integer $id
      */
-    public function user_delete($id = NULL)
+    public function admin_user_delete($id = NULL)
     {
         if ($id == NULL)
         {
