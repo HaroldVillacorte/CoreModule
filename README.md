@@ -1,4 +1,4 @@
-CI_Starter
+CoreModule
 ==========
 
-Full featured Codeigniter starter application.
+An application container for rapid PHP development.  Powered by CodeIgniter.
