@@ -47,19 +47,24 @@ class Core_menu extends MX_Controller
         self::$data['menu_data'] = $this->core_menu_library->generate_data($parent_menu_id);
 
         // Get the menu classes.
-        $menu_classes = self::$data['menu_data']['menu']->menu_classes;
+        $menu_classes = explode(' ', self::$data['menu_data']['menu']->menu_classes);
 
         // Serve the type of menu requested.
         switch ($menu_classes)
         {
             // If 'nav-bar' is found in the class string.
-            case strstr($menu_classes, 'nav-bar'):
+            case in_array('nav-bar', $menu_classes):
                 echo $this->core_menu_library->generate_navbar(self::$data);
                 break;
 
             // If 'top-bar' is found in the class string.
-            case strstr($menu_classes, 'top-bar'):
+            case in_array('top-bar', $menu_classes):
                 echo $this->core_menu_library->generate_topbar(self::$data);
+                break;
+
+            // Generate plain unorderd list menu.
+            default:
+                echo $this->core_menu_library->generate_menu(self::$data);
                 break;
         }
     }

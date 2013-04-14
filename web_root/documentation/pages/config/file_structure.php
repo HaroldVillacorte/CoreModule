@@ -1,6 +1,6 @@
 <h2>File Structure</h2>
 
-<p class="panel">Nothing about the Codeigniter directory structure is altered in CI Starter.  There are obviously some additional directories and files.  I will point them out according to the libraries and modules that have been added.</p>
+<p class="panel">Nothing about the Codeigniter directory structure is altered in CoreModule.  There are obviously some additional directories and files.  I will point them out according to the libraries and modules that have been added.</p>
 
 <h4>HMVC</h4>
 <ul>
@@ -58,7 +58,7 @@
 <ul>
   <li>assets/schema</li>
 </ul>
-<p>This folder contains the database archive that ships with CI Starter.  Once you have it installed or if you are not going to use it this directory should be deleted.</p>
+<p>This folder contains the database archive that ships with CoreModule.  Once you have it installed or if you are not going to use it this directory should be deleted.</p>
 
 <h4>Documentation</h4>
 <ul>
@@ -76,4 +76,4 @@
 <ul>
   <li>README.md</li>
 </ul>
-<p>This file came from Github and is not part of the Codeigniter core.  This can be deleted or edited at will.  CI Starter will continue using this file because there is no reason not to.  It is not a source of documentation but a brief description with links.  It includes html which Github will render and output as the repository front page.</p>
+<p>This file came from Github and is not part of the Codeigniter core.  This can be deleted or edited at will.  CoreModule will continue using this file because there is no reason not to.  It is not a source of documentation but a brief description with links.  It includes html which Github will render and output as the repository front page.</p>

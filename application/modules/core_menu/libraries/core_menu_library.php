@@ -638,32 +638,98 @@ class Core_menu_library
     }
 
     /**
-     * Generate a Foundation 3 nav-bar from final data array.
+     * Generate plain unordered list menu.
+     *
+     * @param array $data
+     * @return string
+     */
+    public function generate_menu($data = NULL)
+    {
+        // Get the menu ul classes.
+        $menu_classes = (isset($data['menu_data']['menu']->menu_classes))
+            ? $data['menu_data']['menu']->menu_classes : '';
+
+        // Start the string.  Only if site name is in the data array so child menus
+        // will not run this part.
+        $output = (isset($data['site_name'])) ? '<ul id="menu-' . $data['menu_data']['menu']->id
+            . '" class="' . $menu_classes . '">' : '';
+
+
+        // Loop through the links.
+        if ($data['menu_data']['links'])
+        {
+            foreach ($data['menu_data']['links'] as $link)
+            {
+                // If link has no child menu.
+                if (!$link->child_menu_id)
+                {
+                    $output .= '<li ' . $link->class . '><a ' . $link->link . ' title="' . $link->title . '">' . $link->text . '</a></li>';
+                }
+                // If link has child menu.
+                else
+                {
+                    // Generate link data for the child menu id.
+                    $new_link_data['menu_data'] = $this->generate_data($link->child_menu_id);
+
+                    // Generate the child menu.
+                    $child_links = $this->generate_menu($new_link_data);
+
+                    // Insert child menu into the new link.
+                    $output .= '<li>'
+                            // The actual link will be inactive.
+                            .  '<a href="#">' . $link->text . '</a>'
+                            .       '<ul>'
+                            .           $child_links
+                            .       '</ul>'
+                            .  '</li>';
+                }
+            }
+        }
+
+        // End the string.  Only if site name is in the data array so child menus
+        // will not run this part.
+        $output .= (isset($data['site_name'])) ? '</ul>' : '';
+
+        return $output;
+    }
+
+    /**
+     * Generate a Foundation 3 nav-bar from menu data.
      *
      * @param array $data
      * @return string
      */
     public function generate_navbar($data = NULL)
     {
-        $link_data = array();
-
+        // Get the menu ul classes.
         $menu_classes = (isset($data['menu_data']['menu']->menu_classes))
             ? $data['menu_data']['menu']->menu_classes : '';
 
-        $output = (isset($data['site_name'])) ? '<ul class="' . $menu_classes . '">' : '';
+        // Start the string.  Only if site name is in the data array so child menus
+        // will not run this part.
+        $output = (isset($data['site_name'])) ? '<ul id="menu-' . $data['menu_data']['menu']->id
+            . '" class="' . $menu_classes . '">' : '';
 
+        // Loop through the links.
         if ($data['menu_data']['links'])
         {
             foreach ($data['menu_data']['links'] as $link)
             {
+                // If link has no child menu.
                 if (!$link->child_menu_id)
                 {
                     $output .= '<li ' . $link->class . '><a ' . $link->link . ' title="' . $link->title . '">' . $link->text . '</a></li>';
                 }
-                elseif ($link->child_menu_id)
+                // If link has child menu.
+                else
                 {
+                    // Generate link data for the child menu id.
                     $new_link_data['menu_data'] = $this->generate_data($link->child_menu_id);
+
+                    // Generate the child menu.
                     $child_links = $this->generate_navbar($new_link_data);
+
+                    // Insert child menu into the new link.
                     $output .= '<li class="has-flyout">'
                             .       '<a href="#">' . $link->text . '</a>'
                             .       '<a href="#" class="flyout-toggle"><span> </span></a>'
@@ -675,17 +741,31 @@ class Core_menu_library
             }
         }
 
+        // End the string.  Only if site name is in the data array so child menus
+        // will not run this part.
         $output .= (isset($data['site_name'])) ? '</ul>' : '';
 
         return $output;
     }
 
+    /**
+     * Generate a Foundation 3 top-bar from menu data.
+     *
+     * @param array $data
+     * @return string
+     */
     public function generate_topbar($data = NULL)
     {
+        // Get the menu ul classes.
+        $menu_classes = (isset($data['menu_data']['menu']->menu_classes))
+            ? $data['menu_data']['menu']->menu_classes : '';
+
+        // Start the string.  Only if site name is in the data array so child menus
+        // will not run this part.
         if (isset($data['site_name']))
         {
-            $output = '<nav class="top-bar">'
-                . '<ul>'
+            $output = '<nav id="nav-' . $data['menu_data']['menu']->id . '" class="' . $menu_classes . '">'
+                . '<ul id="menu-' . $data['menu_data']['menu']->id . '">'
                 . '<li class="name"><h1><a href="' . base_url() . 'admin/">' . $data['site_name'] . 'Admin</a></h1></li>'
                 .      '<li class="divider hide-for-small"></li>'
                 .      '<li class="toggle-topbar"><a href="#"></a></li>'
@@ -698,23 +778,34 @@ class Core_menu_library
             $output = '';
         }
 
+        // Loop through the links.
         foreach ($data['menu_data']['links'] as $link)
         {
+            // Define the divider.
             $divider = (isset($data['site_name'])) ? '<li class="divider"></li>' : NULL;
+
+            // You can put label tags per Foundation 3 top-bar.
             if (strstr($link->text, '<label>'))
             {
                 $output .= '<li>' . $link->text . '</li>'
                         .  $divider;
             }
+            // If link has no child menu.
             elseif (!$link->child_menu_id)
             {
                 $output .= '<li ' . $link->class . '><a ' . $link->link . ' title="' . $link->title . '">' . $link->text . '</a></li>'
                         .  $divider;
             }
-            elseif ($link->child_menu_id)
+            // If link has child menu.
+            else
             {
+                // Generate link data for the child menu id.
                 $link_data['menu_data'] = $this->generate_data($link->child_menu_id);
+
+                // Generate the child menu.
                 $child_links = $this->generate_topbar($link_data);
+
+                // Insert child menu into the new link.
                 $output .= '<li class="has-dropdown">'
                         .       '<a href="#">' . $link->text . '</a>'
                         .       '<ul class="dropdown">'
@@ -725,6 +816,8 @@ class Core_menu_library
             }
         }
 
+        // End the string.  Only if site name is in the data array so child menus
+        // will not run this part.
         $output .= (isset($data['site_name'])) ? '</ul></section>' : '';
 
         return $output;

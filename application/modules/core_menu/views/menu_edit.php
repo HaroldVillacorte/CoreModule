@@ -11,10 +11,13 @@
     <input type="text" name="menu_name" class="<?php echo form_error_class('menu_name') ;?>"
            value="<?php echo (isset($menu->menu_name)) ? $menu->menu_name : set_value('menu_name') ;?>" />
 
+    <label for="menu_classes">Menu ul classes:</label>
+    <input type="text" name="menu_classes" class="<?php echo form_error_class('menu_classes') ;?>"
+           value="<?php echo (isset($menu->menu_classes)) ? $menu->menu_classes : set_value('menu_classes') ;?>" />
+
     <label for="description">Description:</label>
-    <textarea name="description" class="<?php echo form_error_class('description') ;?>"/>
-    <?php echo (isset($menu->description)) ? $menu->description : set_value('description') ;?>
-    </textarea>
+    <?php $value = (isset($menu->description)) ? $menu->description : set_value('description') ;?>
+    <textarea name="description" class="<?php echo form_error_class('description') ;?>"/><?php echo $value ;?></textarea>
 
 </fieldset>
 

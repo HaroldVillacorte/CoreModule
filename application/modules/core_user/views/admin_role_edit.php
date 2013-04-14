@@ -12,8 +12,8 @@
            type="text" name="role" value="<?php echo (isset($role->role)) ? $role->role : set_value('role') ;?>" />
 
     <label for="description">Description:</label>
-    <textarea class="<?php echo form_error_class('description') ;?>"
-              name="description"><?php echo (isset($role->description)) ? $role->description : set_value('description') ;?></textarea>
+    <?php $value = (isset($role->description)) ? $role->description : set_value('description') ;?>
+    <textarea class="<?php echo form_error_class('description') ;?>" name="description"><?php echo $value ;?></textarea>
 
     <?php if ($this->session->userdata('role') == 'super_user') :?>
         <label for="protected_value">Protected:</label>

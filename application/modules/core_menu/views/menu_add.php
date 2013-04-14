@@ -9,6 +9,10 @@
     <input type="text" name="menu_name" class="<?php echo form_error_class('menu_name') ;?>"
            value="<?php echo set_value('menu_name') ;?>" />
 
+    <label for="menu_classes">Menu ul classes:</label>
+    <input type="text" name="menu_classes" class="<?php echo form_error_class('menu_classes') ;?>"
+           value="<?php echo set_value('menu_classes') ;?>" />
+
     <label for="description">Description:</label>
     <textarea name="description" class="<?php echo form_error_class('description') ;?>"/><?php echo set_value('description') ;?></textarea>
 

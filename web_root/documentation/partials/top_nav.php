@@ -1,7 +1,7 @@
 <div class="fixed">
   <nav class="top-bar">
     <ul>
-      <li class="name"><h1><a href="<?echo $doc_url;?>">CI Starter Documentation</a></h1></li>
+      <li class="name"><h1><a href="<?echo $doc_url;?>">CoreModule Documentation</a></h1></li>
       <li class="toggle-topbar"><a href="#"></a></li>
     </ul>
     <section>
@@ -37,7 +37,7 @@
         <li class="has-dropdown">
           <a href="#">Versions</a>
           <ul class="dropdown">
-            <li><a href="#">CI Starter 1.0</a></li>
+            <li><a href="#">CoreModule 1.0</a></li>
             <li><a href="#">Codeigniter 2.1.3</a></li>
             <li><a href="#">HMVC 2012-11-19</a></li>
             <li><a href="#">Grocery CRUD 1.3.3</a></li>

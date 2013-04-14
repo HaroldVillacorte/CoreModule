@@ -29,7 +29,7 @@ class Core_menu_model extends CI_Model
 
         // Run the query.
         $query = $this->db
-            ->select('id, menu_name, description, menu_classes')
+            ->select('id, menu_name, menu_classes, description')
             ->where($by, $identifier)
             ->get('core_menus', 1);
 
@@ -46,7 +46,7 @@ class Core_menu_model extends CI_Model
     {
         // Run the query.
         $query = $this->db
-            ->select('id, menu_name, description')
+            ->select('id, menu_name, menu_classes, description')
             ->order_by('menu_name')
             ->get('core_menus');
 
@@ -74,7 +74,7 @@ class Core_menu_model extends CI_Model
     {
         // Run the query.
         $query = $this->db
-            ->select('id, menu_name, description')
+            ->select('id, menu_name, menu_classes, description')
             ->get('core_menus', (int) $limit, (int) $offset);
 
         // Choose data type.

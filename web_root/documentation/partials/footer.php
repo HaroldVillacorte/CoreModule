@@ -2,8 +2,8 @@
 <footer class="row">
   <div class="twelve columns">
     <ul class="link-list">
-      <li><a href="http://ignited.laughinghost.com" target="_blank">CI Starter home page</a></li>
-      <li><a href="https://github.com/HaroldVillacorte/CI_Starter" target="_blank">CI Starter Github page</a></li>
+      <li><a href="http://ignited.laughinghost.com" target="_blank">CoreModule home page</a></li>
+      <li><a href="https://github.com/HaroldVillacorte/CoreModule" target="_blank">CoreModule Github page</a></li>
       <li><a href="http://php.net" target="_blank">PHP.net</a></li>
       <li><a href="http://foundation.zurb.com/docs/" target="_blank">Foundation 3 Docs</a></li>
       <li><a href="http://www.grocerycrud.com/documentation" target="_blank">Grocery CRUD Docs</a></li>

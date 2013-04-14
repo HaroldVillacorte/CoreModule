@@ -33,7 +33,7 @@ class Core_Template extends MX_Controller {<br/>
 </code>
 
 <h4 class="code-after">Templates</h4>
-<p>CI Starter ships with a template called default_template:</p>
+<p>CoreModule ships with a template called default_template:</p>
 <code class="prettyprint">
   $this->load->view($module . '/' . $view_file);
 </code>

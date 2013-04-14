@@ -1,5 +1,5 @@
 <h2>Core Model Module</h2>
-<p class="panel">This module is simply a model that normally would get autoloaded.  It contains the site configuration array.  This is different from the way a typical CMS stores site information.  They normally store it in the database and give the admin users a graphical interface to set site information such as the site name, slogan, description, etc.  Since this is not a CMS and is not intended for use by non Codeigniter developers CI Starter simply stores the information in a model.  If you have ever played around with Yii you may have noticed they do the same thing.  All of the modules that ship with CI Starter use this module to get site information.</p>
+<p class="panel">This module is simply a model that normally would get autoloaded.  It contains the site configuration array.  This is different from the way a typical CMS stores site information.  They normally store it in the database and give the admin users a graphical interface to set site information such as the site name, slogan, description, etc.  Since this is not a CMS and is not intended for use by non Codeigniter developers CoreModule simply stores the information in a model.  If you have ever played around with Yii you may have noticed they do the same thing.  All of the modules that ship with CoreModule use this module to get site information.</p>
 
 <p>Here is a condensed version of the code without all the comments:</p>
 
@@ -8,7 +8,7 @@ class Core_Model extends CI_Model {<br/>
 &nbsp;&nbsp;public function site_info() {<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;$meta_description = 'A Codeigniter boilerplate.';<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;$data = array(<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'site_name' => 'CI Starter',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'site_name' => 'CoreModule',<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'site_description' => $meta_description,<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'template_url' => base_url () . 'assets/templates/default_template/',<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'css_url' => base_url () . 'assets/templates/default_template/stylesheets/',<br/>

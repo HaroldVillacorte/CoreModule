@@ -1,5 +1,5 @@
 <h2>Autoload</h2>
-<p class="panel">Only three things are autoloaded by default in CI Starter.</p>
+<p class="panel">Only three things are autoloaded by default in CoreModule.</p>
 
 <h4>Session</h4>
 <code class="prettyprint">$autoload['libraries'] = array('session');</code>

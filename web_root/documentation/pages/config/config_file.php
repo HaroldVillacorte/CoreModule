@@ -1,8 +1,8 @@
 <h2>Config File</h2>
-<p class="panel">CI Starter comes optimally pre-configured but a few things you have to set up for your environment.  Here is a list of the changes CI Starter has made to the config file.</p>
+<p class="panel">CoreModule comes optimally pre-configured but a few things you have to set up for your environment.  Here is a list of the changes CoreModule has made to the config file.</p>
 
 <h4>Base url</h4>
-<code class="prettyprint">$config['base_url']	= 'http://localhost/CI_Starter/';</code>
+<code class="prettyprint">$config['base_url']	= 'http://localhost/CoreModule/';</code>
 <p class="code-after">You need to set this to the base url of your application.  From my experience if this is left blank it can lead to buggy behavior.</p>
 
 <h4>Index file</h4>
