@@ -38,45 +38,58 @@
 |
 */
 
+// Uncomment the following custom code when directed during intall.
+
+/* Start custom code:
+
 // Load the database class.
-require_once( BASEPATH .'database/DB'. EXT );
+require_once BASEPATH . 'database/DB' . EXT ;
+
+// Do not delete this route.  It is used by the system to check route functionality.
+$route['core_module_route_test'] = TRUE;
 
 // Reference the database object.
 $db =& DB();
 
-// Disable database caching here to avoid WSOD.
-$db->cache_off();
-
-// Get the page slugs.
-$query = $db->select('slug')->get('core_pages');
-
-// Define the page routes.
-if ($query->num_rows() > 0)
+if ($db->hostname != '' && $db->username != '' && $db->password != '' && $db->database != '')
 {
-    $routes = $query->result();
+    // Disable database caching here to avoid WSOD.
+    $db->cache_off();
 
-    foreach ($routes as $route_row)
+    // Get the page slugs.
+    $query = $db->select('slug')->get('core_pages');
+
+    // Define the page routes.
+    if ($query->num_rows() > 0)
     {
-        $route[$route_row->slug] = 'core_module/page/' . $route_row->slug;
+        $routes = $query->result();
+
+        foreach ($routes as $route_row)
+        {
+            $route[$route_row->slug] = 'core_module/page/' . $route_row->slug;
+        }
     }
+
+    // Get the admin page slugs.
+    $query = $db->select('slug')->get('core_pages_admin');
+
+    // Define the page routes.
+    if ($query->num_rows() > 0)
+    {
+        $routes = $query->result();
+
+        foreach ($routes as $route_row)
+        {
+            $route[$route_row->slug . '(.*)'] = 'core_module/admin/' . $route_row->slug;
+        }
+    }
+
+    // Reenable database caching.
+    $db->cache_on();
 }
 
-// Get the admin page slugs.
-$query = $db->select('slug')->get('core_pages_admin');
-
-// Define the page routes.
-if ($query->num_rows() > 0)
-{
-    $routes = $query->result();
-
-    foreach ($routes as $route_row)
-    {
-        $route[$route_row->slug . '(.*)'] = 'core_module/admin/' . $route_row->slug;
-    }
-}
-
-// Reenable database caching.
-$db->cache_on();
+ * End of custom code.
+ */
 
 $route['default_controller'] = 'core_module/core_module';
 $route['404_override'] = '';

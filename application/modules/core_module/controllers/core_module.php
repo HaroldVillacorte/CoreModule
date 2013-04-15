@@ -20,6 +20,9 @@ class Core_module extends MX_Controller
     {
         parent::__construct();
 
+        // Check if application is installed and ridirect if not.
+        check_install();
+
         // Set up the module.
         self::$data = initialize_module('core_module');
 

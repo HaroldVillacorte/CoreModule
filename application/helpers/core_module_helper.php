@@ -1,6 +1,65 @@
 <?php if (!defined('BASEPATH')) exit('No direct script access allowed.');
 
 /**
+ * Check if the application is fully installed.  User will be redirected to the
+ * install module if any of the install conditions are not met.
+ */
+function check_install()
+{
+    $CI =& get_instance();
+    $CI->load->dbutil();
+
+    // Get the routes array.
+    require APPPATH . 'config/routes.php';
+    $routes = $route;
+
+    // These directories must be writable.
+    $writable_directories = array($CI->db->cachedir, FCPATH . 'asset_cache');
+
+    // Check the writable directories.
+    foreach ($writable_directories as $dir)
+    {
+        if (!is_really_writable($dir) && $CI->uri->segment(1) != 'core_install')
+        {
+            redirect(base_url('core_install'));
+            exit();
+        }
+    }
+
+    // check that the database name in databsae.php exists on the server.
+    if (!($CI->dbutil->database_exists($CI->db->database)))
+    {
+        redirect(base_url('core_install'));
+        exit();
+    }
+
+    // If the database exists.
+    if ($CI->dbutil->database_exists($CI->db->database))
+    {
+        // Check if the pages table exists.
+        if (!$CI->db->table_exists('core_pages'))
+        {
+            redirect(base_url('core_install'));
+            exit();
+        }
+    }
+
+    // Make sure the Session class uses the database.
+    if (!$CI->config->item('sess_use_database'))
+    {
+        redirect(base_url('core_install'));
+        exit();
+    }
+
+    // Make sure the cusom routing is enabled.
+    if (!isset($routes['core_module_route_test']))
+    {
+        redirect(base_url('core_install'));
+        exit();
+    }
+}
+
+/**
  * Make a module a Core module module.
  *
  * @global object $CI
