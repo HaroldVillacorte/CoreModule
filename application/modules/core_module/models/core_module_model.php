@@ -1,18 +1,14 @@
 <?php if (!defined('BASEPATH')) exit('No direct script access allowed');
 
 /**
- * Default Controller Module
- *
- * Serves as a basic boilerplate for develeping with CoreModule.
- *
- * @package CoreModule
- * @subpackage Modules
- * @category Core
- * @author Harold Villacorte
+ * The CoreModule model.
  */
 class Core_module_model extends CI_Model
 {
 
+    /*
+     * The CoreModule model constructor.
+     */
     function __construct()
     {
         parent::__construct();
@@ -22,34 +18,15 @@ class Core_module_model extends CI_Model
     }
 
     /**
-     * This model should be autolaoded.  Additionally the $data array should be
-     * first set to site_info().  for example:
-     * self:$data = $this->core_model->site_info().
-     * Then subsequently anything can be added to the array.
+     * This model should be autolaoded.
      *
      * @return array $data An array containing site wide information.
      */
     public function site_info()
     {
         $data = array(
-            // The name of the Website or application.
-            'site_name'        => $this->config->item('core_module_site_name'),
-            // The site description te be echoed in the head meta descrition.
-            'site_description' => $this->config->item('core_module_site_description'),
-            // Sets the $template_url variable available application-wide.
-            'template_url'     => base_url() . $this->config->item('core_module_template_url'),
-            // Sets the $css_url variable available application-wide.  This is not
-            // integrated with the Asset loader module.
-            'css_url'          => base_url() . $this->config->item('core_module_css_url'),
-            // Sets the $js_url variable available application-wide.  This is not
-            // integrated with the Asset loader module.
-            'js_url'           => base_url() . $this->config->item('core_module_js_url'),
-            // Sets the $img_url variable available application-wide.  This is not
-            // integrated with the Asset loader module.
-            'img_url'          => base_url() . $this->config->item('core_module_img_url'),
-            // Sets the $aset_path variable available application-wide.  This is not
-            // integrated with the Asset loader module.
-            'asset_path'       => FCPATH . $this->config->item('core_module_asset_path'),
+            'site_name'        => $this->variable_get('site_name'),
+            'site_description' => $this->variable_get('site_description'),
             // This file is required by asset loader module. Do not delete.  File
             // can be edited as long as they match what is in the asset tempalte
             // directory.
@@ -69,24 +46,24 @@ class Core_module_model extends CI_Model
      * @param mixed $setting
      * @return boolean
      */
-    public function setting_set($name = NULL, $setting = NULL)
+    public function variable_set($name = NULL, $variable = NULL)
     {
         // Escape, type case, and serialize.
         $name = $this->db->escape_str($name);
-        $setting = (is_int($setting) || is_numeric($setting)) ? (int) $setting : $setting;
-        $setting = serialize($this->db->escape_str($setting));
+        $variable = (is_int($variable) || is_numeric($variable)) ? (int) $variable : $variable;
+        $variable = serialize($this->db->escape_str($variable));
 
         // Set the post array.
         $array = array(
             'name' => $name,
-            'setting' => $setting,
+            'variable' => $variable,
         );
 
         // Check if the setting exists.
-        if (!$this->setting_get($name))
+        if ((!$this->variable_get($name) && $this->variable_get($name) != 0) || $this->variable_get($name) == NULL)
         {
             // Insert if setting does not exist.
-            $query = $this->db->insert('core_settings', $array);
+            $query = $this->db->insert('core_variables', $array);
             $result = ($this->db->insert_id());
         }
         else
@@ -94,7 +71,7 @@ class Core_module_model extends CI_Model
             // Update if setting exists.
             $query = $this->db
                            ->where('name', $name)
-                           ->update('core_settings', $array);
+                           ->update('core_variables', $array);
             $result = ($query);
         }
 
@@ -111,24 +88,187 @@ class Core_module_model extends CI_Model
      * @param string $name
      * @return mixed
      */
-    public function setting_get($name = NULL)
+    public function variable_get($name = NULL)
     {
         // Excape.
         $name = $this->db->escape_str($name);
 
         // Runf the query.
         $result = $this->db
-                       ->select('setting')
-                       ->get_where('core_settings', array('name' => $name), 1);
+                       ->select('variable')
+                       ->get_where('core_variables', array('name' => $name), 1);
 
         // Get result.
         $row = $result->row();
 
         // Get the setting field and unserialize.
-        $setting = ($result->num_rows() > 0) ? unserialize($row->setting) : NULL;
+        $variable = ($result->num_rows() > 0) ? unserialize($row->variable) : NULL;
 
         // Reurn the setting.
-        return ($result->num_rows() > 0) ? $setting : FALSE;
+        return ($result->num_rows() > 0) ? $variable : FALSE;
+    }
+
+
+    /**
+     * Add a category.
+     *
+     * @param array $post
+     * @return integer
+     */
+    public function category_add($post = array())
+    {
+        // Set and unset.
+        unset($post['submit']);
+
+        // Sanitize and type cast.
+        $post['level'] = (int) $post['level'];
+        $post['name'] = $this->db->escape_str($post['name']);
+
+        // Run the query.
+        $this->db->insert('core_categories', $post);
+
+        // Get the insert id.
+        $id = $this->db->insert_id();
+
+        // Clear the database cache.
+        $this->db->cache_delete_all();
+
+        // Return the result.
+        return ($id) ? $id : FALSE;
+    }
+
+    /**
+     * Edit a category.
+     *
+     * @param array $post
+     * @return integer
+     */
+    public function category_edit($post = array())
+    {
+        // Set and unset.
+        unset($post['submit']);
+
+        // Sanitize and type cast.
+        $post['level'] = (int) $post['level'];
+        $post['name'] = $this->db->escape_str($post['name']);
+
+        // Run the query.
+        $result = $this->db
+            ->where('id', (int) $post['id'])
+            ->update('core_categories', $post);
+
+        // Clear the database cache.
+        $this->db->cache_delete_all();
+
+        // Return the result.
+        return ($result);
+    }
+
+    /**
+     * Delete a category.
+     * @param integer $id
+     * @return boolean
+     */
+    public function category_delete($id = NULL)
+    {
+        // Run the query.
+        $this->db->delete('core_categories', array('id' => (int) $id), 1);
+
+        // Clear the database cache.
+        $this->db->cache_delete_all();
+
+        // Return the result.
+        return ($this->db->affected_rows() == 1) ? TRUE : FALSE;
+    }
+
+    /**
+     * Find a category.
+     *
+     * @param integer $id
+     * @return object
+     */
+    public function category_find($id = NULL)
+    {
+        // Run the query.
+        $category = $this->db
+            ->select('id, level, name')
+            ->get_where('core_categories', array('id' => (int) $id), 1);
+
+        // Return the result.
+        return ($category->num_rows() == 1) ? $category->row() : FALSE;
+    }
+
+    /**
+     * Find all categories.
+     *
+     * @return object
+     */
+    public function category_find_level($level = NULL, $data_type = 'object')
+    {
+        // Run the query.
+        $categories = $this->db
+            ->select('id, level, name')
+            ->where('level', (int) $level)
+            ->get('core_categories');
+
+        // Return the results
+        switch ($data_type)
+        {
+            case 'object':
+                return ($categories->num_rows() > 0) ? $categories->result() : FALSE;
+                break;
+            case 'array':
+                return ($categories->num_rows() > 0) ? $categories->result_array() : FALSE;
+                break;
+            case 'row':
+                return ($categories->num_rows() > 0) ? $categories->row() : FALSE;
+                break;
+        }
+    }
+
+    /**
+     * Find all categories.
+     *
+     * @return object
+     */
+    public function category_count()
+    {
+        // Run the query.
+        $categories = $this->db
+            ->select('id')
+            ->get('core_categories');
+
+        return $categories->num_rows();
+    }
+
+    /**
+     * Get limit offset of categories.
+     *
+     * @param integer $limit
+     * @param integer $offset
+     * @param string $data_type
+     * @return mixed
+     */
+    public function category_find_limit_offset($limit = NULL, $offset = NULL, $data_type = 'object')
+    {
+        // Run the query.
+        $categories = $this->db
+            ->select('id, level, name')
+            ->get('core_categories', (int) $limit, (int) $offset);
+
+        // Return the results
+        switch ($data_type)
+        {
+            case 'object':
+                return ($categories->num_rows() > 0) ? $categories->result() : FALSE;
+                break;
+            case 'array':
+                return ($categories->num_rows() > 0) ? $categories->result_array() : FALSE;
+                break;
+            case 'row':
+                return ($categories->num_rows() > 0) ? $categories->row() : FALSE;
+                break;
+        }
     }
 
     /**
@@ -153,7 +293,7 @@ class Core_module_model extends CI_Model
 
         // Run the query.
         $query = $this->db
-            ->select($table . '.id, is_front, published, author, created, last_edit,
+            ->select($table . '.id, category, is_front, published, author, created, last_edit,
                 last_edit_username, slug, title, body, template')
             ->where($table . '.' . $by, $identifier)
             ->get($table, 1);
@@ -171,7 +311,7 @@ class Core_module_model extends CI_Model
     {
         // Run the query.
         $query = $this->db
-            ->select($table . '.id, is_front, published, author, created, last_edit,
+            ->select($table . '.id, category, is_front, published, author, created, last_edit,
                 last_edit_username, slug, title, body, template')
             ->get($table);
 
@@ -199,8 +339,10 @@ class Core_module_model extends CI_Model
     {
         // Run the query.
         $query = $this->db
-            ->select($table . '.id, is_front, published, author, created, last_edit,
+            ->select($table . '.id, core_categories.name AS category, is_front, published, author, created, last_edit,
                 last_edit_username, slug, title, body, template')
+            ->join('core_categories', $table . '.category = core_categories.id')
+            ->order_by('category')
             ->get($table, (int) $limit, (int) $offset);
 
         // Choose data type.

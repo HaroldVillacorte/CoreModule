@@ -163,7 +163,7 @@ class Core_user_model extends CI_Model
     public function user_login_log_failed_attempt($post = array())
     {
         $post = prep_post($post);
-        $expire_time = time() - setting_get('user_login_attempts_time');
+        $expire_time = time() - variable_get('user_login_attempts_time');
 
         // Delete expired attempts.
         $this->db->where('time <', $expire_time)->delete('core_user_login_attempts');
@@ -181,7 +181,7 @@ class Core_user_model extends CI_Model
         $this->db->cache_delete_all();
 
         // Count number of attempts.
-        if ($all_login_attempts->num_rows() < setting_get('user_login_attempts_max'))
+        if ($all_login_attempts->num_rows() < variable_get('user_login_attempts_max'))
         {
             // Insert if less than the max.
             $this->db->set($post)->insert('core_user_login_attempts');
@@ -451,7 +451,7 @@ class Core_user_model extends CI_Model
                 // Generate unique activation code from email.
                 $activation_code = random_string('alnum', 64);
                 $hashed_code = self::$PasswordHash->HashPassword($activation_code);
-                $expire_time = time() + setting_get('user_activation_expire_limit');
+                $expire_time = time() + variable_get('user_activation_expire_limit');
                 // Generate the activation code insert array.
                 $activation_code_array = array(
                     'user_id' => (int) $id,

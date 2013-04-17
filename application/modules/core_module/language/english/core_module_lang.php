@@ -13,6 +13,20 @@ $lang['success_setting set'] = 'Settings were set successfully';
 
 /*
 |--------------------------------------------------------------------------
+| Categories.
+|--------------------------------------------------------------------------
+*/
+
+$lang['category_add_failed']     = 'There was a problem adding the category.';
+$lang['category_add_success']    = 'Category was successfully added.';
+$lang['category_edit_failed']    = 'There was a problem saving the category.';
+$lang['category_edit_success']   = 'Category was successfully saved.';
+$lang['category_delete_failed']  = 'There was a problem deleting the category.';
+$lang['category_delete_success'] = 'Category was successfully deleted.';
+$lang['category_delete_confirm'] = 'Are you sure you want to delete this category?';
+
+/*
+|--------------------------------------------------------------------------
 | Pages library.
 |--------------------------------------------------------------------------
 */

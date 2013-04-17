@@ -177,11 +177,11 @@ function prep_post($post_array = array())
  *
  * @param string $field
  */
-function set_valid_base_64_error($field = '')
+function set_valid_base_64_error($label = '')
 {
     $CI =& get_instance();
 
-    $valid_base64_error = $field . lang('validation_valid_base64');
+    $valid_base64_error = $label . lang('validation_valid_base64');
     $CI->form_validation->set_message('valid_base64', $valid_base64_error);
 }
 
@@ -276,11 +276,11 @@ function strip_whitespace($string = NULL)
  * @param type $setting
  * @return type
  */
-function setting_set($name = NULL, $setting = NULL)
+function variable_set($name = NULL, $setting = NULL)
 {
     $CI =& get_instance();
     $CI->load->model('core_module/core_module_model');
-    return $CI->core_module_model->setting_set($name, $setting);
+    return $CI->core_module_model->variable_set($name, $setting);
 }
 
 /**
@@ -289,11 +289,11 @@ function setting_set($name = NULL, $setting = NULL)
  * @param type $name
  * @return type
  */
-function setting_get($name = NULL)
+function variable_get($name = NULL)
 {
     $CI =& get_instance();
     $CI->load->model('core_module/core_module_model');
-    return $CI->core_module_model->setting_get($name);
+    return $CI->core_module_model->variable_get($name);
 }
 
 /**
@@ -301,7 +301,7 @@ function setting_get($name = NULL)
  *
  * @param array $post
  */
-function process_settings($post = array())
+function process_variables($post = array())
 {
     $CI =& get_instance();
 
@@ -309,7 +309,7 @@ function process_settings($post = array())
     foreach ($post as $key => $value)
     {
         // Send to the database.
-        $result = setting_set($key, $value);
+        $result = variable_set($key, $value);
         if (!$result)
         {
             // Failed to set.
@@ -340,6 +340,32 @@ function get_back_link()
 {
     $CI =& get_instance();
     return $CI->session->userdata('back_link');
+}
+
+/**
+ * Get a page slug.
+ *
+ * @param integer $id
+ * @return string
+ */
+function get_page_slug($id = NULL)
+{
+    $CI =& get_instance();
+    $page = $CI->core_module_model->page_find('core_pages', 'id', $id);
+    return ($page) ? $page->slug : '';
+}
+
+/**
+ * Get an adin page slug.
+ *
+ * @param integer $id
+ * @return string
+ */
+function get_admin_slug($id = NULL)
+{
+    $CI =& get_instance();
+    $page = $CI->core_module_model->page_find('core_pages_admin', 'id', $id);
+    return ($page) ? $page->slug : '';
 }
 
 /* End of file core_module_heper.php */

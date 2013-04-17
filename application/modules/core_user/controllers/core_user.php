@@ -69,7 +69,7 @@ class Core_user extends MX_Controller
                 unset($post['submit']);
 
                 // Send to the database.
-                process_settings($post);
+                process_variables($post);
             }
         }
         // First visit.
@@ -94,7 +94,7 @@ class Core_user extends MX_Controller
         $id = $this->session->userdata('user_id');
         if (!$id)
         {
-            redirect(base_url() . $this->core_user_library->user_login_uri);
+            redirect(base_url($this->core_user_library->user_login_uri));
         }
         $user = $this->core_user_library->user_find($id);
         self::$data['user'] = $user;
@@ -137,7 +137,7 @@ class Core_user extends MX_Controller
             if ($this->session->userdata('user_id'))
             {
                 keep_flashdata_messages();
-                redirect(base_url() . $this->core_user_library->user_index_uri);
+                redirect(base_url($this->core_user_library->user_index_uri));
                 exit();
             }
 
@@ -235,7 +235,7 @@ class Core_user extends MX_Controller
     {
         if ($activation_code == NULL)
         {
-            redirect(base_url() . $this->core_user_library->user_login_uri);
+            redirect(base_url($this->core_user_library->user_login_uri));
         }
         else
         {
@@ -253,7 +253,7 @@ class Core_user extends MX_Controller
         // Check if a user is logged in then set the user id from the session.
         if (!$this->session->userdata('user_id'))
         {
-            redirect(base_url() . $this->core_user_library->user_index_uri);
+            redirect(base_url($this->core_user_library->user_index_uri));
         }
         else
         {
@@ -267,7 +267,7 @@ class Core_user extends MX_Controller
         {
             if ($this->session->userdata('user_id'))
             {
-                redirect(base_url() . $this->core_user_library->user_delete_uri);
+                redirect(base_url($this->core_user_library->user_delete_uri));
             }
         }
 
@@ -348,10 +348,10 @@ class Core_user extends MX_Controller
     {
         $template = 'core_user/admin_roles';
 
-        $per_page = 2;
+        $per_page = variable_get('core_module_pagination_per_page');
         $start = ($start) ? $start : 0;
         $count = count($this->core_user_library->admin_role_get_all('array'));
-        $base_url = base_url() . $this->core_user_library->user_admin_roles_uri;
+        $base_url = base_url($this->core_user_library->user_admin_roles_uri);
 
         // Pagination setup.
         self::$data['pagination'] = pagination_setup($base_url, $count, $per_page, 2);
@@ -436,7 +436,7 @@ class Core_user extends MX_Controller
             // Redirect if parameter not set.
             if (!$id)
             {
-                redirect(base_url() . $this->core_user_library->user_admin_roles_uri);
+                redirect(base_url($this->core_user_library->user_admin_roles_uri));
             }
 
             // Render the page.
@@ -452,7 +452,7 @@ class Core_user extends MX_Controller
     public function admin_user_role_delete($id = NULL)
     {
         // Redirect if role id is not set.
-        if (!$id) redirect(base_url() . $this->core_user_library->user_admin_roles_uri);
+        if (!$id) redirect(base_url($this->core_user_library->user_admin_roles_uri));
 
         $role = $this->core_user_library->admin_role_get($id);
 
@@ -473,7 +473,7 @@ class Core_user extends MX_Controller
         $template = 'core_user/admin_users';
 
         // Per_page for pagination and model query.
-        $per_page = 1;
+        $per_page = variable_get('core_module_pagination_per_page');
 
         // Set start record for query.
         $start = 0;
@@ -488,13 +488,12 @@ class Core_user extends MX_Controller
         self::$data['users'] = $this->core_user_library->admin_user_limit_offset_get($per_page, $start);
 
         // Parse user data that needs parsing.
-        $date_format = $this->config->item('core_user_date_format');
         foreach (self::$data['users'] as $key => $value)
         {
             // Convert the protected boolean field to string.
             self::$data['users'][$key]['protected'] = (self::$data['users'][$key]['protected']) ? 'Yes' : 'No';
             // Convert created unix time stamp to time.
-            self::$data['users'][$key]['created'] = standard_date($date_format, self::$data['users'][$key]['created']);
+            self::$data['users'][$key]['created'] = standard_date(variable_get('core_module_time_format'), self::$data['users'][$key]['created']);
         }
 
         // Get first and last id's.
@@ -527,7 +526,7 @@ class Core_user extends MX_Controller
         // Redirect admin user if id is not set.
         if ($id == NULL && !$this->input->post('save'))
         {
-            redirect(base_url() . $this->core_user_library->user_admin_users_uri);
+            redirect(base_url($this->core_user_library->user_admin_users_uri));
         }
         // Post submit.
         elseif ($this->input->post('save'))

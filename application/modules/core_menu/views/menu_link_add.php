@@ -1,6 +1,6 @@
 <h4>Add menu link</h4>
 
-<?php echo form_open($this->core_menu_library->menu_link_add_uri) ;?>
+<?php echo form_open(current_url()) ;?>
 
 <fieldset>
     <legend>Link options</legend>

@@ -57,6 +57,169 @@ class Core_module extends MX_Controller
         echo $this->core_template_library->parse_template($template, self::$data);
     }
 
+    /**
+     * The system settings page.
+     */
+    public function system_settings()
+    {
+        // Set the time formats array for the system settings page.
+        self::$data['time_formats'] = array('DATE_ATOM', 'DATE_COOKIE', 'DATE_ISO8601',
+            'DATE_RFC822', 'DATE_RFC850', 'DATE_RFC1036', 'DATE_RFC1123', 'DATE_RFC2822',
+            'DATE_RSS', 'DATE_W3C');
+
+        $template = 'core_module/system_settings';
+
+        if ($this->input->post('submit'))
+        {
+            // Set and unset.
+            $post = $this->input->post();
+            unset($post['submit']);
+            $post['core_module_design_mode'] = ($post['core_module_design_mode']) ? 1 : 0;
+
+            // Set validation rules.
+            $this->core_module_library->set_validation_rules('settings');
+
+            // Form validation fails.
+            if ($this->form_validation->run() == FALSE)
+            {
+                // Render the page.
+                echo $this->core_template_library->parse_view($template, self::$data);
+            }
+            else
+            {
+                // Send to the database.
+                process_variables($post);
+            }
+        }
+        // First visit.
+        else
+        {
+            // Render the page.
+            echo $this->core_template_library->parse_view($template, self::$data);
+        }
+
+    }
+
+    /**
+     * The categories admin page.
+     *
+     * @param integer $page
+     */
+    public function categories($page = 0)
+    {
+        $template = 'core_module/categories';
+
+        // Set the base url for pagination.
+        $base_url = base_url($this->core_module_library->categories_uri);
+
+        // Get the count.
+        $count = $this->core_module_library->category_count();
+
+        // Set the limit.
+        $per_page = variable_get('core_module_pagination_per_page');
+
+        // Set the offset.
+        $page = ($page) ? $page : 0;
+
+        self::$data['pagination'] = pagination_setup($base_url, $count, $per_page, $uri_segment = 2);
+
+        // Get the catefories.
+        self::$data['categories'] = $this->core_module_library->category_find_limit_offset($per_page, $page, 'object');
+
+        // Render the page.
+        echo $this->core_template_library->parse_template($template, self::$data);
+    }
+
+    /**
+     * Add a category.
+     */
+    public function add_category()
+    {
+        $template = 'core_module/add_category';
+
+        // Get the roles.  They are called levels here.
+        self::$data['levels'] = $this->core_user_library->admin_role_get_all('object');
+
+        if ($this->input->post('submit'))
+        {
+            // Set the validation rules.
+            $this->core_module_library->set_validation_rules('category_insert');
+
+            // Validation fails.
+            if ($this->form_validation->run() == FALSE)
+            {
+                // Render the page.
+                echo $this->core_template_library->parse_template($template, self::$data);
+            }
+            else
+            {
+                // Send to the database.
+                $this->core_module_library->category_add($this->input->post());
+            }
+        }
+        else
+        {
+            // Render the page.
+            echo $this->core_template_library->parse_template($template, self::$data);
+        }
+
+    }
+
+    /**
+     * Edit a category.
+     *
+     * @param integer $id
+     */
+    public function edit_category($id = NULL)
+    {
+        $template = 'core_module/edit_category';
+
+        // Get the roles.  They are called levels here.
+        self::$data['levels'] = $this->core_user_library->admin_role_get_all('object');
+
+        self::$data['category'] = $this->core_module_library->category_find($id);
+
+        if ($this->input->post('submit'))
+        {
+            // Set the validation rules.
+            $this->core_module_library->set_validation_rules('category_update');
+
+            // Validation fails.
+            if ($this->form_validation->run() == FALSE)
+            {
+                // Render the page.
+                echo $this->core_template_library->parse_template($template, self::$data);
+            }
+            else
+            {
+                // Send to the database.
+                $this->core_module_library->category_edit($this->input->post());
+            }
+        }
+        else
+        {
+            // Render the page.
+            echo $this->core_template_library->parse_template($template, self::$data);
+        }
+
+    }
+
+    /**
+     * Delete a category.
+     *
+     * @param integer $id
+     */
+    public function delete_category($id = NULL)
+    {
+        $this->core_module_library->category_delete($id);
+    }
+
+    /**
+     * The pages.
+     *
+     * @param string $slug
+     * @return string
+     */
     public function page($slug = NULL)
     {
         // Restrict base access.
@@ -197,16 +360,17 @@ class Core_module extends MX_Controller
         $this->load->library('pagination');
 
         // Per page used for pagination and query.
-        $per_page = 10;
+        $per_page = variable_get('core_module_pagination_per_page');
 
         // Run the query.
-        self::$data['pages'] = $this->core_module_library->page_find_limit_offset('core_pages', $per_page, $page, 'object');
+        self::$data['pages'] = $this->core_module_library
+            ->page_find_limit_offset('core_pages', $per_page, $page, 'object');
 
         // Get the count.
         $count = count($this->core_module_library->page_find_all('core_pages', 'array'));
 
         // Get the pagination links.
-        $base_url = base_url() . $this->config->item('pages_uri');
+        $base_url = base_url($this->config->item('pages_uri'));
         self::$data['pagination'] = pagination_setup($base_url, $count, $per_page, 2);
 
         // Render the page.
@@ -224,16 +388,17 @@ class Core_module extends MX_Controller
         $this->load->library('pagination');
 
         // Per page used for pagination and query.
-        $per_page = 10;
+        $per_page = variable_get('core_module_pagination_per_page');
 
         // Run the query.
-        self::$data['pages'] = $this->core_module_library->page_find_limit_offset('core_pages_admin', $per_page, $page, 'object');
+        self::$data['pages'] = $this->core_module_library
+            ->page_find_limit_offset('core_pages_admin', $per_page, $page, 'object');
 
         // Get the count.
         $count = count($this->core_module_library->page_find_all('core_pages_admin', 'array'));
 
         // Get the pagination links.
-        $base_url = base_url() . $this->config->item('admin_pages_uri');
+        $base_url = base_url($this->config->item('admin_pages_uri'));
         self::$data['pagination'] = pagination_setup($base_url, $count, $per_page, 2);
 
         // Render the page.
@@ -247,6 +412,9 @@ class Core_module extends MX_Controller
     {
         // Set the content template file.
         $template = 'core_module/page_add';
+
+        // Get the categories.
+        self::$data['categories'] = $this->core_module_library->category_find_level(3, 'object');
 
         // Post submit.
         if ($this->input->post('submit'))
@@ -283,6 +451,9 @@ class Core_module extends MX_Controller
         // Set the content template file.
         $template = 'core_module/page_add';
 
+        // Get the categories.
+        self::$data['categories'] = $this->core_module_library->category_find_level(2, 'object');
+
         // Post submit.
         if ($this->input->post('submit'))
         {
@@ -317,6 +488,9 @@ class Core_module extends MX_Controller
     {
         // Set the content template file.
         $template = 'core_module/page_edit';
+
+        // Get the categories.
+        self::$data['categories'] = $this->core_module_library->category_find_level(3, 'object');
 
         // Post submit.
         if ($this->input->post('submit'))
@@ -355,6 +529,9 @@ class Core_module extends MX_Controller
     {
         // Set the content template file.
         $template = 'core_module/page_edit';
+
+        // Get the categories.
+        self::$data['categories'] = $this->core_module_library->category_find_level(2, 'object');
 
         // Post submit.
         if ($this->input->post('submit'))

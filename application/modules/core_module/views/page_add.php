@@ -3,6 +3,19 @@
 <?php echo form_open(current_url()) ;?>
 
 <fieldset>
+    <legend>Category</legend>
+
+    <?php if (!empty($categories)) :?>
+        <?php foreach ($categories as $category) :?>
+    <label class="<?php echo form_error_class('category') ;?>"><?php echo $category->name ;?></label>
+            <input type="radio" name="category" value="<?php echo $category->id ;?>"
+                <?php echo set_radio('category', $category->id) ;?>/>
+        <?php endforeach ;?>
+    <?php endif ;?>
+
+</fieldset>
+
+<fieldset>
     <legend>Options</legend>
 
     <label for="is_front">Is the front page:</label>

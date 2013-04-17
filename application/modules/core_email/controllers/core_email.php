@@ -57,7 +57,7 @@ class Core_email extends MX_Controller
                 $post = $this->core_email_library->system_settings_process_post($post);
 
                 // Send to the database.
-                process_settings($post);
+                process_variables($post);
             }
         }
         // If user sends the "Send test email" button.

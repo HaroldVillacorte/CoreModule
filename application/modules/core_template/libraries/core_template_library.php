@@ -20,9 +20,6 @@ class Core_template_library
         // Instantiate the super object.
         self::$CI =& get_instance();
 
-        // Load the config.
-        self::$CI->load->config('core_template/core_template_config');
-
         // Load the libaries.
         self::$CI->load->library('parser');
 
@@ -128,7 +125,7 @@ class Core_template_library
         }
 
         // Write template assets to asset cache if design mode enabled.
-        if (self::$CI->config->item('template_design_mode'))
+        if (variable_get('core_module_design_mode'))
         {
             // Check if $cache_assets is set to false.
             if ($cache_assets)
@@ -246,7 +243,7 @@ class Core_template_library
     public function escape_output($string = NULL)
     {
         // Strip disallowed tags.
-        $string = strip_tags($string, self::$CI->config->item('core_module_allowed_tags'));
+        $string = strip_tags($string, variable_get('core_module_allowed_tags'));
 
         // nl2br
         $post_array[$key] = str_replace(array("\r\n", "\r", "\n"), "<br>", $post_array[$key]);
@@ -272,11 +269,8 @@ class Core_template_library
         // Set the source directory map array.
         $source_map = get_dir_file_info($directory, FALSE);
 
-        // Set asset count.
-        $asset_count = count($source_map);
-
         // Write the files.
-        if ($asset_count > 0)
+        if ($source_map)
         {
             foreach ($source_map as $value)
             {
@@ -321,11 +315,8 @@ class Core_template_library
         // Set the asset cache directory map array.
         $asset_cache_map = get_dir_file_info($this->asset_cache . $template_name, FALSE);
 
-        // Set the asset cache array count.
-        $asset_cache_map_count = count($asset_cache_map);
-
         // Check for files and delete.
-        if ($asset_cache_map_count > 0)
+        if ($asset_cache_map)
         {
             foreach ($asset_cache_map as $key => $value)
             {

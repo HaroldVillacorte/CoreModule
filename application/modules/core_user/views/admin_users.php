@@ -13,7 +13,7 @@
                 <th>Role</th>
                 <th>Member since</th>
                 <th>Protected</th>
-                <th><a href="<?php echo base_url() . $this->core_user_library->user_admin_user_add_uri ;?>">Add user +</a></th>
+                <th><a href="<?php echo base_url($this->core_user_library->user_admin_user_add_uri) ;?>">Add user +</a></th>
             </tr>
         </thead>
         <tbody>
@@ -26,9 +26,9 @@
                 <td><?php echo $user['created'] ;?></td>
                 <td><?php echo $user['protected'] ;?></td>
                 <td>
-                    <a href="<?php echo base_url() . $this->core_user_library->user_admin_user_edit_uri . $user['id'] ;?>"
+                    <a href="<?php echo base_url($this->core_user_library->user_admin_user_edit_uri . $user['id']) ;?>"
                        class="label secondary round">Edit</a>
-                    <a href="<?php echo base_url() . $this->core_user_library->user_admin_user_delete_uri . $user['id'] ;?>"
+                    <a href="<?php echo base_url($this->core_user_library->user_admin_user_delete_uri . $user['id']) ;?>"
                        class="label alert round" style="margin-left:10px;"
                        onClick="return confirm(<?php echo '\'' . lang('confirm_admin_user_delete') . '\'';?>)">Del</a>
                 </td>

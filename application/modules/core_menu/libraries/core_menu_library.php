@@ -44,6 +44,13 @@ class Core_menu_library
      */
     public function set_validation_rules($rules = NULL)
     {
+        $settings = array(
+            array(
+                'field' => 'menu_link_maximum_weight',
+                'label' => 'Maximum link weight',
+                'rules' => 'required|trim||integer|xss_clean'
+            ),
+        );
         $menu_insert = array(
             array(
                 'field' => 'menu_name',
@@ -189,6 +196,9 @@ class Core_menu_library
 
         switch ($rules)
         {
+            case 'settings':
+                $rule_set = $settings;
+                break;
             case 'menu_insert':
                 $rule_set = $menu_insert;
                 break;
@@ -325,7 +335,7 @@ class Core_menu_library
             self::$CI->session->set_flashdata('message_success', lang('menu_add_success'));
 
             // Redirect to the edit menu.
-            redirect(base_url() . $this->menus_uri);
+            redirect(base_url($this->menus_uri));
             exit();
         }
     }
@@ -344,7 +354,7 @@ class Core_menu_library
         if (!$result)
         {
             self::$CI->session->set_flashdata('message_error', lang('menu_edit_failed'));
-            redirect(base_url() . $this->menu_edit_uri . $post['id']);
+            redirect(base_url($this->menu_edit_uri. $post['id']));
             exit();
         }
         // Insert success.
@@ -353,7 +363,7 @@ class Core_menu_library
             self::$CI->session->set_flashdata('message_success', lang('menu_edit_success'));
 
             // Redirect to the edit menu.
-            redirect(base_url() . $this->menu_edit_uri . $post['id']);
+            redirect(base_url($this->menu_edit_uri . $post['id']));
             exit();
         }
     }
@@ -373,13 +383,13 @@ class Core_menu_library
             // Delete success.
             case TRUE:
                 self::$CI->session->set_flashdata('message_success', lang('menu_delete_success'));
-                redirect(base_url() . $this->menus_uri);
+                redirect(base_url($this->menus_uri));
                 break;
 
             // Delete failure.
             case FALSE:
                 self::$CI->session->set_flashdata('message_error', lang('menu_delete_failed'));
-                redirect(base_url() . $this->menus_uri);
+                redirect(base_url($this->menus_uri));
                 break;
         }
     }
@@ -476,7 +486,7 @@ class Core_menu_library
             self::$CI->session->set_flashdata('message_success', lang('menu_link_add_success'));
 
             // Redirect to the edit menu.
-            redirect(base_url() . $this->menus_uri . $post['parent_menu_id']);
+            redirect(base_url($this->menus_uri . $post['parent_menu_id']));
             exit();
         }
     }
@@ -504,7 +514,7 @@ class Core_menu_library
             {
                 // Or redirect and give failure message.
                 self::$CI->session->set_flashdata('message_error', lang('menu_link_edit_failed'));
-                redirect(base_url() . $this->menus_uri . $post['parent_menu_id']);
+                redirect(base_url($this->menus_uri . $post['parent_menu_id']));
                 exit();
             }
         }
@@ -521,7 +531,7 @@ class Core_menu_library
             {
                 // Or redirect and give success message.
                 self::$CI->session->set_flashdata('message_success', lang('menu_link_edit_success'));
-                redirect(base_url() . $this->menus_uri . $post['parent_menu_id']);
+                redirect(base_url($this->menus_uri . $post['parent_menu_id']));
                 exit();
             }
         }
@@ -547,13 +557,13 @@ class Core_menu_library
             // Delete success.
             case TRUE:
                 self::$CI->session->set_flashdata('message_success', lang('menu_link_delete_success'));
-                redirect(base_url() . $this->menus_uri . $parent_menu_id);
+                redirect(base_url($this->menus_uri . $parent_menu_id));
                 break;
 
             // Delete failure.
             case FALSE:
                 self::$CI->session->set_flashdata('message_error', lang('menu_link_delete_failed'));
-                redirect(base_url() . $this->menus_uri . $parent_menu_id);
+                redirect(base_url($this->menus_uri . $parent_menu_id));
                 break;
         }
     }
@@ -619,12 +629,12 @@ class Core_menu_library
                 {
                     if (self::$CI->session->userdata('user_id'))
                     {
-                        $link->link  = 'href="' . base_url() . self::$CI->core_user_library->user_logout_uri . '"';
+                        $link->link  = 'href="' . base_url(self::$CI->core_user_library->user_logout_uri) . '"';
                         $link->text = 'Logout';
                     }
                     else
                     {
-                        $link->link  = 'href="' . base_url() . self::$CI->core_user_library->user_login_uri . '"';
+                        $link->link  = 'href="' . base_url(self::$CI->core_user_library->user_login_uri) . '"';
                         $link->text = 'Login';
                     }
                 }
@@ -654,9 +664,8 @@ class Core_menu_library
         $output = (isset($data['site_name'])) ? '<ul id="menu-' . $data['menu_data']['menu']->id
             . '" class="' . $menu_classes . '">' : '';
 
-
         // Loop through the links.
-        if ($data['menu_data']['links'])
+        if (!empty($data['menu_data']['links']))
         {
             foreach ($data['menu_data']['links'] as $link)
             {
@@ -711,7 +720,7 @@ class Core_menu_library
             . '" class="' . $menu_classes . '">' : '';
 
         // Loop through the links.
-        if ($data['menu_data']['links'])
+        if (!empty($data['menu_data']['links']))
         {
             foreach ($data['menu_data']['links'] as $link)
             {
@@ -741,6 +750,7 @@ class Core_menu_library
             }
         }
 
+
         // End the string.  Only if site name is in the data array so child menus
         // will not run this part.
         $output .= (isset($data['site_name'])) ? '</ul>' : '';
@@ -766,7 +776,7 @@ class Core_menu_library
         {
             $output = '<nav id="nav-' . $data['menu_data']['menu']->id . '" class="' . $menu_classes . '">'
                 . '<ul id="menu-' . $data['menu_data']['menu']->id . '">'
-                . '<li class="name"><h1><a href="' . base_url() . 'admin/">' . $data['site_name'] . 'Admin</a></h1></li>'
+                . '<li class="name"><h1><a href="' . base_url() . '">' . $data['site_name'] . '</a></h1></li>'
                 .      '<li class="divider hide-for-small"></li>'
                 .      '<li class="toggle-topbar"><a href="#"></a></li>'
                 . '</ul>'
@@ -779,42 +789,46 @@ class Core_menu_library
         }
 
         // Loop through the links.
-        foreach ($data['menu_data']['links'] as $link)
+        if (!empty($data['menu_data']['links']))
         {
-            // Define the divider.
-            $divider = (isset($data['site_name'])) ? '<li class="divider"></li>' : NULL;
-
-            // You can put label tags per Foundation 3 top-bar.
-            if (strstr($link->text, '<label>'))
+            foreach ($data['menu_data']['links'] as $link)
             {
-                $output .= '<li>' . $link->text . '</li>'
-                        .  $divider;
-            }
-            // If link has no child menu.
-            elseif (!$link->child_menu_id)
-            {
-                $output .= '<li ' . $link->class . '><a ' . $link->link . ' title="' . $link->title . '">' . $link->text . '</a></li>'
-                        .  $divider;
-            }
-            // If link has child menu.
-            else
-            {
-                // Generate link data for the child menu id.
-                $link_data['menu_data'] = $this->generate_data($link->child_menu_id);
+                // Define the divider.
+                $divider = (isset($data['site_name'])) ? '<li class="divider"></li>' : NULL;
 
-                // Generate the child menu.
-                $child_links = $this->generate_topbar($link_data);
+                // You can put label tags per Foundation 3 top-bar.
+                if (strstr($link->text, '<label>'))
+                {
+                    $output .= '<li>' . $link->text . '</li>'
+                            .  $divider;
+                }
+                // If link has no child menu.
+                elseif (!$link->child_menu_id)
+                {
+                    $output .= '<li ' . $link->class . '><a ' . $link->link . ' title="' . $link->title . '">' . $link->text . '</a></li>'
+                            .  $divider;
+                }
+                // If link has child menu.
+                else
+                {
+                    // Generate link data for the child menu id.
+                    $link_data['menu_data'] = $this->generate_data($link->child_menu_id);
 
-                // Insert child menu into the new link.
-                $output .= '<li class="has-dropdown">'
-                        .       '<a href="#">' . $link->text . '</a>'
-                        .       '<ul class="dropdown">'
-                        .           $child_links
-                        .       '</ul>'
-                        .  '</li>'
-                        .  $divider;
+                    // Generate the child menu.
+                    $child_links = $this->generate_topbar($link_data);
+
+                    // Insert child menu into the new link.
+                    $output .= '<li class="has-dropdown">'
+                            .       '<a href="#">' . $link->text . '</a>'
+                            .       '<ul class="dropdown">'
+                            .           $child_links
+                            .       '</ul>'
+                            .  '</li>'
+                            .  $divider;
+                }
             }
         }
+
 
         // End the string.  Only if site name is in the data array so child menus
         // will not run this part.

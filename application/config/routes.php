@@ -40,7 +40,7 @@
 
 // Uncomment the following custom code when directed during intall.
 
-/* Start custom code:
+/* Start custom code:*/
 
 // Load the database class.
 require_once BASEPATH . 'database/DB' . EXT ;
@@ -88,7 +88,7 @@ if ($db->hostname != '' && $db->username != '' && $db->password != '' && $db->da
     $db->cache_on();
 }
 
- * End of custom code.
+ /* End of custom code.
  */
 
 $route['default_controller'] = 'core_module/core_module';

@@ -1,6 +1,6 @@
 <h4>Add menu</h4>
 
-<?php echo form_open($this->core_menu_library->menu_add_uri) ;?>
+<?php echo form_open(current_url()) ;?>
 
 <fieldset>
     <legend>Name and description</legend>

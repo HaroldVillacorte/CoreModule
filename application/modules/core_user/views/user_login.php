@@ -1,4 +1,4 @@
-<?php echo form_open($this->config->item('user_login_uri')) ;?>
+<?php echo form_open(current_url()) ;?>
 
 <fieldset>
     <legend>Login</legend>
@@ -17,7 +17,7 @@
 
 <?php echo form_submit('submit', 'Login') ;?>
 
-<a href="<?php echo base_url() . $this->core_user_library->user_add_uri ;?>">Create account</a> |
-<a href="<?php echo base_url() . $this->core_user_library->user_forgotten_password_uri ;?>">Recover password</a>
+<a href="<?php echo base_url($this->core_user_library->user_add_uri) ;?>">Create account</a> |
+<a href="<?php echo base_url($this->core_user_library->user_forgotten_password_uri) ;?>">Recover password</a>
 
 <?php echo form_close() ;?>

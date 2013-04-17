@@ -29,7 +29,6 @@ class Core_email_library
         self::$CI =& get_instance();
 
         // Load the config and language files.
-        self::$CI->load->config('core_email/core_email_config');
         self::$CI->lang->load('core_email/core_email');
 
         // Load the libraries.
@@ -47,31 +46,31 @@ class Core_email_library
         $this->mail = new PHPMailer;
 
         // Get the email settings.
-        $this->mail->Timeout = self::$CI->config->item('core_email_smtp_Timeout');
-        $this->mail->Priority = self::$CI->config->item('core_email_Priority');
-        $this->mail->CharSet = self::$CI->config->item('core_email_CharSet');
-        $this->mail->ContentType = self::$CI->config->item('core_email_ContentType');
-        $this->mail->Encoding = self::$CI->config->item('core_email_Encoding');
-        $this->mail->Sendmail = self::$CI->config->item('core_email_Sendmail');
+        $this->mail->Timeout = variable_get('core_email_smtp_Timeout');
+        $this->mail->Priority = variable_get('core_email_Priority');
+        $this->mail->CharSet = variable_get('core_email_CharSet');
+        $this->mail->ContentType = variable_get('core_email_ContentType');
+        $this->mail->Encoding = variable_get('core_email_Encoding');
+        $this->mail->Sendmail = variable_get('core_email_Sendmail');
 
         // Set the protocol.
-        $this->mail->Mailer = self::$CI->config->item('core_email_Mailer');
+        $this->mail->Mailer = variable_get('core_email_Mailer');
 
         // Set the smtp config database.
         //$system_smtp_settings   = $this->system_settings_get(TRUE);
-        $this->mail->Host       = setting_get('core_email_Host');
-        $this->mail->Port       = setting_get('core_email_Port');
-        $this->mail->SMTPAuth   = setting_get('core_email_SMTPAuth');
-        $this->mail->SMTPSecure = setting_get('core_email_SMTPSecure');
-        $this->mail->Username   = setting_get('core_email_Username');
-        $this->mail->Password   = self::$CI->encrypt->decode(setting_get('core_email_Password'));
-        $this->mail->From       = setting_get('core_email_From');
-        $this->mail->FromName   = setting_get('core_email_FromName');
+        $this->mail->Host       = variable_get('core_email_Host');
+        $this->mail->Port       = variable_get('core_email_Port');
+        $this->mail->SMTPAuth   = variable_get('core_email_SMTPAuth');
+        $this->mail->SMTPSecure = variable_get('core_email_SMTPSecure');
+        $this->mail->Username   = variable_get('core_email_Username');
+        $this->mail->Password   = self::$CI->encrypt->decode(variable_get('core_email_Password'));
+        $this->mail->From       = variable_get('core_email_From');
+        $this->mail->FromName   = variable_get('core_email_FromName');
 
         // Set reply-to.
         $this->mail->AddReplyTo(
-            setting_get('core_email_reply_to'),
-            setting_get('core_email_reply_to_name')
+            variable_get('core_email_reply_to'),
+            variable_get('core_email_reply_to_name')
         );
     }
 
@@ -131,7 +130,45 @@ class Core_email_library
                 'label' => 'Reply-to name',
                 'rules' => 'required|trim|xss_clean',
             ),
+            array(
+                'field' => 'core_email_smtp_Timeout',
+                'label' => 'Smtp timeout',
+                'rules' => 'required|trim|integer|xss_clean',
+            ),
+            array(
+                'field' => 'core_email_Priority',
+                'label' => 'Email priority',
+                'rules' => 'required|trim|integer|xss_clean',
+            ),
+            array(
+                'field' => 'core_email_CharSet',
+                'label' => 'Charset',
+                'rules' => 'required|trim|alpha_dash|xss_clean',
+            ),
+            array(
+                'field' => 'core_email_ContentType',
+                'label' => 'Content type',
+                'rules' => 'required|trim|valid_base64|xss_clean',
+            ),
+            array(
+                'field' => 'core_email_Encoding',
+                'label' => 'Encoding',
+                'rules' => 'required|trim|alpha_numeric|xss_clean',
+            ),
+            array(
+                'field' => 'core_email_Sendmail',
+                'label' => 'Path to sendmail',
+                'rules' => 'required|trim|valid_base64|xss_clean',
+            ),
+            array(
+                'field' => 'core_email_Mailer',
+                'label' => 'Protocol',
+                'rules' => 'required|trim|alpha_numeric|xss_clean',
+            ),
         );
+
+        set_valid_base_64_error('core_email_ContentType');
+        set_valid_base_64_error('Path to sendmail');
 
         self::$CI->form_validation->set_rules($validation_rules);
     }

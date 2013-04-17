@@ -412,7 +412,7 @@ class Core_user_library
 
         // Load the date helper and set the expire time for email.
         self::$CI->load->helper('date');
-        $expire_time = setting_get('user_activation_expire_limit');
+        $expire_time = variable_get('user_activation_expire_limit');
 
         // Find new user.
         $user = $this->user_find($activation_code_array['user_id']);
@@ -421,11 +421,11 @@ class Core_user_library
         self::$data['username']            = $user->username;
         self::$data['email']               = $user->email;
         self::$data['expire_time']         = timespan(0, $expire_time);
-        self::$data['activation_url_text'] = base_url() . $this->user_activation_uri
+        self::$data['activation_url_text'] = base_url($this->user_activation_uri)
                                              . $user->id . '_' . $activation_code_array['activation_code'];
         self::$data['activation_url_html'] = anchor($this->user_activation_uri
                                              . $user->id . '_' . $activation_code_array['activation_code'], 'Activate');
-        self::$data['login_url_text']      = base_url() . $this->user_login_uri;
+        self::$data['login_url_text']      = base_url($this->user_login_uri);
         self::$data['login_url_html']      = anchor($this->user_login_uri, 'Login');
         $message     = self::$CI->load->view('core_user/email_templates/welcome', self::$data, TRUE);
         $message_alt = self::$CI->load->view('core_user/email_templates/welcome_alt', self::$data, TRUE);
@@ -445,7 +445,7 @@ class Core_user_library
         if ($result)
         {
             self::$CI->session->set_flashdata('message_success', lang('success_user_account_created'));
-            redirect(base_url() . $this->user_login_uri);
+            redirect(base_url($this->user_login_uri));
             exit();
         }
         else
@@ -473,30 +473,27 @@ class Core_user_library
         {
             case 'invalid':
                 self::$CI->session->set_flashdata('message_error', lang('error_user_account_activation_invalid'));
-                redirect(base_url() . $this->user_login_uri);
                 exit();
                 break;
             case 'activated':
                 self::$CI->session->set_flashdata('message_success', lang('success_user_account_activation'));
-                redirect(base_url() . $this->user_login_uri);
                 exit();
                 break;
             case FALSE:
                 self::$CI->session->set_flashdata('message_error', lang('error_user_account_activation'));
-                redirect(base_url() . $this->user_login_uri);
                 exit();
                 break;
             case 'not_found':
                 self::$CI->session->set_flashdata('message_error', lang('error_user_account_activation_not_found'));
-                redirect(base_url() . $this->user_login_uri);
                 exit();
                 break;
             case 'expired':
                 self::$CI->session->set_flashdata('message_notice', lang('notice_user_account_activation_expired'));
-                redirect(base_url() . $this->user_login_uri);
                 exit();
                 break;
         }
+
+        redirect(base_url($this->user_login_uri));
     }
 
     /**
@@ -516,7 +513,7 @@ class Core_user_library
         {
             case TRUE:
                 self::$CI->session->set_flashdata('message_success', lang('success_user_account_edited'));
-                redirect(base_url() . $this->user_index_uri);
+                redirect(base_url($this->user_index_uri));
                 exit();
 
                 // Reset the user session data ater update.
@@ -545,13 +542,13 @@ class Core_user_library
         switch ($result)
         {
             case TRUE:
-                redirect(base_url() . $this->user_logout_uri);
+                redirect(base_url($this->user_logout_uri));
                 exit();
                 break;
             case FALSE:
                 self::$CI->session
                     ->set_flashdata('message_error', lang('error_user_account_delete_failed'));
-                redirect(base_url() . $this->user_edit_uri);
+                redirect(base_url($this->user_edit_uri));
                 exit();
                 break;
         }
@@ -598,7 +595,7 @@ class Core_user_library
                     $this->user_unset_persistent_login();
                 }
             }
-            redirect(base_url() . $this->user_index_uri);
+            redirect(base_url($this->user_index_uri));
             exit();
         }
 
@@ -636,7 +633,7 @@ class Core_user_library
             // Set the recovery code and time.
             self::$CI->load->helper('string');
             $forgotten_password_code        = random_string('alnum', 64);
-            $forgotten_password_expire_time = time() + setting_get('user_forgotten_password_code_expire_limit');
+            $forgotten_password_expire_time = time() + variable_get('user_forgotten_password_code_expire_limit');
             $forgotten_password_data        = array(
                                                 'user_id'                        => $user->id,
                                                 'forgotten_password_code'        => $forgotten_password_code,
@@ -658,13 +655,13 @@ class Core_user_library
             {
                 // Set the expire time for email.
                 self::$CI->load->helper('date');
-                $expire_time = setting_get('user_forgotten_password_code_expire_limit');
+                $expire_time = variable_get('user_forgotten_password_code_expire_limit');
 
                 // Message.
                 self::$data['username']          = $user->username;
                 self::$data['email']             = $user->email;
                 self::$data['expire_time']       = timespan(0, $expire_time);
-                self::$data['recovery_url_text'] = base_url() . $this->user_forgotten_password_login_uri
+                self::$data['recovery_url_text'] = base_url($this->user_forgotten_password_login_uri)
                                                    . $user->id . '_' . $forgotten_password_code;
                 self::$data['recovery_url_html'] = anchor($this->user_forgotten_password_login_uri
                                                    . $user->id . '_' . $forgotten_password_code, 'One time login');
@@ -687,7 +684,7 @@ class Core_user_library
                 if ($result)
                 {
                     self::$CI->session->set_flashdata('message_success', lang('success_user_forgotten_password_sent'));
-                    redirect(base_url() . $this->user_login_uri);
+                    redirect(base_url($this->user_login_uri));
                     exit();
                 }
                 else
@@ -718,13 +715,13 @@ class Core_user_library
             case 'not_found':
                 self::$CI->session->set_flashdata('message_error', self::$CI->lang
                 ->line('error_user_forgotten_password_code_not_found'));
-                redirect(base_url() . $this->user_login_uri);
+                redirect(base_url($this->user_login_uri));
                 exit();
                 break;
             case 'expired':
                 self::$CI->session->set_flashdata('message_error', self::$CI->lang
                 ->line('error_user_forgotten_password_code_expired'));
-                redirect(base_url() . $this->user_login_uri);
+                redirect(base_url($this->user_login_uri));
                 exit();
                 break;
             case 'authenticated':
@@ -736,7 +733,7 @@ class Core_user_library
                     ->line('success_user_forgotten_password_login'));
                     // Delete the code.
                     self::$CI->core_user_model->user_forgotten_password_code_delete($user->id);
-                    redirect(base_url() . $this->user_login_uri);
+                    redirect(base_url($this->user_login_uri));
                     exit();
                     break;
                 }
@@ -744,7 +741,7 @@ class Core_user_library
             case FALSE:
                 self::$CI->session->set_flashdata('message_error', self::$CI->lang
                 ->line('error_user_forgotten_password_email_not_valid'));
-                redirect(base_url() . $this->user_login_uri);
+                redirect(base_url($this->user_login_uri));
                 exit();
                 break;
         }
@@ -792,7 +789,7 @@ class Core_user_library
         $time = time();
 
         // The time when a user can try to login again.
-        $time_to_unlock = $user->locked_out_time + setting_get('user_login_attempts_lockout_time');
+        $time_to_unlock = $user->locked_out_time + variable_get('user_login_attempts_lockout_time');
 
         // If user has a lockout time.
         if ($user->locked_out_time)
@@ -844,7 +841,7 @@ class Core_user_library
         // Unset the logged in cookie if set.
         $this->user_unset_persistent_login();
 
-        redirect(base_url() . $this->user_login_uri);
+        redirect(base_url($this->user_login_uri));
         exit();
         return TRUE;
     }
@@ -879,10 +876,10 @@ class Core_user_library
         self::$CI->load->helper('string');
         self::$CI->load->library('encrypt');
 
-        $cookie_name   = setting_get('user_persistent_cookie_name');
+        $cookie_name   = variable_get('user_persistent_cookie_name');
         $random_string = random_string('alnum', 64);
         $remember_code = self::$CI->encrypt->encode($random_string);
-        $cookie_expire = setting_get('user_persistent_cookie_expire');
+        $cookie_expire = variable_get('user_persistent_cookie_expire');
         $user_id_encoded = self::$CI->encrypt->encode($user_id);
 
         $cookie_data = array(
@@ -906,7 +903,7 @@ class Core_user_library
     public function user_unset_persistent_login()
     {
 
-        $cookie_name = setting_get('user_persistent_cookie_name');
+        $cookie_name = variable_get('user_persistent_cookie_name');
 
         self::$CI->load->helper('cookie');
         delete_cookie($cookie_name);
@@ -920,7 +917,7 @@ class Core_user_library
         self::$CI->load->helper('string');
         self::$CI->load->library('encrypt');
 
-        $cookie_name = setting_get('user_persistent_cookie_name');
+        $cookie_name = variable_get('user_persistent_cookie_name');
         $cookie = self::$CI->input->cookie($cookie_name);
         // Parse the cookie content.
         $cookie_array = explode('_', $cookie);
@@ -975,7 +972,7 @@ class Core_user_library
         {
             // If the user is logged send user to the profile page.
             self::$CI->session->set_flashdata('message_error', lang('error_user_permission'));
-            redirect(base_url() . $this->user_login_uri);
+            redirect(base_url($this->user_login_uri));
             exit();
         }
     }
@@ -1003,7 +1000,7 @@ class Core_user_library
         if ($condition)
         {
             self::$CI->session->set_flashdata('message_error', lang('error_user_protected'));
-            redirect(base_url() . $this->user_index_uri);
+            redirect(base_url($this->user_index_uri));
             exit();
         }
     }
@@ -1058,7 +1055,7 @@ class Core_user_library
         if ($result)
         {
             self::$CI->session->set_flashdata('message_success', lang('success_admin_add_role'));
-            redirect(base_url() . $this->user_admin_role_edit_uri . $result);
+            redirect(base_url($this->user_admin_role_edit_uri . $result));
             exit();
         }
         else
@@ -1081,13 +1078,13 @@ class Core_user_library
         if ($result)
         {
             self::$CI->session->set_flashdata('message_success', lang('success_admin_edit_role'));
-            redirect(base_url() . $this->user_admin_role_edit_uri . $post['id']);
+            redirect(base_url($this->user_admin_role_edit_uri . $post['id']));
             exit();
         }
         else
         {
             self::$CI->session->set_flashdata('message_error', lang('error_admin_edit_role'));
-            redirect(base_url() . $this->user_admin_role_edit_uri . $post['id']);
+            redirect(base_url($this->user_admin_role_edit_uri . $post['id']));
             exit();
         }
     }
@@ -1105,12 +1102,12 @@ class Core_user_library
         {
             case TRUE:
                 self::$CI->session->set_flashdata('message_success', lang('success_admin_delete_role'));
-                redirect(base_url() . $this->user_admin_roles_uri);
+                redirect(base_url($this->user_admin_roles_uri));
                 exit();
                 break;
             case FALSE:
                 self::$CI->session->set_flashdata('message_error', lang('error_admin_delete_role'));
-                redirect(base_url() . $this->user_admin_roles_uri);
+                redirect(base_url($this->user_admin_roles_uri));
                 exit();
                 break;
         }
@@ -1129,12 +1126,12 @@ class Core_user_library
         {
             case TRUE:
                 self::$CI->session->set_flashdata('message_success', lang('success_admin_add_user'));
-                redirect(base_url() . $this->user_admin_users_uri);
+                redirect(base_url($this->user_admin_users_uri));
                 exit();
                 break;
             case FALSE:
                 self::$CI->session->set_flashdata('message_error', lang('error_admin_add_user'));
-                redirect(base_url() . $this->user_admin_users_uri);
+                redirect(base_url($this->user_admin_users_uri));
                 exit();
                 break;
         }
@@ -1153,12 +1150,12 @@ class Core_user_library
         {
             case TRUE:
                 self::$CI->session->set_flashdata('message_success', lang('success_admin_edit_user'));
-                redirect(base_url() . $this->user_admin_user_edit_uri . $post['id']);
+                redirect(base_url($this->user_admin_user_edit_uri . $post['id']));
                 exit();
                 break;
             case FALSE:
                 self::$CI->session->set_flashdata('message_error', lang('error_admin_edit_user'));
-                redirect(base_url() . $this->user_admin_user_edit_uri . $post['id']);
+                redirect(base_url($this->user_admin_user_edit_uri . $post['id']));
                 exit();
                 break;
         }
@@ -1178,12 +1175,12 @@ class Core_user_library
         {
             case $result == TRUE:
                 self::$CI->session->set_flashdata('message_success', lang('success_admin_delete_user'));
-                redirect(base_url() . $this->user_admin_users_uri);
+                redirect(base_url($this->user_admin_users_uri));
                 exit();
                 break;
             case $result == FALSE:
                 self::$CI->session->set_flashdata('message_error', lang('error_admin_delete_user'));
-                redirect(base_url() . $this->user_admin_users_uri . $user_page);
+                redirect(base_url($this->user_admin_users_uri . $user_page));
                 exit();
                 break;
         }
@@ -1205,7 +1202,7 @@ class Core_user_library
         else
         {
             self::$CI->session->set_flashdata('message_error', lang('error_admin_get_user_count'));
-            redirect(base_url() . $this->user_admin_index_uri);
+            redirect(base_url($this->user_admin_index_uri));
             exit();
         }
     }
@@ -1234,7 +1231,7 @@ class Core_user_library
         if (($user->protected && self::$CI->session->userdata('role') != 'super_user') || $user->id == 1)
         {
             self::$CI->session->set_flashdata('message_error', lang('error_admin_user_protected'));
-            redirect(base_url() . $this->user_admin_users_uri);
+            redirect(base_url($this->user_admin_users_uri));
             exit();
         }
     }
@@ -1250,7 +1247,7 @@ class Core_user_library
         if (($role->protected && self::$CI->session->userdata('role') != 'super_user') || $role->id == 1)
         {
             self::$CI->session->set_flashdata('message_error', lang('error_admin_role_protected'));
-            redirect(base_url() . $this->user_admin_roles_uri);
+            redirect(base_url($this->user_admin_roles_uri));
             exit();
         }
     }

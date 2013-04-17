@@ -1,8 +1,30 @@
 <h4>Edit page</h4>
 
+<p class="panel">
+    Page title: <?php echo (isset($page->title)) ? $page->title : set_value('title') ;?></br>
+    Author: <?php echo (isset($page->author)) ? $page->author : set_value('author') ;?></br>
+    Post date and time: <?php echo (isset($page->created)) ? $page->created : set_value('created') ;?></br>
+    Last edited by <strong><em><?php echo (isset($page->last_edit_username)) ?
+    $page->last_edit_username : set_value('last_edit_username') ;?></em></strong> on <strong><em><?php echo (isset($page->last_edit)) ?
+    $page->last_edit : set_value('last_edit') ;?></br></em></strong>
+</p>
+
 <?php echo form_open(current_url()) ;?>
 
 <input type="hidden" name="id" value="<?php echo (isset($page->id)) ? $page->id : set_value('id') ;?>" />
+
+<fieldset>
+    <legend>Category</legend>
+
+    <?php if (!empty($categories)) :?>
+        <?php foreach ($categories as $category) :?>
+    <label class="<?php echo form_error_class('category') ;?>"><?php echo $category->name ;?></label>
+            <?php $checked = (isset($page->category) && $page->category == $category->id) ? 'checked="checked"' : set_radio('category', $category->id) ;?>
+            <input type="radio" name="category" value="<?php echo $category->id ;?>" <?php echo $checked ;?> />
+        <?php endforeach ;?>
+    <?php endif ;?>
+
+</fieldset>
 
 <fieldset>
     <legend>Options</legend>

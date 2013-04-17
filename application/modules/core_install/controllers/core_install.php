@@ -11,7 +11,7 @@ class Core_install extends MX_Controller
      *
      * @var array
      */
-    private static $data;
+    private static $data = array();
 
     /**
      * The Core install constructor.
@@ -62,10 +62,14 @@ class Core_install extends MX_Controller
         self::$data['custom_routing'] = (isset($this->routes['core_module_route_test']));
     }
 
+    /**
+     * The index method.
+     */
     public function index()
     {
         if ($this->input->post('submit'))
         {
+            // The validation rules.
             $rules = array(
                 array(
                     'field' => 'yes',
@@ -79,16 +83,21 @@ class Core_install extends MX_Controller
                 ),
             );
 
+            // Set the rules.
             $this->form_validation->set_rules($rules);
 
             if (!$this->form_validation->run())
             {
+                // Validation failed.
                 $this->load->view('core_install', self::$data);
             }
+            // Install the schema file.
             else
             {
+                // Read the the schema file.
                 $restore = read_file($this->schema_file);
 
+                // Run the install.
                 $sql_clean = '';
                 foreach (explode("\n", $restore) as $line){
 
@@ -111,6 +120,7 @@ class Core_install extends MX_Controller
                 redirect(current_url());
             }
         }
+        // Page visit.
         else
         {
             $this->load->view('core_install', self::$data);

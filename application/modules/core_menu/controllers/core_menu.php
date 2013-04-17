@@ -23,7 +23,7 @@ class Core_menu extends MX_Controller
         $this->load->library('core_menu_library');
 
         // Get the link count.
-        $max_link_count = $this->config->item('menu_link_maximum_weight');
+        $max_link_count = variable_get('menu_link_maximum_weight');
 
         // Set the count array.
         self::$data['max_link_count'] = array();
@@ -70,6 +70,42 @@ class Core_menu extends MX_Controller
     }
 
     /**
+     * The menu settings page.
+     */
+    public function menu_settings()
+    {
+        $template = 'core_menu/menu_settings';
+
+        if ($this->input->post('submit'))
+        {
+            // Set and unset.
+            $post = $this->input->post();
+            unset($post['submit']);
+
+            // Set validation rules.
+            $this->core_menu_library->set_validation_rules('settings');
+
+            // Form validation fails.
+            if ($this->form_validation->run() == FALSE)
+            {
+                // Render the page.
+                echo $this->core_template_library->parse_view($template, self::$data);
+            }
+            else
+            {
+                // Send to the database.
+                process_variables($post);
+            }
+        }
+        // First visit.
+        else
+        {
+            // Render the page.
+            echo $this->core_template_library->parse_view($template, self::$data);
+        }
+    }
+
+    /**
      * The menus admin page.
      *
      * @param integer $menu
@@ -92,7 +128,7 @@ class Core_menu extends MX_Controller
         self::$data['links'] = $this->core_menu_library->menu_link_find('parent_menu_id', $menu, 'array');
 
         // Set the menu link edit weight url.  Will be used by ajax.
-        self::$data['menu_link_edit_weight_url'] = base_url() . $this->core_menu_library->menu_link_edit_weight_uri;
+        self::$data['menu_link_edit_weight_url'] = base_url($this->core_menu_library->menu_link_edit_weight_uri);
 
         // Set the csrf test name.  For some reason it is not getting output.
         self::$data['csrf_test_name'] = $this->input->cookie('csrf_cookie_name');

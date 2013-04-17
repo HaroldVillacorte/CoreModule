@@ -1,6 +1,6 @@
 <h4>Edit menu</h4>
 
-<?php echo form_open($this->core_menu_library->menu_edit_uri) ;?>
+<?php echo form_open(current_url()) ;?>
 
 <input type="hidden" name="id" value="<?php echo (isset($menu->id)) ? $menu->id : set_value('id') ;?>" />
 
