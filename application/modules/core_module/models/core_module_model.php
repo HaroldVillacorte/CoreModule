@@ -293,8 +293,8 @@ class Core_module_model extends CI_Model
 
         // Run the query.
         $query = $this->db
-            ->select($table . '.id, category, is_front, published, author, created, last_edit,
-                last_edit_username, slug, title, body, template')
+            ->select($table . '.id, category, is_front, published, permissions, author,
+                created, last_edit, last_edit_username, slug, title, body, template')
             ->where($table . '.' . $by, $identifier)
             ->get($table, 1);
 
@@ -311,8 +311,8 @@ class Core_module_model extends CI_Model
     {
         // Run the query.
         $query = $this->db
-            ->select($table . '.id, category, is_front, published, author, created, last_edit,
-                last_edit_username, slug, title, body, template')
+            ->select($table . '.id, category, is_front, published, permissions, author,
+                created, last_edit, last_edit_username, slug, title, body, template')
             ->get($table);
 
         // Choose data type.
@@ -339,8 +339,9 @@ class Core_module_model extends CI_Model
     {
         // Run the query.
         $query = $this->db
-            ->select($table . '.id, core_categories.name AS category, is_front, published, author, created, last_edit,
-                last_edit_username, slug, title, body, template')
+            ->select($table . '.id, core_categories.name AS category, is_front,
+                published, permissions, author, created, last_edit, last_edit_username,
+                slug, title, body, template')
             ->join('core_categories', $table . '.category = core_categories.id')
             ->order_by('category')
             ->get($table, (int) $limit, (int) $offset);
@@ -368,13 +369,14 @@ class Core_module_model extends CI_Model
      */
     public function page_add($table = 'core_pages', $post = array())
     {
-        // Sanitize.
-        $post = prep_post($post);
-
         // Set and unset.
         unset($post['submit']);
+        $post['permissions'] = implode(',', $post['permissions']);
         $post['author'] = $this->session->userdata('username');
         $post['created'] = time();
+
+        // Sanitize.
+        $post = prep_post($post);
 
         // Run the query.
         $this->db->insert($table, $post);
@@ -399,6 +401,7 @@ class Core_module_model extends CI_Model
     {
         // Set and unset.
         unset($post['submit']);
+        $post['permissions'] = implode(',', $post['permissions']);
         $post['last_edit'] = time();
         $post['last_edit_username'] = $this->session->userdata('username');
         $post['is_front'] = ($post['is_front']) ? $post['is_front'] : 0;
@@ -406,6 +409,9 @@ class Core_module_model extends CI_Model
 
         // Sanitize.
         $post = prep_post($post);
+
+        // Reset an unset permissions to empty string.
+        $post['permissions'] = (isset($post['permissions'])) ? $post['permissions'] : '';
 
         // Run the query.
         $result = $this->db->where('id', (int) $post['id'])->update($table, $post);

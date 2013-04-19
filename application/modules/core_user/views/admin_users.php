@@ -10,7 +10,7 @@
                 <th>Id</th>
                 <th>Username</th>
                 <th>Email</th>
-                <th>Role</th>
+                <th>Permissions</th>
                 <th>Member since</th>
                 <th>Protected</th>
                 <th><a href="<?php echo base_url($this->core_user_library->user_admin_user_add_uri) ;?>">Add user +</a></th>
@@ -22,7 +22,7 @@
                 <td><?php echo $user['id'] ;?></td>
                 <td><?php echo $user['username'] ;?></td>
                 <td><?php echo $user['email'] ;?></td>
-                <td><?php echo $user['role'] ;?></td>
+                <td><?php echo $user['permissions'] ;?></td>
                 <td><?php echo $user['created'] ;?></td>
                 <td><?php echo $user['protected'] ;?></td>
                 <td>

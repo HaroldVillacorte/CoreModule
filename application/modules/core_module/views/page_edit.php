@@ -40,6 +40,23 @@
 </fieldset>
 
 <fieldset>
+    <legend>Permissions</legend>
+
+    <select name="permissions[]" multiple="multiple">
+        <?php if (isset($all_permissions)) :?>
+            <?php foreach ($all_permissions as $permission) :?>
+            <?php $selected = (isset($page->permissions) && strstr($page->permissions, $permission['permission'])) ?
+            'selected="selected"' : set_select('permissions', $permission['permission']) ;?>
+            <option value="<?php echo $permission['permission'] ;?>" <?php echo $selected ;?>>
+                <?php echo $permission['permission'] ;?>
+            </option>
+            <?php endforeach ;?>
+        <?php endif ;?>
+    </select>
+
+</fieldset>
+
+<fieldset>
     <legend>Slug and title</legend>
 
 <label for="slug">Slug:</label>

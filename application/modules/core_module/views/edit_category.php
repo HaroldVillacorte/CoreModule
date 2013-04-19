@@ -9,7 +9,7 @@
 
     <?php foreach ($levels as $level) :?>
 
-    <label class="<?php echo form_error_class('level')?>" for="level"><?php echo $level->role ;?></label>
+    <label class="<?php echo form_error_class('level')?>" for="level"><?php echo $level->permission ;?></label>
     <?php $checked = (isset($category->level) && $category->level == $level->id) ? 'checked="checked"' : set_radio('level', $level->id) ;?>
     <input type="radio" name="level" value="<?php echo $level->id ;?>" <?php echo $checked ;?>/>
 

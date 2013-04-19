@@ -129,7 +129,7 @@ class Core_menu_library
             array(
                 'field' => 'permissions',
                 'label' => 'Permissons',
-                'rules' => 'trim|xss_clean',
+                'rules' => 'xss_clean',
             ),
         );
         $menu_link_update = array(
@@ -176,7 +176,7 @@ class Core_menu_library
             array(
                 'field' => 'permissions',
                 'label' => 'Permissons',
-                'rules' => 'trim|xss_clean',
+                'rules' => 'xss_clean',
             ),
         );
         $menu_link_update_weight = array(
@@ -217,31 +217,6 @@ class Core_menu_library
         }
 
         self::$CI->form_validation->set_rules($rule_set);
-    }
-
-
-    /**
-     * Check if user has permission to view menu item.
-     *
-     * @param array $roles
-     * @return boolean
-     */
-    public function menu_link_check_permissions($roles = array())
-    {
-        // Set the user role.
-        if (self::$CI->session->userdata('role'))
-        {
-            // From session if logged in.
-            $user_role = self::$CI->session->userdata('role');
-        }
-        else
-        {
-            // NULL if not logged in.
-            $user_role = NULL;
-        }
-
-        // Return result.
-        return (in_array($user_role, $roles)) ? TRUE : FALSE;
     }
 
     /**
@@ -294,11 +269,11 @@ class Core_menu_library
                 {
                     foreach ($menus[$key]->links as $link_key => $link)
                     {
-                        // Set array from string of roles.
-                        $roles = explode(',', $menus[$key]->links[$link_key]->permissions);
+                        // Set array from string of permissions.
+                        $permissions = explode(',', $menus[$key]->links[$link_key]->permissions);
 
                         // Check the permissions.
-                        if (!$this->menu_link_check_permissions($roles) && $menus[$key]->links[$link_key]->permissions != NULL)
+                        if (!check_permissions($permissions) && $menus[$key]->links[$link_key]->permissions != NULL)
                         {
                             // Unset link if permission is false.
                             unset($menus[$key]->links[$link_key]);
@@ -416,11 +391,8 @@ class Core_menu_library
                 {
                     if (!is_array($links[$key]))
                     {
-                        // Set array from string of roles.
-                        $roles = explode(',', $links[$key]->permissions);
-
                         // Check the permissions.
-                        if (!$this->menu_link_check_permissions($roles) && $links[$key]->permissions != NULL)
+                        if (!check_permissions($links[$key]->permissions) && $links[$key]->permissions != NULL)
                         {
                             // Unset link if permission is false.
                             unset($links[$key]);
@@ -428,11 +400,8 @@ class Core_menu_library
                     }
                     else
                     {
-                        // Set array from string of roles.
-                        $roles = explode(',', $links[$key]['permissions']);
-
                         // Check the permissions.
-                        if (!$this->menu_link_check_permissions($roles) && $links[$key]['permissions'] != NULL)
+                        if (!check_permissions($links[$key]['permissions']) && $links[$key]['permissions'] != NULL)
                         {
                             // Unset link if permission is false.
                             unset($links[$key]);
@@ -444,11 +413,8 @@ class Core_menu_library
             // If row() is returned.
             else
             {
-                // Set array from string of roles.
-                $roles = explode(',', $links->permissions);
-
                 // Check the permissions.
-                if (!$this->menu_link_check_permissions($roles) && $links->permissions != NULL)
+                if (!check_permissions($links->permissions) && $links->permissions != NULL)
                 {
                     // Only applicable if user visits edit page from typing url in
                     // the menu bar.

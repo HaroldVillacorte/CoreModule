@@ -20,11 +20,11 @@ $config['user_delete_uri']                   = 'user_delete/';
 // User admin index redirect to.
 $config['user_admin_index_uri'] = base_url();
 
-// User admin roles.
-$config['user_admin_roles_uri']       = 'admin_user_roles/';
-$config['user_admin_role_add_uri']    = 'admin_user_role_add/';
-$config['user_admin_role_edit_uri']   = 'admin_user_role_edit/';
-$config['user_admin_role_delete_uri'] = 'admin_user_role_delete/';
+// User admin permissions.
+$config['user_admin_permissions_uri']       = 'admin_user_permissions/';
+$config['user_admin_permission_add_uri']    = 'admin_user_permission_add/';
+$config['user_admin_permission_edit_uri']   = 'admin_user_permission_edit/';
+$config['user_admin_permission_delete_uri'] = 'admin_user_permission_delete/';
 
 // User admin users.
 $config['user_admin_users_uri']       = 'admin_users/';

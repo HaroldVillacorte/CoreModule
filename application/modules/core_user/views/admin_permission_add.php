@@ -1,19 +1,19 @@
-<h4>Add Role</h4>
+<h4>Add Permission</h4>
 
 <?php echo form_open(current_url()) ;?>
 
 <fieldset>
     <legend>Name and description</legend>
 
-    <label for="role">Role:</label>
-    <input class="<?php echo form_error_class('role') ;?>"
-           type="text" name="role" value="<?php echo set_value('role') ;?>" />
+    <label for="permission">Permission:</label>
+    <input class="<?php echo form_error_class('permission') ;?>"
+           type="text" name="permission" value="<?php echo set_value('permission') ;?>" />
 
     <label for="description">Description:</label>
     <textarea class="<?php echo form_error_class('description') ;?>"
               name="description"><?php echo set_value('description') ;?></textarea>
 
-    <?php if ($this->session->userdata('role') == 'super_user') :?>
+    <?php if ($this->session->userdata('permission') == 'super_user') :?>
         <label for="protected_value">Protected:</label>
         <select name="protected_value">
             <option value="1" <?php echo set_select('protected_value', '1') ;?>>Yes</option>
@@ -23,7 +23,7 @@
 
 </fieldset>
 
-<input type="submit" value="Add role" name="save" />
+<input type="submit" value="Add permission" name="save" />
 
 <a href="<?php echo get_back_link() ;?>">Cancel</a>
 

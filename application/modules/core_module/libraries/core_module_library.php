@@ -153,6 +153,11 @@ class Core_module_library
                 'label' => 'Template',
                 'rules' => 'required|trim|xss_clean',
             ),
+            array(
+                'field' => 'permissions',
+                'label' => 'Permissions',
+                'rules' => 'xss_clean',
+            ),
         );
         $page_update = array(
             array(
@@ -194,6 +199,11 @@ class Core_module_library
                 'field' => 'template',
                 'label' => 'Template',
                 'rules' => 'required|trim|xss_clean',
+            ),
+            array(
+                'field' => 'permissions',
+                'label' => 'Permissions',
+                'rules' => 'xss_clean',
             ),
         );
 
@@ -331,13 +341,13 @@ class Core_module_library
         // Get the categories.
         $categories = self::$CI->core_module_model->category_find_limit_offset($limit, $offset, $data_type);
 
-        // Convert the level int to the corresponding role.
+        // Convert the level int to the corresponding permission.
         if (!empty($categories))
         {
             foreach ($categories as $category)
             {
-                $role = self::$CI->core_user_library->admin_role_get($category->level);
-                $category->level = ($role) ? $role->role : $category->level;
+                $permission = self::$CI->core_user_library->admin_permission_get($category->level);
+                $category->level = ($permission) ? $permission->permission : $category->level;
             }
         }
 
@@ -518,7 +528,19 @@ class Core_module_library
                 redirect(base_url($redirect));
                 break;
         }
+    }
 
+    /*
+     * Check page permissions.  Rediect on flase result.
+     */
+    public function page_check_permissions($permissions = '')
+    {
+        if (!check_permissions($permissions))
+        {
+            self::$CI->session->set_flashdata('message_error', lang('error_page_permissions'));
+            redirect(base_url(self::$CI->core_user_library->user_index_uri));
+            exit();
+        }
     }
 
 }

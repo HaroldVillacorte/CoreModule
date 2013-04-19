@@ -7,7 +7,7 @@
 
     <?php foreach ($levels as $level) :?>
 
-    <label class="<?php echo form_error_class('level')?>" for="level"><?php echo $level->role ;?></label>
+    <label class="<?php echo form_error_class('level')?>" for="level"><?php echo $level->permission ;?></label>
     <input type="radio" name="level" value="<?php echo $level->id ;?>" <?php echo set_radio('level', $level->id) ;?>/>
 
     <?php endforeach ;?>

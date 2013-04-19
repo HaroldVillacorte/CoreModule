@@ -54,9 +54,15 @@
 <fieldset>
     <legend>Link permissions</legend>
 
-    <label for="permissions">Permissions:</label>
-    <input type="text" name="permissions" class="<?php echo form_error_class('permissions') ;?>"
-           value="<?php echo set_value('permissions') ;?>" />
+    <select name="permissions[]" multiple="multiple">
+        <?php if (isset($all_permissions)) :?>
+            <?php foreach ($all_permissions as $permission) :?>
+            <option value="<?php echo $permission['permission'] ;?>" <?php echo set_select('permissions', $permission['permission']) ;?>>
+                <?php echo $permission['permission'] ;?>
+            </option>
+            <?php endforeach ;?>
+        <?php endif ;?>
+    </select>
 
 </fieldset>
 

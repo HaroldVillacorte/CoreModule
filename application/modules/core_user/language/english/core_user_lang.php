@@ -50,9 +50,6 @@ $lang['success_user_forgotten_password_login']        = 'You are now logged in. 
 // user_logout()
 $lang['notice_user_logout'] = 'You are now logged out.';
 
-// user_permission()
-$lang['error_user_permission'] = 'You are not authorized to access that page.';
-
 // user_check_protected()
 $lang['error_user_protected'] = 'Unable to process.  User account is protected.';
 
@@ -62,20 +59,20 @@ $lang['error_user_protected'] = 'Unable to process.  User account is protected.'
 |--------------------------------------------------------------------------
 */
 
-// admin_role_table()
-$lang['confirm_admin_role_delete']  = 'Are you sure you want to delete this role?';
+// admin_permission_table()
+$lang['confirm_admin_permission_delete']  = 'Are you sure you want to delete this permission?';
 
-// admin_role_add()
-$lang['success_admin_add_role']     = 'Role was successfully added.';
-$lang['error_admin_add_role']       = 'There was problem adding the role.';
+// admin_permission_add()
+$lang['success_admin_add_permission']     = 'permission was successfully added.';
+$lang['error_admin_add_permission']       = 'There was problem adding the permission.';
 
-// admin_role_edit()
-$lang['success_admin_edit_role']    = 'Role was successfully saved.';
-$lang['error_admin_edit_role']      = 'There was a problem saving the role.';
+// admin_permission_edit()
+$lang['success_admin_edit_permission']    = 'permission was successfully saved.';
+$lang['error_admin_edit_permission']      = 'There was a problem saving the permission.';
 
-// admin_role_delete()
-$lang['success_admin_delete_role']  = 'Role was successfully deleted.';
-$lang['error_admin_delete_role']    = 'There was a problem deleting the role.';
+// admin_permission_delete()
+$lang['success_admin_delete_permission']  = 'permission was successfully deleted.';
+$lang['error_admin_delete_permission']    = 'There was a problem deleting the permission.';
 
 // admin_user_add()
 $lang['success_admin_add_user']     = 'User was successfully saved.';
@@ -98,7 +95,7 @@ $lang['confirm_admin_user_delete']  = 'Are you sure you want to delete this user
 // admin_user_check_protected()
 $lang['error_admin_user_protected'] = 'Unable to process.  User account is protected.';
 
-// admin_role_check_protected()
-$lang['error_admin_role_protected'] = 'Unable to process.  Role is protected.';
+// admin_permission_check_protected()
+$lang['error_admin_permission_protected'] = 'Unable to process.  permission is protected.';
 
 /* End of file core_user_lang.php */

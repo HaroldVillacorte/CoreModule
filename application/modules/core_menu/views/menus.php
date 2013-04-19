@@ -156,8 +156,29 @@
                     </td>
 
                     <td>
-                        <input type="text" name="permissions" class="<?php echo (form_error('permissions') && set_value('id') == $link['id']) ? form_error_class('permissions') : '' ;?>"
-                            value="<?php echo (isset($link['permissions'])) ? $link['permissions'] : set_value('permissions') ;?>" />
+                        <select name="permissions[]" multiple="multiple">
+                            <?php if (isset($all_permissions)) :?>
+                                <?php foreach ($all_permissions as $permission) :?>
+                                    <?php
+                                        if (isset($link['permissions']) && strstr($link['permissions'], $permission['permission']))
+                                        {
+                                            $selected = 'selected="selected"';
+                                        }
+                                        elseif (set_select('permissions', $permission['permission']) && set_value('id') == $id)
+                                        {
+                                            $selected = set_select('permissions', $permission['permission']);
+                                        }
+                                        else
+                                        {
+                                            $selected = '';
+                                        }
+                                    ?>
+                                    <option value="<?php echo $permission['permission'] ;?>" <?php echo $selected ;?>>
+                                        <?php echo $permission['permission'] ;?>
+                                    </option>
+                                <?php endforeach ;?>
+                            <?php endif ;?>
+                        </select>
                     </td>
                     <td>
                         <input type="submit" value="Save" name="submit" />

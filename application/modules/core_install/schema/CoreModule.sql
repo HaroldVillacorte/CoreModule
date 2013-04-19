@@ -43,9 +43,9 @@ CREATE TABLE IF NOT EXISTS `ci_sessions` (
 INSERT INTO `ci_sessions` (`session_id`, `ip_address`, `user_agent`, `last_activity`, `user_data`) VALUES
 ('21255e563095e2c2cf23d98cae586050', '127.0.0.1', 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:20.0) Gecko/20100101 Firefox/20.0', 1365919253, 'a:2:{s:9:"user_data";s:0:"";s:9:"back_link";b:0;}'),
 ('3451c5fd8363c422c151c255a890bcc3', '127.0.0.1', 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:20.0) Gecko/20100101 Firefox/20.0', 1365912376, 'a:2:{s:9:"user_data";s:0:"";s:9:"back_link";b:0;}'),
-('3ea0b899050b7b285d51ce313e41648b', '127.0.0.1', 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:20.0) Gecko/20100101 Firefox/20.0', 1365908419, 'a:7:{s:9:"user_data";s:0:"";s:9:"back_link";s:26:"http://ignited_root/login/";s:7:"user_id";s:1:"2";s:8:"username";s:5:"admin";s:5:"email";s:15:"admin@admin.com";s:4:"role";s:5:"admin";s:25:"flash:old:message_success";s:31:"You are now logged in as admin.";}'),
+('3ea0b899050b7b285d51ce313e41648b', '127.0.0.1', 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:20.0) Gecko/20100101 Firefox/20.0', 1365908419, 'a:7:{s:9:"user_data";s:0:"";s:9:"back_link";s:26:"http://ignited_root/login/";s:7:"user_id";s:1:"2";s:8:"username";s:5:"admin";s:5:"email";s:15:"admin@admin.com";s:4:"permission";s:5:"admin";s:25:"flash:old:message_success";s:31:"You are now logged in as admin.";}'),
 ('46302a50d1769ac23de9199ac8fc03f5', '127.0.0.1', 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:20.0) Gecko/20100101 Firefox/20.0', 1365922982, ''),
-('de2ddd265c03dee7c05728232d939826', '127.0.0.1', 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:20.0) Gecko/20100101 Firefox/20.0', 1365908061, 'a:6:{s:9:"user_data";s:0:"";s:9:"back_link";b:0;s:7:"user_id";s:1:"2";s:8:"username";s:5:"admin";s:5:"email";s:15:"admin@admin.com";s:4:"role";s:5:"admin";}'),
+('de2ddd265c03dee7c05728232d939826', '127.0.0.1', 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:20.0) Gecko/20100101 Firefox/20.0', 1365908061, 'a:6:{s:9:"user_data";s:0:"";s:9:"back_link";b:0;s:7:"user_id";s:1:"2";s:8:"username";s:5:"admin";s:5:"email";s:15:"admin@admin.com";s:4:"permission";s:5:"admin";}'),
 ('f1db07e43ccf1ed19655be2786e4ae0b', '127.0.0.1', 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:20.0) Gecko/20100101 Firefox/20.0', 1365908854, 'a:2:{s:9:"user_data";s:0:"";s:9:"back_link";b:0;}');
 
 -- --------------------------------------------------------
@@ -100,7 +100,7 @@ INSERT INTO `core_menu_links` (`id`, `weight`, `parent_menu_id`, `child_menu_id`
 (1, 3, 1, 0, 0, 'Set the system email perferences.', 'Email settings', 'email_settings', 'admin,super_user'),
 (2, 2, 1, 5, 0, 'Edit site content.', 'Content', '#', 'admin,super_user'),
 (3, 4, 1, 0, 0, 'Administer menus and links.', 'Menus', 'menus', 'admin,super_user'),
-(4, 5, 4, 0, 0, 'User roles admin page.', 'User roles', 'admin_user_roles', 'admin,super_user'),
+(4, 5, 4, 0, 0, 'User permissions admin page.', 'User permissions', 'admin_user_permissions', 'admin,super_user'),
 (5, 5, 1, 4, 0, 'The user admin page.', 'Users', '#', 'admin,super_user'),
 (6, 1, 1, 0, 0, 'The application home page.', 'Home', '{front}', ''),
 (13, 1, 2, 0, 0, 'The application home page.', 'Home', '{front}', ''),
@@ -109,8 +109,8 @@ INSERT INTO `core_menu_links` (`id`, `weight`, `parent_menu_id`, `child_menu_id`
 (27, 2, 4, 0, 0, 'The user admin page.', 'User admin', 'admin_users', 'admin,super_user'),
 (28, 1, 5, 7, 0, 'Pages submenu.', 'Pages', '#', 'admin,super_user'),
 (31, 1, 4, 0, 0, 'The label for the Users section of the User submenu.', '<label>Users</label>', '{label}', 'admin,super_user'),
-(32, 4, 4, 0, 0, 'The roles label for the Users submenu.', '<label>Roles</label>', '{label}', 'admin,super_user'),
-(33, 6, 4, 0, 0, 'Add a user role.', 'Add role', 'admin_user_role_add', 'admin,super_user'),
+(32, 4, 4, 0, 0, 'The permissions label for the Users submenu.', '<label>permissions</label>', '{label}', 'admin,super_user'),
+(33, 6, 4, 0, 0, 'Add a user permission.', 'Add permission', 'admin_user_permission_add', 'admin,super_user'),
 (34, 2, 7, 0, 0, 'Page admin.', 'Pages', 'pages', 'admin,super_user'),
 (35, 3, 7, 0, 0, 'Add a page.', 'Add page', 'page_add', 'admin,super_user'),
 (36, 1, 7, 0, 0, 'Public', '<label>Public</label>', '{label}', ''),
@@ -202,10 +202,10 @@ INSERT INTO `core_pages_admin` (`id`, `is_front`, `published`, `author`, `create
 (13, 0, 1, 'admin', 1365646467, 0, '0', 'menu_link_edit_weight', 'Edit the weight of a menu link.', '{%module:core_menu/menu_link_edit_weight%}', 'admin_template/admin_template'),
 (14, 0, 1, 'admin', 1365648263, 0, '0', 'email_settings', 'Email settings', '{%module:core_email/email_settings%}', 'admin_template/admin_template'),
 (15, 0, 1, 'admin', 1365652984, 0, '0', 'page_delete', 'Delete a public page.', '{%module:core_module/page_delete%}', 'admin_template/admin_template'),
-(16, 0, 1, 'admin', 1365684113, 0, '0', 'admin_user_roles', 'User roles', '{%module:core_user/admin_user_roles%}', 'admin_template/admin_template'),
-(17, 0, 1, 'admin', 1365684248, 0, '0', 'admin_user_role_add', 'Add a user role.', '{%module:core_user/admin_user_role_add%}', 'admin_template/admin_template'),
-(18, 0, 1, 'admin', 1365684629, 0, '0', 'admin_user_role_edit', 'Edit a user role.', '{%module:core_user/admin_user_role_edit%}', 'admin_template/admin_template'),
-(19, 0, 1, 'admin', 1365684717, 0, '0', 'admin_user_role_delete', 'Delete a user role.', '{%module:core_user/admin_user_role_delete%}', 'admin_template/admin_template'),
+(16, 0, 1, 'admin', 1365684113, 0, '0', 'admin_user_permissions', 'User permissions', '{%module:core_user/admin_user_permissions%}', 'admin_template/admin_template'),
+(17, 0, 1, 'admin', 1365684248, 0, '0', 'admin_user_permission_add', 'Add a user permission.', '{%module:core_user/admin_user_permission_add%}', 'admin_template/admin_template'),
+(18, 0, 1, 'admin', 1365684629, 0, '0', 'admin_user_permission_edit', 'Edit a user permission.', '{%module:core_user/admin_user_permission_edit%}', 'admin_template/admin_template'),
+(19, 0, 1, 'admin', 1365684717, 0, '0', 'admin_user_permission_delete', 'Delete a user permission.', '{%module:core_user/admin_user_permission_delete%}', 'admin_template/admin_template'),
 (20, 0, 1, 'admin', 1365684905, 1365752001, 'admin', 'admin_users', 'User admin page.', '{%module:core_user/admin_users%}', 'admin_template/admin_template'),
 (21, 0, 1, 'admin', 1365702374, 0, '0', 'admin_user_edit', 'Edit a user.', '{%module:core_user/admin_user_edit%}', 'admin_template/admin_template'),
 (22, 0, 1, 'admin', 1365702614, 0, '0', 'admin_user_add', 'Add a user.', '{%module:core_user/admin_user_add%}', 'admin_template/admin_template'),
@@ -216,25 +216,25 @@ INSERT INTO `core_pages_admin` (`id`, `is_front`, `published`, `author`, `create
 -- --------------------------------------------------------
 
 --
--- Table structure for table `core_roles`
+-- Table structure for table `core_permissions`
 --
 
-CREATE TABLE IF NOT EXISTS `core_roles` (
+CREATE TABLE IF NOT EXISTS `core_permissions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `role` varchar(50) COLLATE utf8_unicode_ci NOT NULL,
+  `permission` varchar(50) COLLATE utf8_unicode_ci NOT NULL,
   `description` text COLLATE utf8_unicode_ci NOT NULL,
   `protected` tinyint(1) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=4 ;
 
 --
--- Dumping data for table `core_roles`
+-- Dumping data for table `core_permissions`
 --
 
-INSERT INTO `core_roles` (`id`, `role`, `description`, `protected`) VALUES
+INSERT INTO `core_permissions` (`id`, `permission`, `description`, `protected`) VALUES
 (1, 'super_user', 'Top level user account.', 1),
 (2, 'admin', 'User with administrator privileges.', 1),
-(3, 'authenticated', 'The default role.', 1);
+(3, 'authenticated', 'The default permission.', 1);
 
 -- --------------------------------------------------------
 
@@ -331,20 +331,20 @@ CREATE TABLE IF NOT EXISTS `core_user_forgotten_passwords` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `core_user_join_users_roles`
+-- Table structure for table `core_user_join_users_permissions`
 --
 
-CREATE TABLE IF NOT EXISTS `core_user_join_users_roles` (
+CREATE TABLE IF NOT EXISTS `core_user_join_users_permissions` (
   `user_id` bigint(20) unsigned NOT NULL,
-  `role_id` int(11) unsigned NOT NULL,
+  `permission_id` int(11) unsigned NOT NULL,
   PRIMARY KEY (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Dumping data for table `core_user_join_users_roles`
+-- Dumping data for table `core_user_join_users_permissions`
 --
 
-INSERT INTO `core_user_join_users_roles` (`user_id`, `role_id`) VALUES
+INSERT INTO `core_user_join_users_permissions` (`user_id`, `permission_id`) VALUES
 (1, 1),
 (2, 2),
 (3, 3);

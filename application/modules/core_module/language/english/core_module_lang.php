@@ -44,4 +44,7 @@ $lang['page_confirm_delete'] = 'Are you sure you want to delete this page?';
 $lang['page_delete_success'] = 'Page was successfully deleted.';
 $lang['page_delete_failed']  = 'There was a problem and page could not be deleted.';
 
+// Permissions.
+$lang['error_page_permissions'] = 'You are not authorized to access that page.';
+
 /* End of file core_module_lang.php */

@@ -127,6 +127,9 @@ class Core_menu extends MX_Controller
         // Get the menu links.
         self::$data['links'] = $this->core_menu_library->menu_link_find('parent_menu_id', $menu, 'array');
 
+        // Get the user permissions.
+        self::$data['all_permissions'] = $this->core_user_library->admin_permissions_get_all('array');
+
         // Set the menu link edit weight url.  Will be used by ajax.
         self::$data['menu_link_edit_weight_url'] = base_url($this->core_menu_library->menu_link_edit_weight_uri);
 
@@ -178,9 +181,6 @@ class Core_menu extends MX_Controller
      */
     public function menu_add()
     {
-        // Set the permission.
-        $this->core_user_library->user_permission(array('admin', 'super_user'));
-
         // Set the content template file.
         $template = 'menu_add';
 
@@ -216,9 +216,6 @@ class Core_menu extends MX_Controller
      */
     public function menu_edit($id = NULL)
     {
-        // Set the permission.
-        $this->core_user_library->user_permission(array('admin', 'super_user'));
-
         // Set the content template file.
         $template = 'menu_edit';
 
@@ -275,9 +272,6 @@ class Core_menu extends MX_Controller
      */
     public function menu_link_add($menu_id = 1)
     {
-        // Set the permission.
-        $this->core_user_library->user_permission(array('admin', 'super_user'));
-
         // Set the content template file.
         $template = 'menu_link_add';
 
@@ -290,6 +284,9 @@ class Core_menu extends MX_Controller
         // Set the next weight to preset form.
         self::$data['next_weight'] = count($this->core_menu_library
             ->menu_link_find('parent_menu_id', $menu_id, 'array')) + 1;
+
+        // Get the user permissions.
+        self::$data['all_permissions'] = $this->core_user_library->admin_permissions_get_all('array');
 
         // Post submit.
         if ($this->input->post('submit'))

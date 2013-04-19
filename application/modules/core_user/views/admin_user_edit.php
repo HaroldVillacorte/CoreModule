@@ -17,19 +17,21 @@
 
 </fieldset>
 
-
 <fieldset>
-    <legend>Account options</legend>
-
-    <?php foreach ($all_roles as $role) :?>
-        <label for="<?php echo $role['id'] ;?>"><?php echo $role['role'] ;?>:</label>
-        <input type="radio" name="role" value="<?php echo $role['id'] ;?>"
-               <?php echo (isset($user) && $user->role == $role['role']) ? 'checked="checked"' : set_radio('role', $role['id']) ;?> />
-    <?php endforeach ;?>
+    <legend>Permissions</legend>
+    <select name="permissions[]" multiple="TRUE">
+        <?php foreach ($all_permissions as $permission) :?>
+            <?php $selected = (isset($user->permissions) && strstr($user->permissions, $permission['permission'])) ?
+            'selected="selected"' : set_select('permissions', $permission['id']) ;?>
+            <option value="<?php echo $permission['id'] ;?>" <?php echo $selected ;?> />
+                <?php echo $permission['permission'] ;?>
+            </option>
+        <?php endforeach ;?>
+    </select>
 
 </fieldset>
 
-<?php if ($this->session->userdata('role') == 'super_user') :?>
+<?php if ($this->session->userdata('permission') == 'super_user') :?>
 <fieldset>
     <legend>Protected</legend>
 

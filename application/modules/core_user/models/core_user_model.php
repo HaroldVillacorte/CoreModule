@@ -48,25 +48,26 @@ class Core_user_model extends CI_Model
     }
 
     /**
-     * Find user and join roles.
+     * Find user and join permissions.
      *
      * @param integer $id
      * @return object
      */
     public function user_find($id = NULL)
     {
-        $user = $this->db
-            ->select('core_users.id, core_users.protected, username, email,
-                      created, active, role_id, role, locked_out_time')
-            ->join('core_user_join_users_roles', 'core_user_join_users_roles.user_id = core_users.id')
-            ->join('core_roles', 'core_roles.id = core_user_join_users_roles.role_id')
-            ->get_where('core_users', array('core_users.id' => (int) $id));
+        $query = $this->db
+            ->select('id, protected, username, email, created, active, locked_out_time')
+            ->get_where('core_users', array('id' => (int) $id));
 
-        return ($user->num_rows() > 0) ? $user->row() : FALSE;
+        $user = $query->row();
+
+        $user->permissions = $this->admin_user_permissions_get((int) $id);
+
+        return ($query->num_rows() > 0) ? $user : FALSE;
     }
 
     /**
-     * Find user by identity and join roles.
+     * Find user by identity and join permissions.
      *
      * @param string $column
      * @param string $identity
@@ -79,38 +80,38 @@ class Core_user_model extends CI_Model
 
         $user = $this->db
             ->select('core_users.id, core_users.protected, username, email,
-                      created, active, role_id, role, locked_out_time')
-            ->join('core_user_join_users_roles', 'core_user_join_users_roles.user_id = core_users.id')
-            ->join('core_roles', 'core_roles.id = core_user_join_users_roles.role_id')
+                      created, active, permission_id, permission, locked_out_time')
+            ->join('core_user_join_users_permissions', 'core_user_join_users_permissions.user_id = core_users.id')
+            ->join('core_permissions', 'core_permissions.id = core_user_join_users_permissions.permission_id')
             ->get_where('core_users', array('core_users.' . $column => $identity));
 
         return ($user->num_rows() > 0) ? $user->row() : FALSE;
     }
 
     /**
-     * Currently not in use.  Will get all roles of user.
+     * Currently not in use.  Will get all permissions of user.
      *
-     * @return array $roles
+     * @return array $permissions
      */
-    public function user_get_roles()
+    public function user_get_permissions()
     {
         if ($this->session->userdata('user_id'))
         {
             $id       = $this->session->userdata('user_id');
-            $role_ids = $this->db
-                ->get_where('core_user_join_users_roles', array('user_id' => (int) $id))
+            $permission_ids = $this->db
+                ->get_where('core_user_join_users_permissions', array('user_id' => (int) $id))
                 ->result_array();
-            $roles = array();
+            $permissions = array();
 
-            foreach ($role_ids as $role_id)
+            foreach ($permission_ids as $permission_id)
             {
-                $found_role = $this->db
-                    ->select('role')
-                    ->get_where('core_roles', array('id' => (int) $role_id));
-                $roles[] = $found_role;
+                $found_permission = $this->db
+                    ->select('permission')
+                    ->get_where('core_permissions', array('id' => (int) $permission_id));
+                $permissions[] = $found_permission;
             }
 
-            return $roles;
+            return $permissions;
         }
     }
 
@@ -438,11 +439,11 @@ class Core_user_model extends CI_Model
 
         if ($id)
         {
-            // Add the user role
+            // Add the user permission
             $this->db
-            ->insert('core_user_join_users_roles', array(
+            ->insert('core_user_join_users_permissions', array(
                 'user_id' => (int) $id,
-                'role_id' => 3,
+                'permission_id' => 3,
             ));
 
             // Generate and add the activation code.
@@ -469,14 +470,14 @@ class Core_user_model extends CI_Model
                 }
                 else
                 {
-                    // Delete user and role record if activation code insert fail.
+                    // Delete user and permission record if activation code insert fail.
                     $this->user_delete($id);
                     return FALSE;
                 }
             }
             else
             {
-                // Delete user and role record if role insert fail.
+                // Delete user and permission record if permission insert fail.
                 $this->user_delete($id);
                 return FALSE;
             }
@@ -602,8 +603,8 @@ class Core_user_model extends CI_Model
         // Get the user id from the session.
         $id = $this->session->userdata('user_id');
 
-        // Delete the roles records.
-        $this->db->delete('core_user_join_users_roles', array('user_id' => (int) $id), 1);
+        // Delete the permissions records.
+        $this->db->delete('core_user_join_users_permissions', array('user_id' => (int) $id), 1);
         // Delete remember codes.
         $this->db->delete('core_user_remember_codes', array('user_id' => (int) $id), 1);
         // Delete forgotten password codes.
@@ -627,6 +628,12 @@ class Core_user_model extends CI_Model
      */
     public function admin_user_save($post)
     {
+        //Set and unset.
+        $permissions = $post['permissions'];
+        unset($post['permissions']);
+        unset($post['passconf']);
+        unset($post['save']);
+
         $post = prep_post($post);
 
         // There is a name conflict in the core input class that prohibits using
@@ -641,11 +648,7 @@ class Core_user_model extends CI_Model
             $post['protected'] = 0;
         }
 
-        $role = (int) $post['role'];
-        unset($post['role']);
 
-        unset($post['passconf']);
-        unset($post['save']);
 
         switch ($post)
         {
@@ -661,12 +664,15 @@ class Core_user_model extends CI_Model
 
                 if ($id)
                 {
-                    // Set the users role.
-                    $result2 = $this->db->insert(
-                        'core_user_join_users_roles', array(
-                        'user_id' => $id,
-                        'role_id' => $role,
+                    foreach ($permissions as $permission)
+                    {
+                        // Set the users permission.
+                        $result2 = $this->db->insert(
+                            'core_user_join_users_permissions', array(
+                            'user_id' => $id,
+                            'permission_id' => (int) $permission,
                         ));
+                    }
                 }
                 break;
 
@@ -679,11 +685,19 @@ class Core_user_model extends CI_Model
 
                 if ($result)
                 {
-                    // Edit the user's role.
-                    $result2 = $this->db
-                        ->where('user_id', $post['id'])
-                        ->limit(1)
-                        ->update('core_user_join_users_roles', array('role_id' => $role));
+                    // First delete all users permission.
+                    $this->db->delete('core_user_join_users_permissions', array('user_id' => $post['id']));
+
+                    // Now loop through and add permissions.
+                    foreach ($permissions as $permission)
+                    {
+                        // Set the users permission.
+                        $result2 = $this->db->insert(
+                            'core_user_join_users_permissions', array(
+                            'user_id' => (int) $post['id'],
+                            'permission_id' => (int) $permission,
+                        ));
+                    }
                 }
                 break;
         }
@@ -702,8 +716,8 @@ class Core_user_model extends CI_Model
      */
     public function admin_user_delete($id = NULL)
     {
-        // Delete the roles records.
-        $this->db->delete('core_user_join_users_roles', array('user_id' => (int) $id), 1);
+        // Delete the permissions records.
+        $this->db->delete('core_user_join_users_permissions', array('user_id' => (int) $id));
         // Delete remember codes.
         $this->db->delete('core_user_remember_codes', array('user_id' => (int) $id), 1);
         // Delete forgotten password codes.
@@ -720,34 +734,53 @@ class Core_user_model extends CI_Model
     }
 
     /**
-     * Get the role of a user.
+     * Get a permission by id.
      *
      * @param integer $id
-     * @return mixed
+     * @return object
      */
-    public function admin_role_get($id = NULL)
+    public function admin_permission_get($id = NULL)
     {
-        $query = $this->db->select('id, role, description, protected')
-            ->where('id', (int) $id)->get('core_roles');
+        $query = $this->db
+            ->select('id, permission, description, protected')
+            ->get_where('core_permissions', array('id' => (int) $id), 1);
         return ($query->num_rows() > 0) ? $query->row() : FALSE;
     }
 
     /**
-     * Admin gets all roles.  Choose whether to return an 'array' or 'object'.
+     * Get the permissions of a user.
+     *
+     * @param integer $id
+     * @return mixed
+     */
+    public function admin_user_permissions_get($id = NULL)
+    {
+        $query = $this->db->select('GROUP_CONCAT(permission) as permissions')
+            ->where('core_user_join_users_permissions.user_id', (int) $id)
+            ->join('core_permissions', 'core_permissions.id = core_user_join_users_permissions.permission_id')
+            ->get('core_user_join_users_permissions');
+
+        $row = $query->row();
+
+        return ($query->num_rows() > 0) ? $row->permissions : '';
+    }
+
+    /**
+     * Admin gets all permissions.  Choose whether to return an 'array' or 'object'.
      *
      * @param string $data_type
      * @return mixed
      */
-    public function admin_role_get_all($data_type = 'object')
+    public function admin_permissions_get_all($data_type = 'object')
     {
-        // Exclude super_user role if not super user.
-        if ($this->session->userdata('role') != 'super_user')
+        // Exclude super_user permission if not super user.
+        if (!strstr($this->session->userdata('permissions'), 'super_user'))
         {
-            $result = $this->db->select('id, role, description, protected')->where('id !=', 1)->get('core_roles');
+            $result = $this->db->select('id, permission, description, protected')->where('id !=', 1)->get('core_permissions');
         }
         else
         {
-            $result = $this->db->select('id, role, description, protected')->get('core_roles');
+            $result = $this->db->select('id, permission, description, protected')->get('core_permissions');
         }
 
         switch ($data_type)
@@ -764,19 +797,19 @@ class Core_user_model extends CI_Model
     }
 
     /**
-     * Get paginated results for role table.
+     * Get paginated results for permission table.
      *
      * @param integer $per_page
      * @param integer $start
      * @param string $data_type
      * @return mixed
      */
-    public function admin_role_get_limit_offset($per_page = NULL, $start = NULL, $data_type = 'object')
+    public function admin_permissions_get_limit_offset($per_page = NULL, $start = NULL, $data_type = 'object')
     {
         // Run the query.
         $result = $this->db
-            ->select('id, role, description, protected')
-            ->get('core_roles', (int) $per_page, (int) $start);
+            ->select('id, permission, description, protected')
+            ->get('core_permissions', (int) $per_page, (int) $start);
 
         // Return results.
         switch ($data_type)
@@ -794,12 +827,12 @@ class Core_user_model extends CI_Model
     }
 
     /**
-     * Admin adds or edits a role.
+     * Admin adds or edits a permission.
      *
      * @param array $post
      * @return mixed
      */
-    public function admin_role_save($post)
+    public function admin_permission_save($post)
     {
         $post = prep_post($post);
 
@@ -818,32 +851,32 @@ class Core_user_model extends CI_Model
 
         switch ($post)
         {
-            // Add a role.
+            // Add a permission.
             case !isset($post['id']):
-                $query = $this->db->insert('core_roles', $post);
+                $query = $this->db->insert('core_permissions', $post);
                 $id    = $this->db->insert_id();
                 return ($id) ? $id : FALSE;
                 break;
 
-            // Edit a role.
+            // Edit a permission.
             case isset($post['id']):
                 $query = $this->db
                     ->where('id', (int) $post['id'])
-                    ->update('core_roles', $post);
+                    ->update('core_permissions', $post);
                 return ($this->db->affected_rows() > 0) ? TRUE : FALSE;
                 break;
         }
     }
 
     /**
-     * Admin deletes a role.
+     * Admin deletes a permission.
      *
      * @param integer $id
      * @return boolean
      */
-    public function admin_role_delete($id = NULL)
+    public function admin_permission_delete($id = NULL)
     {
-        $this->db->delete('core_roles', array('id' => (int) $id), 1);
+        $this->db->delete('core_permissions', array('id' => (int) $id), 1);
 
         // Clear the database cache.
         $this->db->cache_delete_all();
@@ -882,12 +915,20 @@ class Core_user_model extends CI_Model
     public function admin_user_limit_offset_get($per_page = NULL, $start = NULL)
     {
         $query = $this->db
-            ->select('core_users.id, username, email, role, created, core_users.protected')
-            ->join('core_user_join_users_roles', 'core_user_join_users_roles.user_id = core_users.id')
-            ->join('core_roles', 'core_roles.id = core_user_join_users_roles.role_id')
+            ->select('id, username, email, created, protected')
             ->get('core_users', (int) $per_page, (int) $start);
 
-        return ($query->num_rows() > 0) ? $query->result_array() : FALSE;
+        if ($query->num_rows() > 0)
+        {
+            $result_array = $query->result_array();
+
+            foreach ($result_array as $key => $value)
+            {
+                $result_array[$key]['permissions'] = $this->admin_user_permissions_get($result_array[$key]['id']);
+            }
+        }
+
+        return ($query->num_rows() > 0) ? $result_array : FALSE;
     }
 
     /**

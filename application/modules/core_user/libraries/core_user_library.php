@@ -52,10 +52,10 @@ class Core_user_library
         $this->user_delete_uri                   = self::$CI->config->item('user_delete_uri');
 
         // Set the admin uri's.
-        $this->user_admin_roles_uri         = self::$CI->config->item('user_admin_roles_uri');
-        $this->user_admin_role_add_uri      = self::$CI->config->item('user_admin_role_add_uri');
-        $this->user_admin_role_edit_uri     = self::$CI->config->item('user_admin_role_edit_uri');
-        $this->user_admin_role_delete_uri   = self::$CI->config->item('user_admin_role_delete_uri');
+        $this->user_admin_permissions_uri         = self::$CI->config->item('user_admin_permissions_uri');
+        $this->user_admin_permission_add_uri      = self::$CI->config->item('user_admin_permission_add_uri');
+        $this->user_admin_permission_edit_uri     = self::$CI->config->item('user_admin_permission_edit_uri');
+        $this->user_admin_permission_delete_uri   = self::$CI->config->item('user_admin_permission_delete_uri');
         $this->user_admin_users_uri         = self::$CI->config->item('user_admin_users_uri');
         $this->user_admin_user_edit_uri     = self::$CI->config->item('user_admin_user_edit_uri');
         $this->user_admin_user_add_uri      = self::$CI->config->item('user_admin_user_add_uri');
@@ -63,8 +63,8 @@ class Core_user_library
     }
 
     /**
-     * Options: user_login, user_insert, user_update, admin_role_isert,
-     * admin_role_update, admin_user_insert, admin_user_update.
+     * Options: user_login, user_insert, user_update, admin_permission_isert,
+     * admin_permission_update, admin_user_insert, admin_user_update.
      *
      * @param string $rules
      */
@@ -179,11 +179,11 @@ class Core_user_library
             ),
         );
 
-        $admin_role_insert = array(
+        $admin_permission_insert = array(
             array(
-                'field' => 'role',
-                'label' => 'Role',
-                'rules' => 'required|is_unique[core_roles.role]|xss_clean',
+                'field' => 'permission',
+                'label' => 'permission',
+                'rules' => 'required|is_unique[core_permissions.permission]|xss_clean',
             ),
             array(
                 'field' => 'description',
@@ -197,15 +197,15 @@ class Core_user_library
             ),
         );
 
-        $admin_role_update = array(
+        $admin_permission_update = array(
             array(
                 'field' => 'id',
                 'label' => 'Id',
                 'rules' => 'integer|xss_clean',
             ),
             array(
-                'field' => 'role',
-                'label' => 'Role',
+                'field' => 'permission',
+                'label' => 'permission',
                 'rules' => 'required|xss_clean',
             ),
             array(
@@ -242,9 +242,9 @@ class Core_user_library
                 'rules' => 'required|valid_email|is_unique[core_users.email]|xss_clean'
             ),
             array(
-                'field' => 'role',
-                'label' => 'Role',
-                'rules' => 'required|trim|integer|xss_clean',
+                'field' => 'permissions',
+                'label' => 'Permissions',
+                'rules' => 'required|xss_clean',
             ),
             array(
                 'field' => 'protected_value',
@@ -271,9 +271,9 @@ class Core_user_library
                 'rules' => 'required|valid_email|xss_clean'
             ),
             array(
-                'field' => 'role',
-                'label' => 'Role',
-                'rules' => 'required|trim|integer|xss_clean',
+                'field' => 'permissions',
+                'label' => 'Permissions',
+                'rules' => 'required|xss_clean',
             ),
             array(
                 'field' => 'protected_value',
@@ -301,11 +301,11 @@ class Core_user_library
             case 'user_update':
                 $rule_set = $user_update;
                 break;
-            case 'admin_role_insert':
-                $rule_set = $admin_role_insert;
+            case 'admin_permission_insert':
+                $rule_set = $admin_permission_insert;
                 break;
-            case 'admin_role_update':
-                $rule_set = $admin_role_update;
+            case 'admin_permission_update':
+                $rule_set = $admin_permission_update;
                 break;
             case 'admin_user_insert':
                 $rule_set = $admin_user_insert;
@@ -832,7 +832,7 @@ class Core_user_library
             log_message('error', $username . lang('error_user_delete_remember_failed'));
         }
 
-        $userarray = array('user_id', 'username', 'password', 'email', 'role',);
+        $userarray = array('user_id', 'username', 'password', 'email', 'permission',);
         self::$CI->session->unset_userdata($userarray);
         self::$CI->session->sess_destroy();
         self::$CI->session->sess_create();
@@ -857,7 +857,7 @@ class Core_user_library
             'user_id'  => $user->id,
             'username' => $user->username,
             'email'    => $user->email,
-            'role'     => $user->role,
+            'permissions'     => $this->admin_user_permissions_get($user->id),
         );
 
         // Set userdata session information.
@@ -949,32 +949,31 @@ class Core_user_library
     /**
      * The permissions method.
      *
-     * @param array $role.
+     * @param array $permissions.
      */
-    public function user_permission($role = array())
+    public function check_permissions($permissions = '')
     {
         // Check logged in.
         $this->user_check_logged_in();
 
-        // Sets the $user_role variable.
-        if (self::$CI->session->userdata('role'))
+        // Convert permissions string to array.
+        $permissions = explode(',', $permissions);
+
+        // Sets the $user_permissions variable.
+        if (self::$CI->session->userdata('permissions'))
         {
-            $user_role = self::$CI->session->userdata('role');
+            $user_permissions = explode(',', self::$CI->session->userdata('permissions'));
         }
         else
         {
-            $user_role = '';
+            $user_permissions = array();
         }
+        
+        // Compare the permissions to the user perssion and return bool.
+        return (count(array_intersect($user_permissions, $permissions)) > 0 ||
+            in_array('super_user', $user_permissions) ||
+            (count($permissions) == 1 && $permissions[0] == ''));
 
-        // If the $role set by the method that calls this method does not match the
-        // $user_role variable user will be redirected.
-        if (!in_array($user_role, $role))
-        {
-            // If the user is logged send user to the profile page.
-            self::$CI->session->set_flashdata('message_error', lang('error_user_permission'));
-            redirect(base_url($this->user_login_uri));
-            exit();
-        }
     }
 
     /**
@@ -989,11 +988,11 @@ class Core_user_library
         {
             case 'edit':
                 // Super user can delete own account if it is not User 1.
-                $condition = ($user->protected && self::$CI->session->userdata('role') != 'super_user');
+                $condition = ($user->protected && self::$CI->session->userdata('permission') != 'super_user');
                 break;
             case 'delete':
                 // User 1 cannot be deleted through this application.
-                $condition = ($user->protected && self::$CI->session->userdata('role') != 'super_user') || $user->id == 1;
+                $condition = ($user->protected && self::$CI->session->userdata('permission') != 'super_user') || $user->id == 1;
                 break;
         }
 
@@ -1006,108 +1005,120 @@ class Core_user_library
     }
 
     /**
-     * Get a role.
+     * Get a permission.
      *
      * @param integer $id
      * @return object
      */
-    public function admin_role_get($id = NULL)
+    public function admin_permission_get($id = NULL)
     {
-        $role = self::$CI->core_user_model->admin_role_get($id);
-        return ($role) ? $role : FALSE ;
+        $permission = self::$CI->core_user_model->admin_permission_get($id);
+        return ($permission) ? $permission : FALSE ;
     }
 
     /**
-     * Get all the roles.
+     * Get a users permissions.
+     *
+     * @param integer $id
+     * @return string
+     */
+    public function admin_user_permissions_get($id = NULL)
+    {
+        $permissions = self::$CI->core_user_model->admin_user_permissions_get($id);
+        return ($permissions) ? $permissions : FALSE ;
+    }
+
+    /**
+     * Get all the permissions.
      *
      * @param string $data_type
      * @return mixed
      */
-    public function admin_role_get_all($data_type = 'object')
+    public function admin_permissions_get_all($data_type = 'object')
     {
-        $result = self::$CI->core_user_model->admin_role_get_all($data_type);
+        $result = self::$CI->core_user_model->admin_permissions_get_all($data_type);
         return ($result) ? $result : FALSE;
     }
 
     /**
-     * Get paginated results for role table.
+     * Get paginated results for permission table.
      *
      * @param integer $per_page
      * @param integer $start
      * @param string $data_type
      * @return mixed
      */
-    public function admin_role_get_limit_offset($per_page = NULL, $start = NULL, $data_type = 'object')
+    public function admin_permissions_get_limit_offset($per_page = NULL, $start = NULL, $data_type = 'object')
     {
-        $roles = self::$CI->core_user_model->admin_role_get_limit_offset($per_page, $start , $data_type );
-        return ($roles) ? $roles : FALSE;
+        $permissions = self::$CI->core_user_model->admin_permissions_get_limit_offset($per_page, $start , $data_type );
+        return ($permissions) ? $permissions : FALSE;
     }
 
     /**
-     * Admin adds role.
+     * Admin adds permission.
      *
      * @param array $post
      */
-    public function admin_role_add($post = array())
+    public function admin_permission_add($post = array())
     {
-        $result = self::$CI->core_user_model->admin_role_save($post);
+        $result = self::$CI->core_user_model->admin_permission_save($post);
 
         if ($result)
         {
-            self::$CI->session->set_flashdata('message_success', lang('success_admin_add_role'));
-            redirect(base_url($this->user_admin_role_edit_uri . $result));
+            self::$CI->session->set_flashdata('message_success', lang('success_admin_add_permission'));
+            redirect(base_url($this->user_admin_permission_edit_uri . $result));
             exit();
         }
         else
         {
-            self::$CI->session->set_flashdata('message_error', lang('error_admin_add_role'));
+            self::$CI->session->set_flashdata('message_error', lang('error_admin_add_permission'));
             redirect(current_url());
             exit();
         }
     }
 
     /**
-     * Admin edits role.
+     * Admin edits permission.
      *
      * @param array $post
      */
-    public function admin_role_edit($post = array())
+    public function admin_permission_edit($post = array())
     {
-        $result = self::$CI->core_user_model->admin_role_save($post);
+        $result = self::$CI->core_user_model->admin_permission_save($post);
 
         if ($result)
         {
-            self::$CI->session->set_flashdata('message_success', lang('success_admin_edit_role'));
-            redirect(base_url($this->user_admin_role_edit_uri . $post['id']));
+            self::$CI->session->set_flashdata('message_success', lang('success_admin_edit_permission'));
+            redirect(base_url($this->user_admin_permission_edit_uri . $post['id']));
             exit();
         }
         else
         {
-            self::$CI->session->set_flashdata('message_error', lang('error_admin_edit_role'));
-            redirect(base_url($this->user_admin_role_edit_uri . $post['id']));
+            self::$CI->session->set_flashdata('message_error', lang('error_admin_edit_permission'));
+            redirect(base_url($this->user_admin_permission_edit_uri . $post['id']));
             exit();
         }
     }
 
     /**
-     * Admin deletes a role.
+     * Admin deletes a permission.
      *
      * @param integer $id
      */
-    public function admin_role_delete($id = NULL)
+    public function admin_permission_delete($id = NULL)
     {
-        $result = self::$CI->core_user_model->admin_role_delete($id);
+        $result = self::$CI->core_user_model->admin_permission_delete($id);
 
         switch ($result)
         {
             case TRUE:
-                self::$CI->session->set_flashdata('message_success', lang('success_admin_delete_role'));
-                redirect(base_url($this->user_admin_roles_uri));
+                self::$CI->session->set_flashdata('message_success', lang('success_admin_delete_permission'));
+                redirect(base_url($this->user_admin_permissions_uri));
                 exit();
                 break;
             case FALSE:
-                self::$CI->session->set_flashdata('message_error', lang('error_admin_delete_role'));
-                redirect(base_url($this->user_admin_roles_uri));
+                self::$CI->session->set_flashdata('message_error', lang('error_admin_delete_permission'));
+                redirect(base_url($this->user_admin_permissions_uri));
                 exit();
                 break;
         }
@@ -1228,7 +1239,7 @@ class Core_user_library
     public function admin_user_check_protected($user = NULL)
     {
         // Superuser can delete any account except User 1.
-        if (($user->protected && self::$CI->session->userdata('role') != 'super_user') || $user->id == 1)
+        if (($user->protected && self::$CI->session->userdata('permission') != 'super_user') || $user->id == 1)
         {
             self::$CI->session->set_flashdata('message_error', lang('error_admin_user_protected'));
             redirect(base_url($this->user_admin_users_uri));
@@ -1237,17 +1248,17 @@ class Core_user_library
     }
 
     /**
-     * Method accepts the role object.
+     * Method accepts the permission object.
      *
-     * @param object $role
+     * @param object $permission
      */
-    public function admin_role_check_protected($role = NULL)
+    public function admin_permission_check_protected($permission = NULL)
     {
-        // Superuser can delete any role except Role 1.
-        if (($role->protected && self::$CI->session->userdata('role') != 'super_user') || $role->id == 1)
+        // Superuser can delete any permission except permission 1.
+        if (($permission->protected && self::$CI->session->userdata('permission') != 'super_user') || $permission->id == 1)
         {
-            self::$CI->session->set_flashdata('message_error', lang('error_admin_role_protected'));
-            redirect(base_url($this->user_admin_roles_uri));
+            self::$CI->session->set_flashdata('message_error', lang('error_admin_permission_protected'));
+            redirect(base_url($this->user_admin_permissions_uri));
             exit();
         }
     }

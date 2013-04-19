@@ -24,16 +24,18 @@
 </fieldset>
 
 <fieldset>
-    <legend>Role</legend>
-
-    <?php foreach ($all_roles as $role) :?>
-        <label for="<?php echo $role['id'] ;?>"><?php echo $role['role'];?>:</label>
-        <input type="radio" name="role" value="<?php echo $role['id'] ;?>" <?php echo set_radio('role', $role['id']) ;?> />
-    <?php endforeach ;?>
+    <legend>Permissions</legend>
+    <select name="permissions[]" multiple="TRUE">
+        <?php foreach ($all_permissions as $permission) :?>
+            <option value="<?php echo $permission['id'] ;?>" <?php echo set_select('permissions', $permission['id']) ;?> />
+                <?php echo $permission['permission'] ;?>
+            </option>
+        <?php endforeach ;?>
+    </select>
 
 </fieldset>
 
-<?php if ($this->session->userdata('role') == 'super_user') :?>
+<?php if ($this->session->userdata('permission') == 'super_user') :?>
 <fieldset>
     <legend>Protected</legend>
 

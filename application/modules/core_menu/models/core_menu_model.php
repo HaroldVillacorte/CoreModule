@@ -232,14 +232,12 @@ class Core_menu_model extends CI_Model
      */
     public function menu_link_add($post = array())
     {
+        // Set and unset.
+        $post['permissions'] = implode(',', $post['permissions']);
+        unset($post['submit']);
+
         // Sanitize.
         $post = prep_post($post);
-
-        // Remove white space from permissions string.
-        $post['permissions'] = strip_whitespace($post['permissions']);
-
-        // Set and unset.
-        unset($post['submit']);
 
         // Run the query.
         $this->db->insert('core_menu_links', $post);
@@ -263,19 +261,20 @@ class Core_menu_model extends CI_Model
     public function menu_link_edit($post = array(), $is_ajax_request = FALSE)
     {
         // Set and unset.
+        $post['permissions'] = implode(',', $post['permissions']);
         unset($post['submit']);
 
         if (!$is_ajax_request)
         {
             // Set and unset.
             $post['external'] = (!isset($post['external'])) ? 0 : $post['external'];
-
-            // Remove white space from permissions string.
-            $post['permissions'] = strip_whitespace($post['permissions']);
         }
 
         // Sanitize.
         $post = prep_post($post);
+
+        // Reset an unset permissions to empty string.
+        $post['permissions'] = (isset($post['permissions'])) ? $post['permissions'] : '';
 
         // Run the query.
         $result = $this->db->where('id', (int) $post['id'])->update('core_menu_links', $post);

@@ -88,15 +88,18 @@ class Core_user extends MX_Controller
     {
         $template = 'user_profile';
 
+        keep_flashdata_messages();
+
         // Checks if the user is logged in.  If not user is redirected to the
         // base_url().
-
         $id = $this->session->userdata('user_id');
         if (!$id)
         {
             redirect(base_url($this->core_user_library->user_login_uri));
         }
+
         $user = $this->core_user_library->user_find($id);
+
         self::$data['user'] = $user;
 
         // Render the page.
@@ -342,25 +345,25 @@ class Core_user extends MX_Controller
     }
 
     /**
-     * Admin view all roles.
+     * Admin view all permissions.
      */
-    public function admin_user_roles($start = NULL)
+    public function admin_user_permissions($start = NULL)
     {
-        $template = 'core_user/admin_roles';
+        $template = 'core_user/admin_permissions';
 
         $per_page = variable_get('core_module_pagination_per_page');
         $start = ($start) ? $start : 0;
-        $count = count($this->core_user_library->admin_role_get_all('array'));
-        $base_url = base_url($this->core_user_library->user_admin_roles_uri);
+        $count = count($this->core_user_library->admin_permissions_get_all('array'));
+        $base_url = base_url($this->core_user_library->user_admin_permissions_uri);
 
         // Pagination setup.
         self::$data['pagination'] = pagination_setup($base_url, $count, $per_page, 2);
 
-        // Get the roles.
-        self::$data['roles'] = $this->core_user_library->admin_role_get_limit_offset($per_page, $start, 'object');
+        // Get the permissions.
+        self::$data['permissions'] = $this->core_user_library->admin_permissions_get_limit_offset($per_page, $start, 'object');
 
         // Parse values if neccessary.
-        foreach (self::$data['roles'] as $value)
+        foreach (self::$data['permissions'] as $value)
         {
             // Convert the protected boolean field to string.
             $value->protected = ($value->protected) ? 'Yes' : 'No';
@@ -371,15 +374,15 @@ class Core_user extends MX_Controller
     }
 
     /**
-     * Admin add a role.
+     * Admin add a permission.
      */
-    public function admin_user_role_add()
+    public function admin_user_permission_add()
     {
-        $template = 'admin_role_add';
+        $template = 'admin_permission_add';
 
         if ($this->input->post('save'))
         {
-            $this->core_user_library->set_validation_rules('admin_role_insert');
+            $this->core_user_library->set_validation_rules('admin_permission_insert');
 
             if ($this->form_validation->run() == FALSE)
             {
@@ -388,7 +391,7 @@ class Core_user extends MX_Controller
             }
             else
             {
-                $this->core_user_library->admin_role_add($this->input->post());
+                $this->core_user_library->admin_permission_add($this->input->post());
             }
         }
         else
@@ -399,26 +402,26 @@ class Core_user extends MX_Controller
     }
 
     /**
-     * Admin edits a role.
+     * Admin edits a permission.
      *
      * @param integer $id
      */
-    public function admin_user_role_edit($id = NULL)
+    public function admin_user_permission_edit($id = NULL)
     {
-        $template = 'admin_role_edit';
+        $template = 'admin_permission_edit';
 
-        // Instantiate the role to populate the form.
-        $role = $this->core_user_library->admin_role_get($id);
-        self::$data['role'] = ($role) ? $role : NULL;
+        // Instantiate the permission to populate the form.
+        $permission = $this->core_user_library->admin_user_permissions_get($id);
+        self::$data['permission'] = ($permission) ? $permission : NULL;
 
         if ($this->input->post('save'))
         {
-            $role = $this->core_user_library->admin_role_get($this->input->post('id'));
+            $permission = $this->core_user_library->admin_user_permissions_get($this->input->post('id'));
 
-            // Check first if role is protected.
-            $this->core_user_library->admin_role_check_protected($role);
+            // Check first if permission is protected.
+            $this->core_user_library->admin_permission_check_protected($permission);
 
-            $this->core_user_library->set_validation_rules('admin_role_update');
+            $this->core_user_library->set_validation_rules('admin_permission_update');
 
             if ($this->form_validation->run() == FALSE)
             {
@@ -428,7 +431,7 @@ class Core_user extends MX_Controller
             else
             {
                 // Send to the database.
-                $this->core_user_library->admin_role_edit($this->input->post());
+                $this->core_user_library->admin_permission_edit($this->input->post());
             }
         }
         else
@@ -436,7 +439,7 @@ class Core_user extends MX_Controller
             // Redirect if parameter not set.
             if (!$id)
             {
-                redirect(base_url($this->core_user_library->user_admin_roles_uri));
+                redirect(base_url($this->core_user_library->user_admin_permissions_uri));
             }
 
             // Render the page.
@@ -445,22 +448,22 @@ class Core_user extends MX_Controller
     }
 
     /**
-     * Admin deletes a role.
+     * Admin deletes a permission.
      *
      * @param integer $id
      */
-    public function admin_user_role_delete($id = NULL)
+    public function admin_user_permission_delete($id = NULL)
     {
-        // Redirect if role id is not set.
-        if (!$id) redirect(base_url($this->core_user_library->user_admin_roles_uri));
+        // Redirect if permission id is not set.
+        if (!$id) redirect(base_url($this->core_user_library->user_admin_permissions_uri));
 
-        $role = $this->core_user_library->admin_role_get($id);
+        $permission = $this->core_user_library->admin_user_permissions_get($id);
 
-        // Check if role is protected.
-        $this->core_user_library->admin_role_check_protected($role);
+        // Check if permission is protected.
+        $this->core_user_library->admin_permission_check_protected($permission);
 
-        // Delete the role.
-        $this->core_user_library->admin_role_delete($role->id);
+        // Delete the permission.
+        $this->core_user_library->admin_permission_delete($permission->id);
     }
 
     /**
@@ -520,8 +523,15 @@ class Core_user extends MX_Controller
     public function admin_user_edit($id = NULL)
     {
         $template = 'admin_user_edit';
-        self::$data['all_roles'] = $this->core_user_library->admin_role_get_all('array');
+
+        // Get all the permisssions to set the form.
+        self::$data['all_permissions'] = $this->core_user_library->admin_permissions_get_all('array');
+
+        // Find the user.
         $user = $this->core_user_library->user_find((int) $id);
+
+        // Get the users permissions.
+        $user->permissions = $this->core_user_library->admin_user_permissions_get($id);
 
         // Redirect admin user if id is not set.
         if ($id == NULL && !$this->input->post('save'))
@@ -554,9 +564,6 @@ class Core_user extends MX_Controller
         }
         else
         {
-            // Add the js file.
-            array_unshift(self::$data['scripts'], 'user_admin_ajax.js');
-
             self::$data['user'] = $user;
 
             // Render the page.
@@ -570,7 +577,7 @@ class Core_user extends MX_Controller
     public function admin_user_add()
     {
         $template = 'admin_user_add';
-        self::$data['all_roles'] = $this->core_user_library->admin_role_get_all('array');
+        self::$data['all_permissions'] = $this->core_user_library->admin_permissions_get_all('array');
 
         if ($this->input->post('save'))
         {

@@ -137,8 +137,8 @@ class Core_module extends MX_Controller
     {
         $template = 'core_module/add_category';
 
-        // Get the roles.  They are called levels here.
-        self::$data['levels'] = $this->core_user_library->admin_role_get_all('object');
+        // Get the permissions.  They are called levels here.
+        self::$data['levels'] = $this->core_user_library->admin_permissions_get_all('object');
 
         if ($this->input->post('submit'))
         {
@@ -174,8 +174,8 @@ class Core_module extends MX_Controller
     {
         $template = 'core_module/edit_category';
 
-        // Get the roles.  They are called levels here.
-        self::$data['levels'] = $this->core_user_library->admin_role_get_all('object');
+        // Get the permissions.  They are called levels here.
+        self::$data['levels'] = $this->core_user_library->admin_permissions_get_all('object');
 
         self::$data['category'] = $this->core_module_library->category_find($id);
 
@@ -278,6 +278,9 @@ class Core_module extends MX_Controller
         // Set the template.
         $template = ($page) ? $page->template : $this->template;
 
+        // Check permissions.
+        $this->core_module_library->page_check_permissions($page->permissions);
+
         if ($this->input->is_ajax_request())
         {
             return self::$data['body'];
@@ -337,6 +340,9 @@ class Core_module extends MX_Controller
 
         // Set the template.
         $template = ($page) ? $page->template : $this->admin_template;
+        
+        // Check permissions.
+        $this->core_module_library->page_check_permissions($page->permissions);
 
         if ($this->input->is_ajax_request())
         {
@@ -416,6 +422,9 @@ class Core_module extends MX_Controller
         // Get the categories.
         self::$data['categories'] = $this->core_module_library->category_find_level(3, 'object');
 
+        // Get the user permissions.
+        self::$data['all_permissions'] = $this->core_user_library->admin_permissions_get_all('array');
+
         // Post submit.
         if ($this->input->post('submit'))
         {
@@ -454,6 +463,9 @@ class Core_module extends MX_Controller
         // Get the categories.
         self::$data['categories'] = $this->core_module_library->category_find_level(2, 'object');
 
+        // Get the user permissions.
+        self::$data['all_permissions'] = $this->core_user_library->admin_permissions_get_all('array');
+
         // Post submit.
         if ($this->input->post('submit'))
         {
@@ -491,6 +503,9 @@ class Core_module extends MX_Controller
 
         // Get the categories.
         self::$data['categories'] = $this->core_module_library->category_find_level(3, 'object');
+
+        // Get the user permissions.
+        self::$data['all_permissions'] = $this->core_user_library->admin_permissions_get_all('array');
 
         // Post submit.
         if ($this->input->post('submit'))
@@ -532,6 +547,9 @@ class Core_module extends MX_Controller
 
         // Get the categories.
         self::$data['categories'] = $this->core_module_library->category_find_level(2, 'object');
+
+        // Get the user permissions.
+        self::$data['all_permissions'] = $this->core_user_library->admin_permissions_get_all('array');
 
         // Post submit.
         if ($this->input->post('submit'))

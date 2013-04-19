@@ -9,6 +9,7 @@
                 <th>Category</th>
                 <th>Id</th>
                 <th>Published</th>
+                <th>Permissions</th>
                 <th>Author</th>
                 <th>Slug</th>
                 <th>Title</th>
@@ -20,6 +21,7 @@
             <td><?php echo $page->category ;?></td>
             <td><?php echo $page->id ;?></td>
             <td><?php echo $page->published ;?></td>
+            <td><?php echo (!empty($page->permissions)) ? $page->permissions : 'None' ;?></td>
             <td><?php echo $page->author ;?></td>
             <td><a href="<?php echo base_url($page->slug) ;?>"><?php echo $page->slug ;?></a></td>
             <td><?php echo $page->title ;?></td>

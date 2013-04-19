@@ -108,6 +108,18 @@ function module_direct_access_restrict($controller_name = NULL)
 }
 
 /**
+ * Alias for the Core user library check permissions method.
+ *
+ * @param array $permissions
+ * @return Boolean
+ */
+function check_permissions($permissions = '')
+{
+    $CI =& get_instance();
+    return $CI->core_user_library->check_permissions($permissions);
+}
+
+/**
  * Dynamically set the css class of a form field or label.
  *
  * @param string $field
