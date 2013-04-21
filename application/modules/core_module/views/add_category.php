@@ -1,6 +1,6 @@
 <h4>Add category</h4>
 
-<?php echo form_open(current_url()) ;?>
+<?php echo form_open(current_url(), array('class' => 'custom')) ;?>
 
 <fieldset>
     <legend>Category level</legend>

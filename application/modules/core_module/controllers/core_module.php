@@ -45,7 +45,7 @@ class Core_module extends MX_Controller
      */
     public function index()
     {
-        $page = $this->core_module_library->page_find('core_pages', 'is_front', TRUE);
+        $page = $this->core_module_library->page_find('core_pages', 'is_front', TRUE, 'row');
 
         // Parse the page body.
         self::$data['body']  = ($page) ? $this->core_template_library->parse_string($page->body, self::$data) : NULL;
@@ -244,17 +244,17 @@ class Core_module extends MX_Controller
         elseif ($segment_count == 1 && $uri_array[0] != '')
         {
             $slug = $uri_array[0];
-            $page = $this->core_module_library->page_find('core_pages', 'slug', $slug);
+            $page = $this->core_module_library->page_find('core_pages', 'slug', $slug, 'row');
             $param = '';
         }
         // Multiple uri segments.
         else
         {
             // Check if the page exists.
-            if ($this->core_module_library->page_find('core_pages', 'slug', $this->uri->uri_string()))
+            if ($this->core_module_library->page_find('core_pages', 'slug', $this->uri->uri_string(), 'row'))
             {
                 // If uri string is found in pages.
-                $page = $this->core_module_library->page_find('core_pages', 'slug', $this->uri->uri_string());
+                $page = $this->core_module_library->page_find('core_pages', 'slug', $this->uri->uri_string(), 'row');
                 $param = '';
             }
             else
@@ -268,7 +268,7 @@ class Core_module extends MX_Controller
 
                 // Slug is the reminder of the uri array imploded.
                 $slug = implode('/', $uri_array);
-                $page = $this->core_module_library->page_find('core_pages', 'slug', $slug);
+                $page = $this->core_module_library->page_find('core_pages', 'slug', $slug, 'row');
             }
         }
 
@@ -307,17 +307,17 @@ class Core_module extends MX_Controller
         if ($segment_count == 1 && $uri_array[0] != '')
         {
             $slug = $uri_array[0];
-            $page = $this->core_module_library->page_find('core_pages_admin', 'slug', $slug);
+            $page = $this->core_module_library->page_find('core_pages_admin', 'slug', $slug, 'row');
             $param = '';
         }
         // Multiple uri segments.
         else
         {
             // Check if the page exists.
-            if ($this->core_module_library->page_find('core_pages_admin', 'slug', $this->uri->uri_string()))
+            if ($this->core_module_library->page_find('core_pages_admin', 'slug', $this->uri->uri_string(), 'row'))
             {
                 // If uri string is found in pages.
-                $page = $this->core_module_library->page_find('core_pages_admin', 'slug', $this->uri->uri_string());
+                $page = $this->core_module_library->page_find('core_pages_admin', 'slug', $this->uri->uri_string(), 'row');
                 $param = '';
             }
             else
@@ -331,7 +331,7 @@ class Core_module extends MX_Controller
 
                 // Slug is the reminder of the uri array imploded.
                 $slug = implode('/', $uri_array);
-                $page = $this->core_module_library->page_find('core_pages_admin', 'slug', $slug);
+                $page = $this->core_module_library->page_find('core_pages_admin', 'slug', $slug, 'row');
             }
         }
 
@@ -340,7 +340,7 @@ class Core_module extends MX_Controller
 
         // Set the template.
         $template = ($page) ? $page->template : $this->admin_template;
-        
+
         // Check permissions.
         $this->core_module_library->page_check_permissions($page->permissions);
 
@@ -530,7 +530,7 @@ class Core_module extends MX_Controller
         else
         {
             // Find page to edit.
-            self::$data['page'] = $this->core_module_library->page_find('core_pages', 'id', (int) $id);
+            self::$data['page'] = $this->core_module_library->page_find('core_pages', 'id', (int) $id, 'row');
 
             // Render the page.
             echo $this->core_template_library->parse_view($template, self::$data, FALSE);
@@ -574,7 +574,7 @@ class Core_module extends MX_Controller
         else
         {
             // Find page to edit.
-            self::$data['page'] = $this->core_module_library->page_find('core_pages_admin', 'id', (int) $id);
+            self::$data['page'] = $this->core_module_library->page_find('core_pages_admin', 'id', (int) $id, 'row');
 
             // Render the page.
             echo $this->core_template_library->parse_view($template, self::$data, FALSE);

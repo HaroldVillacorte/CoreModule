@@ -362,10 +362,10 @@ class Core_module_library
      * @param mixed $identifier
      * @return object
      */
-    public function page_find($table = 'core_pages', $by = 'id', $identifier = NULL)
+    public function page_find($table = 'core_pages', $by = 'id', $identifier = NULL, $data_type = 'row')
     {
         // Get the page.
-        $page = self::$CI->core_module_model->page_find($table, $by, $identifier);
+        $page = self::$CI->core_module_model->page_find($table, $by, $identifier, $data_type);
 
         // Prep data.
         if (isset($page->created))

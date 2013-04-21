@@ -278,7 +278,7 @@ class Core_module_model extends CI_Model
      * @param mixed $identifier
      * @return object
      */
-    public function page_find($table = 'core_pages', $by = 'id', $identifier = NULL)
+    public function page_find($table = 'core_pages', $by = 'id', $identifier = NULL, $data_type = 'row')
     {
         // Sanitize.
         $by = $this->db->escape_str($by);
@@ -296,10 +296,21 @@ class Core_module_model extends CI_Model
             ->select($table . '.id, category, is_front, published, permissions, author,
                 created, last_edit, last_edit_username, slug, title, body, template')
             ->where($table . '.' . $by, $identifier)
-            ->get($table, 1);
+            ->get($table);
 
-        // Return result.
-        return ($query->num_rows() == 1) ? $query->row() : FALSE;
+        // Choose data type.
+        switch ($data_type)
+        {
+           case 'object':
+               return ($query->num_rows() > 0) ? $query->result() : FALSE;
+               break;
+           case 'array':
+               return ($query->num_rows() > 0) ? $query->result_array() : FALSE;
+               break;
+           case 'row':
+               return ($query->num_rows() > 0) ? $query->row() : FALSE;
+               break;
+        }
     }
 
     /**
