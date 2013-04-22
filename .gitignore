@@ -5,8 +5,8 @@
 */APPCACHE/!index.html
 */APPCACHE/DB*
 */APPCACHE/DB/!index.html
-*/web_root/asset_cache*
-*/web_root/asset_cache/!index.html
+web_root/asset_cache
+web_root/asset_cache/!index.html
 nbproject
 .settings
 .buildpath
