@@ -1,7 +1,7 @@
 <div class="fixed">
   <nav class="top-bar">
     <ul>
-      <li class="name"><h1><a href="<?echo $doc_url;?>">CoreModule Documentation</a></h1></li>
+      <li class="name"><h1><a href="/documentation">CoreModule Documentation</a></h1></li>
       <li class="toggle-topbar"><a href="#"></a></li>
     </ul>
     <section>
@@ -10,26 +10,22 @@
         <li class="has-dropdown">
           <a href="#">Configuration</a>
           <ul class="dropdown">
-            <li><a href="<?echo $doc_url;?>page/config/file_structure/">File Structure</a></li>
-            <li><a href="<?echo $doc_url;?>page/config/autoload/">Autoload</a></li>
-            <li><a href="<?echo $doc_url;?>page/config/config_file/">Config file</a></li>
-            <li><a href="<?echo $doc_url;?>page/config/database/">Database</a></li>
-            <li><a href="<?echo $doc_url;?>page/config/routes/">Routes</a></li>
-            <li><a href="<?echo $doc_url;?>page/config/htaccess/">.htaccess file</a></li>
-            <li><a href="<?echo $doc_url;?>page/config/gitignore/">.gitignore file</a></li>
+            <li><a href="?page=config/file_structure.php">File Structure</a></li>
+            <li><a href="?page=config/autoload.php">Autoload</a></li>
+            <li><a href="?page=config/config_file.php">Config file</a></li>
           </ul>
         </li>
 
         <li class="has-dropdown">
           <a href="#">Modules</a>
           <ul class="dropdown">
-            <li><a href="<?echo $doc_url;?>page/modules/core_model/">Core Model</a></li>
-            <li><a href="<?echo $doc_url;?>page/modules/core_template/">Core Template</a></li>
-            <li><a href="<?echo $doc_url;?>page/modules/core_asset_loader/">Core Asset Loader</a></li>
-            <li><a href="<?echo $doc_url;?>page/modules/core_messages/">Core Messages</a></li>
-            <li><a href="<?echo $doc_url;?>page/modules/user/">User</a></li>
-            <li><a href="<?echo $doc_url;?>page/modules/demo_grocery_crud/">Demo Grocery CRUD</a></li>
-            <li><a href="<?echo $doc_url;?>page/modules/demo_doctrine2/">Demo Doctrine 2</a></li>
+            <li><a href="?page=modules/core_model.php">Core Model</a></li>
+            <li><a href="?page=modules/core_template.php">Core Template</a></li>
+            <li><a href="?page=modules/core_asset_loader.php">Core Asset Loader</a></li>
+            <li><a href="?page=modules/core_messages.php">Core Messages</a></li>
+            <li><a href="?page=modules/user.php">User</a></li>
+            <li><a href="?page=modules/demo_grocery_crud.php">Demo Grocery CRUD</a></li>
+            <li><a href="?page=modules/demo_doctrine2.php">Demo Doctrine 2</a></li>
           </ul>
 
       </ul>

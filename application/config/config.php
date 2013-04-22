@@ -366,7 +366,7 @@ $config['proxy_ips'] = '';
 |
 */
 $config['modules_locations'] = array(
-		APPPATH.'modules/' => '../modules/',
+		APPPATH . 'modules/' => '../modules/',
 );
 
 /* End of file config.php */

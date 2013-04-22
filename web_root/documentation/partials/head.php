@@ -10,9 +10,9 @@
   <meta charset="utf-8" />
   <!-- Set the viewport width to device width for mobile -->
   <meta name="viewport" content="width=device-width" />
-  <link rel="stylesheet" type="text/css" href="<?echo $doc_url;?>stylesheets/foundation.min.css" />
-  <link href="<?echo $doc_url;?>prettify/prettify.css" type="text/css" rel="stylesheet" />
-  <link rel="stylesheet" type="text/css" href="<?echo $doc_url;?>stylesheets/custom.css" />
-  <script type="text/javascript" src="<?echo $doc_url;?>javascripts/modernizr.foundation.js"></script>
+  <link rel="stylesheet" type="text/css" href="stylesheets/foundation.min.css" />
+  <link href="prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <link rel="stylesheet" type="text/css" href="stylesheets/custom.css" />
+  <script type="text/javascript" src="javascripts/modernizr.foundation.js"></script>
 </head>
 <body onload="prettyPrint()">

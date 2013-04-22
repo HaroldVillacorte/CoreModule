@@ -1,9 +1,3 @@
-<?php
-define (BASEPATH, NULL);
-require_once '../../application/config/config.php';
-$doc_url = $config['base_url'] . 'documentation/';
-?>
-
 <?php include 'partials/head.php';?>
 <?php include 'partials/top_nav.php';?>
 

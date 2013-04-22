@@ -1,13 +1,13 @@
 <h2>Config File</h2>
-<p class="panel">CoreModule comes optimally pre-configured but a few things you have to set up for your environment.  Here is a list of the changes CoreModule has made to the config file.</p>
+<p class="panel">Make sure to set the config file to match your environment.</p>
 
 <h4>Base url</h4>
-<code class="prettyprint">$config['base_url']	= 'http://localhost/CoreModule/';</code>
-<p class="code-after">You need to set this to the base url of your application.  From my experience if this is left blank it can lead to buggy behavior.</p>
+<code class="prettyprint">$config['base_url']	= 'http://CoreModule/';</code>
+<p class="code-after">You need to set this to the base url of your application.</p>
 
 <h4>Index file</h4>
-<code class="prettyprint">$config['index_page'] = 'index.php';</code>
-<p class="code-after">This comes preset as index.php.  Just like the base url setting this should not be left blank.</p>
+<code class="prettyprint">$config['index_page'] = '';</code>
+<p class="code-after">This comes preset as empty since there is an .htaccess file to eliminate the index.php from the url.</p>
 
 <h4>Encryption key</h4>
 <code class="prettyprint">$config['encryption_key'] = 'superSecretEncrytionKey';</code>
@@ -15,7 +15,7 @@
 
 <h4>Session variables</h4>
 <code class="prettyprint">$config['sess_use_database']	= TRUE;</code>
-<p class="code-after">This has been set to true in order to store sessions in the database.</p>
+<p class="code-after">This is will be required to be set to TRUE during installation.</p>
 
 <h4>Global XSS filtering</h4>
 <code class="prettyprint">$config['global_xss_filtering'] = TRUE;</code>
